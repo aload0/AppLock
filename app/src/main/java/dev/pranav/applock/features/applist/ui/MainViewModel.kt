@@ -18,6 +18,63 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+
+package com.pranavpurwar.applock.ui.settings
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.pranavpurwar.applock.data.datastore.DatastoreRepository // Import the repository
+import com.pranavpurwar.applock.data.datastore.PreferencesKeys
+import com.pranavpurwar.applock.di.DataStoreModule
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    private val dataStoreModule: DataStoreModule,
+    private val datastoreRepository: DatastoreRepository // ADDED: Repository Injection
+) : ViewModel() {
+
+    // --- EXISTING THEME LOGIC ---
+    val getThemePreference = dataStoreModule.providePreferencesDataStore().data
+        .map { preferences ->
+            preferences[PreferencesKeys.KEY_THEME_PREFERENCE] ?: "System Default"
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "System Default"
+        )
+
+    fun setThemePreference(theme: String) {
+        viewModelScope.launch {
+            dataStoreModule.providePreferencesDataStore().edit { preferences ->
+                preferences[PreferencesKeys.KEY_THEME_PREFERENCE] = theme
+            }
+        }
+    }
+    
+    // --- NEW BIOMETRIC TOGGLE LOGIC (ADDED) ---
+    
+    // 1. Expose the current state of the 'Fingerprint Only' setting
+    val isFingerprintOnly = datastoreRepository.isFingerprintOnly.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
+
+    // 2. Function to update the setting when the switch is toggled
+    fun setFingerprintOnly(isOnlyFingerprint: Boolean) {
+        viewModelScope.launch {
+            datastoreRepository.setFingerprintOnly(isOnlyFingerprint)
+        }
+    }
+    // --- END NEW BIOMETRIC LOGIC ---
+}
 @OptIn(FlowPreview::class)
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val appSearchManager = AppSearchManager(application)
