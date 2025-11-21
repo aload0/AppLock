@@ -201,6 +201,8 @@ class PasswordOverlayActivity : FragmentActivity() {
                     contentColor = MaterialTheme.colorScheme.primaryContainer
                 ) { innerPadding ->
                     val lockType = remember { appLockRepository.getLockType() }
+                    val isFingerprintOnly = remember { appLockRepository.isFingerprintOnlyEnabled() } // Fetch the new state here
+
                     when (lockType) {
                         PreferencesRepository.LOCK_TYPE_PATTERN -> {
                             PatternLockScreen(
@@ -216,6 +218,7 @@ class PasswordOverlayActivity : FragmentActivity() {
                             PasswordOverlayScreen(
                                 modifier = Modifier.padding(innerPadding),
                                 showBiometricButton = appLockRepository.isBiometricAuthEnabled(),
+                                isFingerprintOnly = isFingerprintOnly, // Pass the new state
                                 fromMainActivity = false,
                                 onBiometricAuth = { triggerBiometricPrompt() },
                                 onAuthSuccess = {},
@@ -236,16 +239,31 @@ class PasswordOverlayActivity : FragmentActivity() {
             BiometricPrompt(this@PasswordOverlayActivity, executor, authenticationCallbackInternal)
 
         val appNameForPrompt = appName.ifEmpty { getString(R.string.this_app) }
-        promptInfo = BiometricPrompt.PromptInfo.Builder()
+        val isFingerprintOnly = appLockRepository.isFingerprintOnlyEnabled() // Read setting for prompt configuration
+
+        val allowedAuthenticators = if (isFingerprintOnly) {
+            // Only allow biometric authentication
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG
+        } else {
+            // Allow biometric and PIN/Pattern fallback (DEVICE_CREDENTIAL)
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        }
+
+        val builder = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.unlock_app_title, appNameForPrompt))
             .setSubtitle(getString(R.string.confirm_biometric_subtitle))
-            .setNegativeButtonText(getString(R.string.use_pin_button))
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                        BiometricManager.Authenticators.BIOMETRIC_STRONG
-            )
+            .setAllowedAuthenticators(allowedAuthenticators)
             .setConfirmationRequired(false)
-            .build()
+
+        // Only set the negative button text (to enable fallback) if Fingerprint Only Mode is NOT active.
+        if (!isFingerprintOnly) {
+            builder.setNegativeButtonText(getString(R.string.use_pin_button))
+        }
+
+        promptInfo = builder.build()
     }
 
     private val authenticationCallbackInternal =
@@ -332,6 +350,7 @@ class PasswordOverlayActivity : FragmentActivity() {
 fun PasswordOverlayScreen(
     modifier: Modifier = Modifier,
     showBiometricButton: Boolean = false,
+    isFingerprintOnly: Boolean = false, // NEW PARAMETER
     fromMainActivity: Boolean = false,
     onBiometricAuth: () -> Unit = {},
     onAuthSuccess: () -> Unit,
@@ -353,6 +372,14 @@ fun PasswordOverlayScreen(
         val passwordState = remember { mutableStateOf("") }
         var showError by remember { mutableStateOf(false) }
         val minLength = 4
+
+        val showKeypad = remember(isFingerprintOnly, showBiometricButton) {
+            // Show keypad only if:
+            // 1. Fingerprint Only is OFF (keypad is the primary method)
+            // OR
+            // 2. Biometric authentication is DISABLED (keypad is the ONLY method available)
+            !isFingerprintOnly || !showBiometricButton
+        }
 
         if (isLandscape) {
             Row(
@@ -390,41 +417,47 @@ fun PasswordOverlayScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    PasswordIndicators(
-                        passwordLength = passwordState.value.length,
-                    )
-
-                    if (showError) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.incorrect_pin_try_again),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
+                    if (showKeypad) {
+                        PasswordIndicators(
+                            passwordLength = passwordState.value.length,
                         )
+
+                        if (showError) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.incorrect_pin_try_again),
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
                     }
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    KeypadSection(
-                        passwordState = passwordState,
-                        minLength = minLength,
-                        showBiometricButton = showBiometricButton,
-                        fromMainActivity = fromMainActivity,
-                        onBiometricAuth = onBiometricAuth,
-                        onAuthSuccess = onAuthSuccess,
-                        onPinAttempt = onPinAttempt,
-                        onPasswordChange = {
-                            showError = false
+                if (showKeypad) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        KeypadSection(
+                            passwordState = passwordState,
+                            minLength = minLength,
+                            showBiometricButton = showBiometricButton,
+                            fromMainActivity = fromMainActivity,
+                            onBiometricAuth = onBiometricAuth,
+                            onAuthSuccess = onAuthSuccess,
+                            onPinAttempt = onPinAttempt,
+                            onPasswordChange = {
+                                showError = false
 
-                            if (appLockRepository.isAutoUnlockEnabled()) {
-                                onPinAttempt?.invoke(passwordState.value)
-                            }
-                        },
-                        onPinIncorrect = { showError = true }
-                    )
+                                if (appLockRepository.isAutoUnlockEnabled()) {
+                                    onPinAttempt?.invoke(passwordState.value)
+                                }
+                            },
+                            onPinIncorrect = { showError = true }
+                        )
+                    }
+                } else {
+                    FingerprintOnlyPrompt(onBiometricAuth = onBiometricAuth)
                 }
             }
         } else {
@@ -460,38 +493,45 @@ fun PasswordOverlayScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                PasswordIndicators(
-                    passwordLength = passwordState.value.length,
-                )
-
-                if (showError) {
-                    Text(
-                        text = stringResource(R.string.incorrect_pin_try_again),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 8.dp)
+                if (showKeypad) {
+                    PasswordIndicators(
+                        passwordLength = passwordState.value.length,
                     )
+
+                    if (showError) {
+                        Text(
+                            text = stringResource(R.string.incorrect_pin_try_again),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    KeypadSection(
+                        passwordState = passwordState,
+                        minLength = minLength,
+                        showBiometricButton = showBiometricButton,
+                        fromMainActivity = fromMainActivity,
+                        onBiometricAuth = onBiometricAuth,
+                        onAuthSuccess = onAuthSuccess,
+                        onPinAttempt = onPinAttempt,
+                        onPasswordChange = {
+                            showError = false
+
+                            if (appLockRepository.isAutoUnlockEnabled()) {
+                                onPinAttempt?.invoke(passwordState.value)
+                            }
+                        },
+                        onPinIncorrect = { showError = true }
+                    )
+                } else {
+                    // Fingerprint Only Mode: Hide keypad and show prompt
+                    Spacer(modifier = Modifier.weight(1f))
+                    FingerprintOnlyPrompt(onBiometricAuth = onBiometricAuth)
+                    Spacer(modifier = Modifier.weight(1f))
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                KeypadSection(
-                    passwordState = passwordState,
-                    minLength = minLength,
-                    showBiometricButton = showBiometricButton,
-                    fromMainActivity = fromMainActivity,
-                    onBiometricAuth = onBiometricAuth,
-                    onAuthSuccess = onAuthSuccess,
-                    onPinAttempt = onPinAttempt,
-                    onPasswordChange = {
-                        showError = false
-
-                        if (appLockRepository.isAutoUnlockEnabled()) {
-                            onPinAttempt?.invoke(passwordState.value)
-                        }
-                    },
-                    onPinIncorrect = { showError = true }
-                )
             }
         }
     }
@@ -500,6 +540,47 @@ fun PasswordOverlayScreen(
         BackHandler {}
     }
 }
+
+// --- NEW COMPOSABLE FOR FINGERPRINT ONLY MODE ---
+@Composable
+private fun FingerprintOnlyPrompt(onBiometricAuth: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(bottom = 64.dp)
+    ) {
+        FilledTonalIconButton(
+            onClick = onBiometricAuth,
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+        ) {
+            Icon(
+                imageVector = Fingerprint,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentDescription = stringResource(R.string.biometric_authentication_cd),
+                tint = MaterialTheme.colorScheme.surfaceTint
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Tap to use Fingerprint Sensor", // Placeholder
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "PIN fallback disabled by setting", // Placeholder
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
+}
+
+// --- Existing Composables (Unchanged or minor context changes) ---
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class)
 @Composable
