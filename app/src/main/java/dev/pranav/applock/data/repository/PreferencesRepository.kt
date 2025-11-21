@@ -58,6 +58,14 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_BIOMETRIC_AUTH_ENABLED, false)
     }
 
+    fun setFingerprintOnlyEnabled(enabled: Boolean) {
+        settingsPrefs.edit { putBoolean(KEY_FINGERPRINT_ONLY_MODE, enabled) }
+    }
+
+    fun isFingerprintOnlyEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_FINGERPRINT_ONLY_MODE, false)
+    }
+
     fun setUseMaxBrightness(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_USE_MAX_BRIGHTNESS, enabled) }
     }
@@ -153,6 +161,7 @@ class PreferencesRepository(context: Context) {
         private const val KEY_PASSWORD = "password"
         private const val KEY_PATTERN = "pattern"
         private const val KEY_BIOMETRIC_AUTH_ENABLED = "use_biometric_auth"
+        private const val KEY_FINGERPRINT_ONLY_MODE = "fingerprint_only_mode" // New Key
         private const val KEY_DISABLE_HAPTICS = "disable_haptics"
         private const val KEY_USE_MAX_BRIGHTNESS = "use_max_brightness"
         private const val KEY_ANTI_UNINSTALL = "anti_uninstall"
