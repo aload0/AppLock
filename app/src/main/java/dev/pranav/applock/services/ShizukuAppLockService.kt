@@ -192,6 +192,12 @@ class ShizukuAppLockService : Service() {
         if (packageName !in lockedApps) return
 
         val unlockDurationMinutes = appLockRepository.getUnlockTimeDuration()
+        
+        // If duration is 0 (lock immediately), clear any unlock state
+        if (unlockDurationMinutes == 0) {
+            AppLockManager.appUnlockTimes.remove(packageName)
+        }
+        
         val unlockTimestamp = AppLockManager.appUnlockTimes[packageName] ?: 0L
 
         Log.d(
