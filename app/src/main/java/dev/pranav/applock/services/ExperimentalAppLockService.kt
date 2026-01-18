@@ -82,27 +82,31 @@ class ExperimentalAppLockService : Service() {
         timer?.cancel()
         timer = Timer()
         timer?.schedule(timerTask {
-            if (!appLockRepository.isProtectEnabled() || applicationContext.isDeviceLocked()) {
-                if (applicationContext.isDeviceLocked()) {
-                    AppLockManager.appUnlockTimes.clear()
+            try {
+                if (!appLockRepository.isProtectEnabled() || applicationContext.isDeviceLocked()) {
+                    if (applicationContext.isDeviceLocked()) {
+                        AppLockManager.appUnlockTimes.clear()
+                    }
+                    return@timerTask
                 }
-                return@timerTask
+
+                val foregroundApp = getCurrentForegroundAppPackage() ?: return@timerTask
+                val currentPackage = foregroundApp.first
+                val triggeringPackage = previousForegroundPackage
+                previousForegroundPackage = currentPackage
+
+                if (isExclusionApp(currentPackage)) return@timerTask
+
+                if (triggeringPackage in appLockRepository.getTriggerExcludedApps()) {
+                    return@timerTask
+                }
+
+                if (currentPackage == triggeringPackage) return@timerTask
+
+                checkAndLockApp(currentPackage, triggeringPackage, System.currentTimeMillis())
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in monitoring timer task", e)
             }
-
-            val foregroundApp = getCurrentForegroundAppPackage() ?: return@timerTask
-            val currentPackage = foregroundApp.first
-            val triggeringPackage = previousForegroundPackage
-            previousForegroundPackage = currentPackage
-
-            if (isExclusionApp(currentPackage)) return@timerTask
-
-            if (triggeringPackage in appLockRepository.getTriggerExcludedApps()) {
-                return@timerTask
-            }
-
-            if (currentPackage == triggeringPackage) return@timerTask
-
-            checkAndLockApp(currentPackage, triggeringPackage, System.currentTimeMillis())
         }, 0, 250)
     }
 

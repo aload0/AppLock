@@ -161,24 +161,28 @@ class ShizukuAppLockService : Service() {
     private fun setupShizukuActivityManager() {
         shizukuActivityManager =
             ShizukuActivityManager(this, appLockRepository) { packageName, _, timeMillis ->
-                val triggeringPackage = previousForegroundPackage
-                previousForegroundPackage = packageName
+                try {
+                    val triggeringPackage = previousForegroundPackage
+                    previousForegroundPackage = packageName
 
-                if (AppLockManager.isLockScreenShown.get() || packageName == this.packageName) {
-                    return@ShizukuActivityManager
+                    if (AppLockManager.isLockScreenShown.get() || packageName == this.packageName) {
+                        return@ShizukuActivityManager
+                    }
+
+                    val triggerExclusions = appLockRepository.getTriggerExcludedApps()
+                    if (triggeringPackage in triggerExclusions) {
+                        Log.d(
+                            TAG,
+                            "Trigger app $triggeringPackage is excluded, skipping lock for $packageName"
+                        )
+                        return@ShizukuActivityManager
+                    }
+
+                    Log.d(TAG, "Current package=$packageName, trigger=$triggeringPackage")
+                    checkAndLockApp(packageName, triggeringPackage, timeMillis)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in ShizukuActivityManager callback", e)
                 }
-
-                val triggerExclusions = appLockRepository.getTriggerExcludedApps()
-                if (triggeringPackage in triggerExclusions) {
-                    Log.d(
-                        TAG,
-                        "Trigger app $triggeringPackage is excluded, skipping lock for $packageName"
-                    )
-                    return@ShizukuActivityManager
-                }
-
-                Log.d(TAG, "Current package=$packageName, trigger=$triggeringPackage")
-                checkAndLockApp(packageName, triggeringPackage, timeMillis)
             }
     }
 
