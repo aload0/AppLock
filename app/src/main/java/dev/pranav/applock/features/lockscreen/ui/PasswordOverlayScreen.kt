@@ -250,8 +250,7 @@ class PasswordOverlayActivity : FragmentActivity() {
             .setSubtitle(getString(R.string.confirm_biometric_subtitle))
             .setNegativeButtonText(getString(R.string.use_pin_button))
             .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                        BiometricManager.Authenticators.BIOMETRIC_STRONG
+                BiometricManager.Authenticators.BIOMETRIC_STRONG
             )
             .setConfirmationRequired(false)
             .build()
@@ -264,6 +263,14 @@ class PasswordOverlayActivity : FragmentActivity() {
                 isBiometricPromptShowingLocal = false
                 AppLockManager.reportBiometricAuthFinished()
                 Log.w(TAG, "Authentication error: $errString ($errorCode)")
+                
+                // If user cancels authentication, finish the activity to remove the overlay
+                // This prevents the overlay from staying visible over other apps
+                if (errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
+                    errorCode == BiometricPrompt.ERROR_CANCELED ||
+                    errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                    finish()
+                }
             }
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
@@ -321,6 +328,17 @@ class PasswordOverlayActivity : FragmentActivity() {
         super.onPause()
         movedToBackground = true
         AppLockManager.isLockScreenShown.set(false)
+        
+        // Cancel biometric prompt if it's showing
+        if (isBiometricPromptShowingLocal) {
+            try {
+                biometricPrompt.cancelAuthentication()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error canceling biometric prompt: ${e.message}")
+            }
+            isBiometricPromptShowingLocal = false
+        }
+        
         if (!isFinishing && !isDestroyed) {
             AppLockManager.reportBiometricAuthFinished()
             finish()

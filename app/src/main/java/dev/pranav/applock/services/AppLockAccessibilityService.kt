@@ -257,14 +257,23 @@ class AppLockAccessibilityService : AccessibilityService() {
             return
         }
 
-        // Return if app is temporarily unlocked
-        if (AppLockManager.isAppTemporarilyUnlocked(packageName)) {
-            return
+        val unlockDurationMinutes = appLockRepository.getUnlockTimeDuration()
+        
+        // If duration is 0 (lock immediately), skip temporarily unlocked check
+        // and go straight to showing lock screen
+        if (unlockDurationMinutes == 0) {
+            // Clear any unlock state for immediate locking
+            AppLockManager.appUnlockTimes.remove(packageName)
+            AppLockManager.clearTemporarilyUnlockedApp()
+        } else {
+            // Return if app is temporarily unlocked (only when duration > 0)
+            if (AppLockManager.isAppTemporarilyUnlocked(packageName)) {
+                return
+            }
+            
+            AppLockManager.clearTemporarilyUnlockedApp()
         }
 
-        AppLockManager.clearTemporarilyUnlockedApp()
-
-        val unlockDurationMinutes = appLockRepository.getUnlockTimeDuration()
         val unlockTimestamp = AppLockManager.appUnlockTimes[packageName] ?: 0L
 
         Log.d(

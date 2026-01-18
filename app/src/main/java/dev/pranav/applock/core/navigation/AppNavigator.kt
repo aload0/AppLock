@@ -152,8 +152,7 @@ private fun createBiometricPromptInfo(): BiometricPrompt.PromptInfo {
         .setSubtitle(BIOMETRIC_SUBTITLE)
         .setNegativeButtonText(BIOMETRIC_NEGATIVE_BUTTON)
         .setAllowedAuthenticators(
-            BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                    BiometricManager.Authenticators.BIOMETRIC_STRONG
+            BiometricManager.Authenticators.BIOMETRIC_STRONG
         )
         .setConfirmationRequired(false)
         .build()
