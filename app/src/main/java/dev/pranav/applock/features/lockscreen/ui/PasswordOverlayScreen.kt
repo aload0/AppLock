@@ -263,14 +263,6 @@ class PasswordOverlayActivity : FragmentActivity() {
                 isBiometricPromptShowingLocal = false
                 AppLockManager.reportBiometricAuthFinished()
                 Log.w(TAG, "Authentication error: $errString ($errorCode)")
-                
-                // If user cancels authentication, finish the activity to remove the overlay
-                // This prevents the overlay from staying visible over other apps
-                if (errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
-                    errorCode == BiometricPrompt.ERROR_CANCELED ||
-                    errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                    finish()
-                }
             }
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
