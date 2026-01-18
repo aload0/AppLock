@@ -333,7 +333,7 @@ class PasswordOverlayActivity : FragmentActivity() {
         if (isBiometricPromptShowingLocal) {
             try {
                 biometricPrompt.cancelAuthentication()
-            } catch (e: Exception) {
+            } catch (e: IllegalStateException) {
                 Log.e(TAG, "Error canceling biometric prompt: ${e.message}")
             }
             isBiometricPromptShowingLocal = false
