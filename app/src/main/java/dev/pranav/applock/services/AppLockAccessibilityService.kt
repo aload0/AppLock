@@ -46,12 +46,37 @@ class AppLockAccessibilityService : AccessibilityService() {
         var isServiceRunning = false
     }
 
+    private val screenStateReceiver = object: android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            try {
+                if (intent?.action == Intent.ACTION_SCREEN_OFF) {
+                    Log.d(TAG, "Screen off detected. Resetting AppLock state.")
+                    AppLockManager.isLockScreenShown.set(false)
+                    AppLockManager.clearTemporarilyUnlockedApp()
+                    // Optional: Clear all unlock timestamps to force re-lock on next unlock
+                    AppLockManager.appUnlockTimes.clear()
+                } else if (intent?.action == Intent.ACTION_USER_PRESENT) {
+                    Log.d(TAG, "User present.")
+                }
+            } catch (e: Exception) {
+                logError("Error in screenStateReceiver", e)
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         try {
             isServiceRunning = true
             AppLockManager.currentBiometricState = BiometricState.IDLE
+            AppLockManager.isLockScreenShown.set(false)
             startPrimaryBackendService()
+
+            val filter = android.content.IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_OFF)
+                addAction(Intent.ACTION_USER_PRESENT)
+            }
+            registerReceiver(screenStateReceiver, filter)
         } catch (e: Exception) {
             logError("Error in onCreate", e)
         }
@@ -89,7 +114,8 @@ class AppLockAccessibilityService : AccessibilityService() {
     private fun handleAccessibilityEvent(event: AccessibilityEvent) {
         // Check for device admin deactivation (anti-uninstall feature)
         if (appLockRepository.isAntiUninstallEnabled() &&
-            event.packageName == DEVICE_ADMIN_SETTINGS_PACKAGE) {
+            event.packageName == DEVICE_ADMIN_SETTINGS_PACKAGE
+        ) {
             try {
                 checkForDeviceAdminDeactivation(event)
             } catch (e: Exception) {
@@ -187,7 +213,7 @@ class AppLockAccessibilityService : AccessibilityService() {
     private fun clearTemporarilyUnlockedAppIfNeeded(newPackage: String? = null) {
         val shouldClear = newPackage == null ||
                 (newPackage != AppLockManager.temporarilyUnlockedApp &&
-                 newPackage !in appLockRepository.getTriggerExcludedApps())
+                        newPackage !in appLockRepository.getTriggerExcludedApps())
 
         if (shouldClear) {
             Log.d(TAG, "Clearing temporarily unlocked app")
@@ -211,7 +237,8 @@ class AppLockAccessibilityService : AccessibilityService() {
         // Skip excluded packages
         if (packageName == APP_PACKAGE_PREFIX ||
             packageName in keyboardPackages ||
-            packageName in EXCLUDED_APPS) {
+            packageName in EXCLUDED_APPS
+        ) {
             return false
         }
 
@@ -229,6 +256,19 @@ class AppLockAccessibilityService : AccessibilityService() {
             return
         }
 
+        // Fix for "Lock Immediately" not working when switching between apps
+        val unlockedApp = AppLockManager.temporarilyUnlockedApp
+        if (unlockedApp.isNotEmpty() &&
+            unlockedApp != currentForegroundPackage &&
+            currentForegroundPackage !in appLockRepository.getTriggerExcludedApps()
+        ) {
+            Log.d(
+                TAG,
+                "Switched from unlocked app $unlockedApp to $currentForegroundPackage. clearing temporary unlock."
+            )
+            AppLockManager.clearTemporarilyUnlockedApp()
+        }
+
         Log.d(TAG, event.toString())
         checkAndLockApp(currentForegroundPackage, triggeringPackage, event.eventTime)
     }
@@ -239,6 +279,7 @@ class AppLockAccessibilityService : AccessibilityService() {
             BackendImplementation.SHIZUKU -> !applicationContext.isServiceRunning(
                 ShizukuAppLockService::class.java
             )
+
             BackendImplementation.USAGE_STATS -> !applicationContext.isServiceRunning(
                 ExperimentalAppLockService::class.java
             )
@@ -247,8 +288,9 @@ class AppLockAccessibilityService : AccessibilityService() {
 
     private fun checkAndLockApp(packageName: String, triggeringPackage: String, currentTime: Long) {
         // Return early if lock screen is already shown or biometric auth is in progress
-        if (AppLockManager.isLockScreenShown.get() || 
-            AppLockManager.currentBiometricState == BiometricState.AUTH_STARTED) {
+        if (AppLockManager.isLockScreenShown.get() ||
+            AppLockManager.currentBiometricState == BiometricState.AUTH_STARTED
+        ) {
             return
         }
 
@@ -519,6 +561,15 @@ class AppLockAccessibilityService : AccessibilityService() {
             super.onDestroy()
             isServiceRunning = false
             Log.d(TAG, "Accessibility service destroyed")
+
+            try {
+                unregisterReceiver(screenStateReceiver)
+            } catch (e: IllegalArgumentException) {
+                // Ignore if not registered
+                Log.w(TAG, "Receiver not registered or already unregistered")
+            }
+
+            AppLockManager.isLockScreenShown.set(false)
             AppLockManager.startFallbackServices(this, AppLockAccessibilityService::class.java)
         } catch (e: Exception) {
             logError("Error in onDestroy", e)

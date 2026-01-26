@@ -1,5 +1,5 @@
 [versions]
-agp = "9.0.0-alpha11"
+agp = "9.0.0"
 annotation = "1.9.1"
 refine = "4.4.0"
 hiddenapibypass = "6.1"

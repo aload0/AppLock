@@ -5,11 +5,7 @@ import android.view.MotionEvent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -81,6 +77,7 @@ fun PatternLock(
                     }
                 }
 
+
                 MotionEvent.ACTION_MOVE -> {
                     if (previewLine.value != null) {
                         previewLine.value = previewLine.value!!.copy(end = Offset(it.x, it.y))
@@ -109,7 +106,6 @@ fun PatternLock(
                                 scope.launch {
                                     dots.size.animateTo(
                                         (dotsSize * 1.8).toFloat(),
-                                        tween(animationDuration)
                                     )
                                     delay(animationDelay)
                                     dots.size.animateTo(dotsSize, tween(animationDuration))

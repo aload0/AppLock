@@ -8,7 +8,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import dev.pranav.applock.core.utils.isAccessibilityServiceEnabled
 import dev.pranav.applock.data.repository.BackendImplementation
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -114,11 +113,13 @@ object AppLockManager {
         when (targetBackend) {
             BackendImplementation.ACCESSIBILITY -> {
                 if (AppLockAccessibilityService.isServiceRunning) return
-                if (!context.isAccessibilityServiceEnabled()) {
-                    showNoPermissionsToast(context)
-                    return
-                }
-                Log.d(TAG, "Attempting ACCESSIBILITY backend. Requires manual setup.")
+                // Check if accessibility service is enabled in system settings
+                // But don't show toast if we are just restarting or if it's not enabled yet
+                // The user needs to enable it manually anyway if they chose this backend.
+                Log.d(
+                    TAG,
+                    "Attempting ACCESSIBILITY backend restart. (Manually enabled in settings)"
+                )
             }
 
             BackendImplementation.USAGE_STATS, BackendImplementation.SHIZUKU -> {
@@ -126,6 +127,13 @@ object AppLockManager {
             }
 
             null -> {
+                if (failedService == AppLockAccessibilityService::class.java) {
+                    Log.d(
+                        TAG,
+                        "Accessibility Service stopped. Waiting for system restart or manual re-enable."
+                    )
+                    return
+                }
                 showNoPermissionsToast(context)
                 return
             }
