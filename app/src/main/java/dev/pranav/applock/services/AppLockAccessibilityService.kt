@@ -169,8 +169,8 @@ class AppLockAccessibilityService : AccessibilityService() {
                 recentsOpen = true
             }
 
-            isHomeScreenTransition(event) -> {
-                Log.d(TAG, "Transitioning to home screen")
+            isHomeScreenTransition(event) && recentsOpen -> {
+                Log.d(TAG, "Transitioning to home screen from recents")
                 recentsOpen = false
                 clearTemporarilyUnlockedAppIfNeeded()
             }
@@ -247,6 +247,12 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     private fun processPackageLocking(packageName: String, event: AccessibilityEvent) {
+        // Check for grace period first
+        if (AppLockManager.checkAndRestoreRecentlyLeftApp(packageName)) {
+            // If restored, we don't need to do anything else, it's efficiently unlocked
+            // But we continue to letting the logic flow, checkAndLockApp will handle "temporarilyUnlocked" check
+        }
+
         val currentForegroundPackage = packageName
         val triggeringPackage = lastForegroundPackage
         lastForegroundPackage = currentForegroundPackage
@@ -264,8 +270,9 @@ class AppLockAccessibilityService : AccessibilityService() {
         ) {
             Log.d(
                 TAG,
-                "Switched from unlocked app $unlockedApp to $currentForegroundPackage. clearing temporary unlock."
+                "Switched from unlocked app $unlockedApp to $currentForegroundPackage. Setting grace period tracking."
             )
+            AppLockManager.setRecentlyLeftApp(unlockedApp)
             AppLockManager.clearTemporarilyUnlockedApp()
         }
 

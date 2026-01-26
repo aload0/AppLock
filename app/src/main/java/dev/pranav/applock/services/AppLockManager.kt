@@ -25,7 +25,10 @@ object AppLockConstants {
         "com.android.intentresolver",
         "com.google.android.permissioncontroller",
         "android.uid.system:1000",
-        "com.google.android.googlequicksearchbox"
+        "com.google.android.googlequicksearchbox",
+        "android",
+        "com.google.android.gms",
+        "com.google.android.webview"
     )
 
     val ADMIN_CONFIG_CLASSES = setOf(
@@ -65,6 +68,36 @@ object AppLockManager {
     val appUnlockTimes = ConcurrentHashMap<String, Long>()
     val isLockScreenShown = AtomicBoolean(false)
     var currentBiometricState: Any? = null
+
+    // Grace period tracking
+    private var recentlyLeftApp: String = ""
+    private var recentlyLeftTime: Long = 0L
+    private const val GRACE_PERIOD_MS = 300L
+
+    fun setRecentlyLeftApp(packageName: String) {
+        recentlyLeftApp = packageName
+        recentlyLeftTime = System.currentTimeMillis()
+        Log.d(TAG, "Left app $packageName at $recentlyLeftTime")
+    }
+
+    fun checkAndRestoreRecentlyLeftApp(packageName: String): Boolean {
+        // If we are returning to the same app we just left within the grace period
+        if (packageName == recentlyLeftApp && packageName.isNotEmpty()) {
+            val elapsed = System.currentTimeMillis() - recentlyLeftTime
+            if (elapsed <= GRACE_PERIOD_MS) {
+                Log.d(TAG, "Restoring unlock state for $packageName (elapsed: ${elapsed}ms)")
+                temporarilyUnlockedApp = packageName
+                // Clear the tracking so it doesn't trigger again inappropriately
+                recentlyLeftApp = ""
+                recentlyLeftTime = 0L
+                return true
+            } else {
+                Log.d(TAG, "Grace period expired for $packageName (elapsed: ${elapsed}ms)")
+                recentlyLeftApp = "" // Expired
+            }
+        }
+        return false
+    }
 
     private val serviceRestartAttempts = ConcurrentHashMap<String, Int>()
     private val lastRestartTime = ConcurrentHashMap<String, Long>()
