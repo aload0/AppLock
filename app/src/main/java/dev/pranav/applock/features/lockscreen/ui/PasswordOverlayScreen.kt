@@ -107,28 +107,28 @@ class PasswordOverlayActivity : FragmentActivity() {
         }
     }
 
-    
+
     private fun setupWindow() {
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-            WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-            WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON or
-            WindowManager.LayoutParams.FLAG_SECURE
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_SECURE
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
         }
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             window.setHideOverlayWindows(true)
         }
 
 
         val layoutParams = window.attributes
-        layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY 
-        
+        layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+
         if (appLockRepository.shouldUseMaxBrightness()) {
             layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
         }
@@ -321,6 +321,9 @@ fun PasswordOverlayScreen(
     val screenHeight = windowInfo.containerSize.height
     val isLandscape = screenWidth > screenHeight
 
+    val configuration = LocalConfiguration.current
+    val screenHeightDp = configuration.screenHeightDp.dp
+
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surfaceContainer
@@ -410,7 +413,9 @@ fun PasswordOverlayScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Spacer(modifier = Modifier.height(48.dp))
+                // Dynamic spacer for small screens
+                val topSpacerHeight = if (screenHeightDp < 600.dp) 12.dp else 48.dp
+                Spacer(modifier = Modifier.height(topSpacerHeight))
 
                 Text(
                     text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
@@ -655,12 +660,25 @@ fun KeypadSection(
         }
     }
 
+    // Calculate available height for keypad (heuristic)
+    // 4 rows of buttons + 3 spacings + biometric button (optional)
+    // Estimate top content takes ~200dp
+    val estimatedTopContentHeight = 220.dp
+    val availableHeight = screenHeightDp - estimatedTopContentHeight
+
     val buttonSize =
-        remember(screenWidthDp, screenHeightDp, isLandscape, buttonSpacing, horizontalPadding) {
+        remember(
+            screenWidthDp,
+            screenHeightDp,
+            isLandscape,
+            buttonSpacing,
+            horizontalPadding,
+            showBiometricButton
+        ) {
             if (isLandscape) {
-                val availableHeight = screenHeightDp * 0.8f
+                val availableLandscapeHeight = screenHeightDp * 0.8f
                 val totalVerticalSpacing = buttonSpacing * 3
-                val heightBasedSize = (availableHeight - totalVerticalSpacing) / 4f
+                val heightBasedSize = (availableLandscapeHeight - totalVerticalSpacing) / 4f
 
                 val availableWidth = (screenWidthDp * 0.45f)
                 val totalHorizontalSpacing = buttonSpacing * 2
@@ -669,8 +687,18 @@ fun KeypadSection(
                 minOf(heightBasedSize, widthBasedSize)
             } else {
                 val availableWidth = screenWidthDp - (horizontalPadding * 2)
-                val totalSpacing = buttonSpacing * 2
-                (availableWidth - totalSpacing) / 3.5f
+                val totalHorizontalSpacing = buttonSpacing * 2
+                val widthBasedSize = (availableWidth - totalHorizontalSpacing) / 3.5f
+
+                // Height constraint for portrait
+                val totalVerticalSpacing = buttonSpacing * 3
+                // If biometric button is shown, it takes extra space, but it's floating or above?
+                // In the current layout, it's inside the column at the top.
+                val biometricAllowance = if (showBiometricButton) 60.dp else 0.dp
+                val heightBasedSize =
+                    (availableHeight - totalVerticalSpacing - biometricAllowance) / 4f
+
+                minOf(widthBasedSize, heightBasedSize)
             }
         }
 
@@ -722,6 +750,8 @@ fun KeypadSection(
             Modifier
                 .padding(horizontal = horizontalPadding)
                 .navigationBarsPadding()
+                // Add a small bottom padding to ensure it doesn't touch the edge
+                .padding(bottom = 8.dp)
         }
     ) {
         if (showBiometricButton) {

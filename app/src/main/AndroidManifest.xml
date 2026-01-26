@@ -57,6 +57,7 @@
             android:name=".features.lockscreen.ui.PasswordOverlayActivity"
             android:excludeFromRecents="true"
             android:exported="false"
+            android:taskAffinity=""
             android:theme="@android:style/Theme.Material.NoActionBar.TranslucentDecor" />
 
         <activity
