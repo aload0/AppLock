@@ -11,54 +11,18 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumFlexibleTopAppBar
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.rounded.Forum
+import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -84,10 +48,7 @@ import dev.pranav.applock.core.utils.hasUsagePermission
 import dev.pranav.applock.core.utils.isAccessibilityServiceEnabled
 import dev.pranav.applock.core.utils.openAccessibilitySettings
 import dev.pranav.applock.data.repository.BackendImplementation
-import dev.pranav.applock.ui.components.AccessibilityServiceGuideDialog
-import dev.pranav.applock.ui.components.AntiUninstallAccessibilityPermissionDialog
-import dev.pranav.applock.ui.components.ShizukuPermissionDialog
-import dev.pranav.applock.ui.components.UsageStatsPermission
+import dev.pranav.applock.ui.components.*
 import rikka.shizuku.Shizuku
 
 @OptIn(
@@ -273,63 +234,27 @@ fun MainScreen(
     var showCommunityLink by remember { mutableStateOf(appLockRepository.isShowCommunityLink()) }
 
     if (showCommunityLink && !showAccessibilityDialog && !showShizukuDialog && !showUsageStatsDialog && !showAntiUninstallAccessibilityDialog && !showAntiUninstallDeviceAdminDialog && !showOverlayDialog) {
-        AlertDialog(
-            onDismissRequest = { appLockRepository.setCommunityLinkShown(true) },
-            title = { Text(stringResource(R.string.main_screen_join_community_dialog_title)) },
-            text = { Text(stringResource(R.string.main_screen_join_community_dialog_text)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    appLockRepository.setCommunityLinkShown(true)
-                    showCommunityLink = false
-                    context.startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            "https://discord.gg/46wCMRVAre".toUri() // Keep this as is, not a user-facing string
-                        )
-                    )
-                }) {
-                    Text(stringResource(R.string.main_screen_join_community_join_discord_button))
-                }
+        CommunityDialog(
+            onDismiss = {
+                appLockRepository.setCommunityLinkShown(true)
+                showCommunityLink = false
             },
-            dismissButton = {
-                TextButton(onClick = {
-                    appLockRepository.setCommunityLinkShown(true)
-                    showCommunityLink = false
-                }) {
-                    Text(stringResource(R.string.main_screen_join_community_dismiss_button))
-                }
+            onJoin = {
+                appLockRepository.setCommunityLinkShown(true)
+                showCommunityLink = false
+                context.startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        "https://discord.gg/46wCMRVAre".toUri()
+                    )
+                )
             }
         )
     }
 
     var showDonateDialog by remember { mutableStateOf(appLockRepository.isShowDonateLink()) }
     if (showDonateDialog && !showAccessibilityDialog && !showShizukuDialog && !showUsageStatsDialog && !showAntiUninstallAccessibilityDialog && !showAntiUninstallDeviceAdminDialog && !showCommunityLink && !showOverlayDialog) {
-        AlertDialog(
-            onDismissRequest = { showDonateDialog = false },
-            title = { Text(stringResource(R.string.main_screen_support_development_dialog_title)) },
-            text = { Text(stringResource(R.string.support_development_text)) },
-            confirmButton = {
-                FilledTonalButton(
-                    onClick = {
-                        context.startActivity(
-                            Intent(
-                                Intent.ACTION_VIEW,
-                                "https://paypal.me/pranavpurwar".toUri() // Keep this as is, not a user-facing string
-                            )
-                        )
-                        showDonateDialog = false
-                        appLockRepository.setShowDonateLink(false)
-                    }
-                ) { Text(stringResource(R.string.main_screen_support_development_donate_button)) }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showDonateDialog = false
-                    appLockRepository.setShowDonateLink(false)
-                }) { Text(stringResource(R.string.cancel_button)) }
-            },
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        )
+        DonateModalBottomSheet { showDonateDialog = false }
     }
 
     Scaffold(
@@ -664,4 +589,50 @@ private fun AppItem(
             }
         )
     }
+}
+
+@Composable
+private fun CommunityDialog(
+    onDismiss: () -> Unit,
+    onJoin: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                Icons.Rounded.Groups,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text(
+                text = stringResource(R.string.join_community),
+                style = MaterialTheme.typography.headlineSmall
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.join_community_desc),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        confirmButton = {
+            Button(onClick = onJoin) {
+                Icon(
+                    Icons.Rounded.Forum,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.join_discord))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.maybe_later))
+            }
+        }
+    )
 }

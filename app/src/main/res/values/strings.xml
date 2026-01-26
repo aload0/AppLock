@@ -263,9 +263,29 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     </string>
     <string name="confirm_button">Confirm</string>
     <string name="enable_button">Enable</string>
+    <string name="settings_screen_advanced_title">Advanced</string>
+    <string name="settings_screen_export_logs_title">Export Logs</string>
+    <string name="settings_screen_export_logs_desc">Save the last 1000 lines of app logs for debugging.</string>
+    <string name="settings_screen_export_logs_success">Logs exported</string>
+    <string name="settings_screen_export_logs_error">Failed to export logs</string>
+    <string name="settings_screen_version_template">Version %1$s</string>
 
     <!-- Pattern Lock Strings -->
     <string name="enter_pattern_to_continue">Draw pattern to continue</string>
     <string name="incorrect_pattern_try_again">Incorrect pattern. Please try again.</string>
 
+    <string name="join_community">Join Community</string>
+    <string name="join_community_desc">Join our Discord community to connect with other users, share feedback, and stay updated on the latest news and features.</string>
+    <string name="join_discord">Join Discord</string>
+    <string name="maybe_later">Maybe Later</string>
+
+    <string name="donate">Donate</string>
+    <string name="donate_subtitle">Keep Reef free and ad-free forever</string>
+    <string name="donate_dialog_title">Support Development</string>
+    <string name="donate_dialog_message">
+        Hi, I’m Pranav. I’m a student developer building AppLock in my spare time to keep it private and ad-free for everyone.
+        Juggling this project with my studies is a challenge, but your support makes it possible.
+        If AppLock has helped you, please consider a small donation—any amount means the world to me and keeps this project alive.
+        Thank you for believing in my work!
+    </string>
 </resources>

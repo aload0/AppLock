@@ -1,10 +1,6 @@
 package dev.pranav.applock.ui.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import dev.pranav.applock.R
@@ -44,24 +39,24 @@ fun AccessibilityServiceGuideDialog(
             ) {
                 Text(
                     text = stringResource(R.string.accessibility_guide_dialog_text_1),
-                    textAlign = TextAlign.Center
+                    //textAlign = TextAlign.Center
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = stringResource(R.string.accessibility_guide_dialog_text_2),
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(R.string.accessibility_guide_dialog_text_3),
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                //Text(
+                //    text = stringResource(R.string.accessibility_guide_dialog_text_2),
+                //    textAlign = TextAlign.Start,
+                //    modifier = Modifier.fillMaxWidth()
+                //)
+                //
+                //Spacer(modifier = Modifier.height(8.dp))
+                //
+                //Text(
+                //    text = stringResource(R.string.accessibility_guide_dialog_text_3),
+                //    textAlign = TextAlign.Start,
+                //    modifier = Modifier.fillMaxWidth()
+                //)
             }
         },
         confirmButton = {

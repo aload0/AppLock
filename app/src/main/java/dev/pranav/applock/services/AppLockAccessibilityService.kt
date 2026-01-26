@@ -277,7 +277,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         }
 
         Log.d(TAG, event.toString())
-        checkAndLockApp(currentForegroundPackage, triggeringPackage, event.eventTime)
+        checkAndLockApp(currentForegroundPackage, triggeringPackage, System.currentTimeMillis())
     }
 
     private fun shouldAccessibilityHandleLocking(): Boolean {
