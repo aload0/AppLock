@@ -1,0 +1,10 @@
+* Add option to export audit logs
+* Add option to export debug logs
+
+* Fix applock bypass with floating windows (#61, #108, #78)
+* Fix navigation issues using fingerprint (#8, #141, #67, #113)
+* fix time calculation in unlock timer (#135, #142, #140, #114, #110, #106)
+* Fix bypass with recents screen (#126, #125, #130, #73)
+* Fix false triggers (#137)
+---
+**Full Changelog**: https://github.com/PranavPurwar/AppLock/compare/v2.0.0...v2.2.1
