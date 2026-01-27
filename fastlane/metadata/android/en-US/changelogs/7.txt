@@ -13,8 +13,3 @@
 * Improve animations
 * Improve app design
 * Update libraries
-
----
-
-Thank you for choosing AppLock for your privacy needs. We welcome your feedback and suggestions
-through GitHub issues!
