@@ -9,13 +9,6 @@
 * Allow system apps to be locked
 * Fix items hidden under navbar (#94)
 * Improve recents detection
-* Simplify user flow
-* Improve settings screen
 * Add error handling to safely catch and log accessibility service crashes
 * Fix locking issues
 * Ask password for disabling anti uninstall
-
----
-
-Thank you for choosing AppLock for your privacy needs. We welcome your feedback and suggestions
-through GitHub issues!
