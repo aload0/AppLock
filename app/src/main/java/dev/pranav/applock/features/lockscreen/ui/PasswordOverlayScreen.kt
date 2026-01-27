@@ -283,6 +283,20 @@ class PasswordOverlayActivity : FragmentActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        if (!isBiometricPromptShowingLocal && !movedToBackground) {
+            AppLockManager.isLockScreenShown.set(false)
+            AppLockManager.reportBiometricAuthFinished()
+            finish()
+        }
+    }
+
+    override fun onResumeFragments() {
+        super.onResumeFragments()
+        AppLockManager.isLockScreenShown.set(true)
+    }
+
     override fun onStop() {
         super.onStop()
         movedToBackground = true

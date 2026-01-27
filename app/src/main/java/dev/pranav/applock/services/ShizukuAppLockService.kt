@@ -16,6 +16,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import dev.pranav.applock.R
 import dev.pranav.applock.core.broadcast.DeviceAdmin
+import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.data.repository.AppLockRepository
 import dev.pranav.applock.data.repository.AppLockRepository.Companion.shouldStartService
@@ -44,12 +45,11 @@ class ShizukuAppLockService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "ShizukuAppLockService created")
         AppLockManager.isLockScreenShown.set(false)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "ShizukuAppLockService started. Running: $isServiceRunning")
+        LogUtils.d(TAG, "ShizukuAppLockService started. Running: $isServiceRunning")
 
         if (isServiceRunning) return START_STICKY
         isServiceRunning = true
@@ -83,12 +83,12 @@ class ShizukuAppLockService : Service() {
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "ShizukuAppLockService destroyed.")
+        LogUtils.d(TAG, "ShizukuAppLockService killed.")
 
         shizukuActivityManager?.stop()
 
         if (isServiceRunning && shouldStartService(appLockRepository, this::class.java)) {
-            Log.d(TAG, "Service destroyed unexpectedly, starting fallback")
+            LogUtils.d(TAG, "Service destroyed unexpectedly, starting fallback")
             AppLockManager.startFallbackServices(this, ShizukuAppLockService::class.java)
         }
 
@@ -100,7 +100,7 @@ class ShizukuAppLockService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onUnbind(intent: Intent?): Boolean {
-        Log.d(TAG, "ShizukuAppLockService unbound. Checking for necessary restart.")
+        LogUtils.d(TAG, "ShizukuAppLockService unbound. Checking for necessary restart.")
         if (shouldStartService(appLockRepository, this::class.java)) {
             AppLockManager.startFallbackServices(this, ShizukuAppLockService::class.java)
         }
@@ -170,14 +170,14 @@ class ShizukuAppLockService : Service() {
 
                 val triggerExclusions = appLockRepository.getTriggerExcludedApps()
                 if (triggeringPackage in triggerExclusions) {
-                    Log.d(
+                    LogUtils.d(
                         TAG,
                         "Trigger app $triggeringPackage is excluded, skipping lock for $packageName"
                     )
                     return@ShizukuActivityManager
                 }
 
-                Log.d(TAG, "Current package=$packageName, trigger=$triggeringPackage")
+                LogUtils.d(TAG, "Current package=$packageName, trigger=$triggeringPackage")
                 checkAndLockApp(packageName, triggeringPackage, timeMillis)
             }
     }
@@ -190,7 +190,7 @@ class ShizukuAppLockService : Service() {
         val unlockDurationMinutes = appLockRepository.getUnlockTimeDuration()
         val unlockTimestamp = AppLockManager.appUnlockTimes[packageName] ?: 0L
 
-        Log.d(
+        LogUtils.d(
             TAG,
             "checkAndLockApp: pkg=$packageName, duration=$unlockDurationMinutes min, unlockTime=$unlockTimestamp, currentTime=$currentTime, isLockScreenShown=${AppLockManager.isLockScreenShown.get()}"
         )
@@ -204,7 +204,7 @@ class ShizukuAppLockService : Service() {
 
             val elapsedMillis = currentTime - unlockTimestamp
 
-            Log.d(
+            LogUtils.d(
                 TAG,
                 "Grace period check: elapsed=${elapsedMillis}ms (${elapsedMillis / 1000}s), duration=${durationMillis}ms (${durationMillis / 1000}s)"
             )
@@ -213,16 +213,16 @@ class ShizukuAppLockService : Service() {
                 return
             }
 
-            Log.d(TAG, "Unlock grace period expired for $packageName. Clearing timestamp.")
+            LogUtils.d(TAG, "Unlock grace period expired for $packageName. Clearing timestamp.")
             AppLockManager.appUnlockTimes.remove(packageName)
         }
 
         if (AppLockManager.isLockScreenShown.get()) {
-            Log.d(TAG, "Lock screen already shown, skipping")
+            LogUtils.d(TAG, "Lock screen already shown, skipping")
             return
         }
 
-        Log.d(TAG, "Locked app detected: $packageName. Showing overlay.")
+        LogUtils.d(TAG, "Locked app detected: $packageName. Showing overlay.")
         AppLockManager.isLockScreenShown.set(true)
 
         val intent = Intent(this, PasswordOverlayActivity::class.java).apply {

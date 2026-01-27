@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.data.repository.AppLockRepository
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.sui.Sui
@@ -21,6 +22,8 @@ class AppLockApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         initializeComponents()
+
+        LogUtils.initialize(this)
     }
 
     private fun initializeHiddenApiBypass() {

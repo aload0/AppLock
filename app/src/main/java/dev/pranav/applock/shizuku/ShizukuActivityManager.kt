@@ -4,12 +4,8 @@ import android.app.ActivityManager
 import android.app.ActivityManagerNative
 import android.app.IActivityManager
 import android.app.IActivityTaskManager
-import android.content.BroadcastReceiver
-import android.content.ComponentName
-import android.content.Context
+import android.content.*
 import android.content.Context.RECEIVER_EXPORTED
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
@@ -18,6 +14,7 @@ import android.util.Log
 import android.view.Display
 import android.view.IWindowManager
 import dev.pranav.applock.core.broadcast.DeviceUnlockReceiver
+import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.data.repository.AppLockRepository
 import dev.pranav.applock.data.repository.BackendImplementation
 import dev.pranav.applock.services.AppLockManager
@@ -50,7 +47,7 @@ class ShizukuActivityManager(
             when (intent?.action) {
                 Intent.ACTION_CLOSE_SYSTEM_DIALOGS -> {
                     val reason = intent.getStringExtra("reason")
-                    Log.d(TAG, "System dialog closed, reason: $reason")
+                    LogUtils.d(TAG, "System dialog closed, reason: $reason")
                     if (lastForegroundApp == topActivity?.packageName && topActivity?.className == "com.android.launcher3.uioverrides.QuickstepLauncher") {
                         AppLockManager.clearTemporarilyUnlockedApp()
                     }
@@ -148,7 +145,7 @@ class ShizukuActivityManager(
         // If we should lock apps on return (home button pressed, device locked, etc.)
         // then trigger app lock for any new foreground app
         if (shouldLockAppsOnReturn && packageName != lastForegroundApp) {
-            Log.d(TAG, "Should lock apps on return - triggering for: $packageName")
+            LogUtils.d(TAG, "Should lock apps on return - triggering for: $packageName")
             shouldLockAppsOnReturn = false // Reset the flag
 
             val timeMillis = System.currentTimeMillis()
@@ -163,7 +160,7 @@ class ShizukuActivityManager(
 
             // Check if previous app was in trigger exclusions
             if (lastForegroundApp in triggerExclusions) {
-                Log.d(
+                LogUtils.d(
                     TAG,
                     "Previous app $lastForegroundApp is excluded, skipping app lock for $packageName"
                 )
@@ -172,7 +169,7 @@ class ShizukuActivityManager(
             }
 
             val timeMillis = System.currentTimeMillis()
-            Log.d(TAG, "Foreground app changed to: $packageName, class: $className")
+            LogUtils.d(TAG, "Foreground app changed to: $packageName, class: $className")
 
             lastForegroundApp = packageName
             onForegroundAppChanged(packageName, className, timeMillis)

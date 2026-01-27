@@ -15,6 +15,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.core.content.getSystemService
 import dev.pranav.applock.core.broadcast.DeviceAdmin
+import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.core.utils.enableAccessibilityServiceWithShizuku
 import dev.pranav.applock.data.repository.AppLockRepository
@@ -50,13 +51,11 @@ class AppLockAccessibilityService : AccessibilityService() {
         override fun onReceive(context: android.content.Context?, intent: Intent?) {
             try {
                 if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                    Log.d(TAG, "Screen off detected. Resetting AppLock state.")
+                    LogUtils.d(TAG, "Screen off detected. Resetting AppLock state.")
                     AppLockManager.isLockScreenShown.set(false)
                     AppLockManager.clearTemporarilyUnlockedApp()
                     // Optional: Clear all unlock timestamps to force re-lock on next unlock
                     AppLockManager.appUnlockTimes.clear()
-                } else if (intent?.action == Intent.ACTION_USER_PRESENT) {
-                    Log.d(TAG, "User present.")
                 }
             } catch (e: Exception) {
                 logError("Error in screenStateReceiver", e)
@@ -140,7 +139,7 @@ class AppLockAccessibilityService : AccessibilityService() {
 
         // Skip processing if recents are open
         if (recentsOpen) {
-            Log.d(TAG, "Recents opened, ignoring accessibility event")
+            LogUtils.d(TAG, "Recents opened, ignoring accessibility event")
             return
         }
 
@@ -165,24 +164,24 @@ class AppLockAccessibilityService : AccessibilityService() {
 
         when {
             isRecentlyOpened -> {
-                Log.d(TAG, "Entering recents")
+                LogUtils.d(TAG, "Entering recents")
                 recentsOpen = true
             }
 
             isHomeScreenTransition(event) && recentsOpen -> {
-                Log.d(TAG, "Transitioning to home screen from recents")
+                LogUtils.d(TAG, "Transitioning to home screen from recents")
                 recentsOpen = false
                 clearTemporarilyUnlockedAppIfNeeded()
             }
 
             isHomeScreen -> {
-                Log.d(TAG, "On home screen")
+                LogUtils.d(TAG, "On home screen")
                 recentsOpen = false
                 clearTemporarilyUnlockedAppIfNeeded()
             }
 
             isAppSwitchedFromRecents(event) -> {
-                Log.d(TAG, "App switched from recents")
+                LogUtils.d(TAG, "App switched from recents")
                 recentsOpen = false
                 clearTemporarilyUnlockedAppIfNeeded(event.packageName?.toString())
             }
@@ -216,7 +215,7 @@ class AppLockAccessibilityService : AccessibilityService() {
                         newPackage !in appLockRepository.getTriggerExcludedApps())
 
         if (shouldClear) {
-            Log.d(TAG, "Clearing temporarily unlocked app")
+            LogUtils.d(TAG, "Clearing temporarily unlocked app")
             AppLockManager.clearTemporarilyUnlockedApp()
         }
     }
@@ -268,7 +267,7 @@ class AppLockAccessibilityService : AccessibilityService() {
             unlockedApp != currentForegroundPackage &&
             currentForegroundPackage !in appLockRepository.getTriggerExcludedApps()
         ) {
-            Log.d(
+            LogUtils.d(
                 TAG,
                 "Switched from unlocked app $unlockedApp to $currentForegroundPackage. Setting grace period tracking."
             )
@@ -276,7 +275,7 @@ class AppLockAccessibilityService : AccessibilityService() {
             AppLockManager.clearTemporarilyUnlockedApp()
         }
 
-        Log.d(TAG, event.toString())
+        LogUtils.d(TAG, event.toString())
         checkAndLockApp(currentForegroundPackage, triggeringPackage, System.currentTimeMillis())
     }
 
@@ -316,7 +315,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         val unlockDurationMinutes = appLockRepository.getUnlockTimeDuration()
         val unlockTimestamp = AppLockManager.appUnlockTimes[packageName] ?: 0L
 
-        Log.d(
+        LogUtils.d(
             TAG,
             "checkAndLockApp: pkg=$packageName, duration=$unlockDurationMinutes min, unlockTime=$unlockTimestamp, currentTime=$currentTime, isLockScreenShown=${AppLockManager.isLockScreenShown.get()}"
         )
@@ -330,7 +329,7 @@ class AppLockAccessibilityService : AccessibilityService() {
 
             val elapsedMillis = currentTime - unlockTimestamp
 
-            Log.d(
+            LogUtils.d(
                 TAG,
                 "Grace period check: elapsed=${elapsedMillis}ms (${elapsedMillis / 1000}s), duration=${durationMillis}ms (${durationMillis / 1000}s)"
             )
@@ -339,7 +338,7 @@ class AppLockAccessibilityService : AccessibilityService() {
                 return
             }
 
-            Log.d(TAG, "Unlock grace period expired for $packageName. Clearing timestamp.")
+            LogUtils.d(TAG, "Unlock grace period expired for $packageName. Clearing timestamp.")
             AppLockManager.appUnlockTimes.remove(packageName)
             AppLockManager.clearTemporarilyUnlockedApp()
         }
@@ -347,7 +346,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         if (AppLockManager.isLockScreenShown.get() ||
             AppLockManager.currentBiometricState == BiometricState.AUTH_STARTED
         ) {
-            Log.d(TAG, "Lock screen already shown or biometric auth in progress, skipping")
+            LogUtils.d(TAG, "Lock screen already shown or biometric auth in progress, skipping")
             return
         }
 
@@ -355,7 +354,7 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     private fun showLockScreenOverlay(packageName: String, triggeringPackage: String) {
-        Log.d(TAG, "Locked app detected: $packageName. Showing overlay.")
+        LogUtils.d(TAG, "Locked app detected: $packageName. Showing overlay.")
         AppLockManager.isLockScreenShown.set(true)
 
         val intent = Intent(this, PasswordOverlayActivity::class.java).apply {
@@ -540,7 +539,7 @@ class AppLockAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {
         try {
-            Log.d(TAG, "Accessibility service interrupted")
+            LogUtils.d(TAG, "Accessibility service interrupted")
         } catch (e: Exception) {
             logError("Error in onInterrupt", e)
         }
@@ -567,7 +566,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         try {
             super.onDestroy()
             isServiceRunning = false
-            Log.d(TAG, "Accessibility service destroyed")
+            LogUtils.d(TAG, "Accessibility service destroyed")
 
             try {
                 unregisterReceiver(screenStateReceiver)

@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -84,7 +83,6 @@ fun MainScreen(
         applockEnabled = appLockRepository.isProtectEnabled()
 
         if (appLockRepository.isAntiUninstallEnabled()) {
-            Log.d("MainScreen", context.getString(R.string.main_screen_anti_uninstall_log))
             if (!context.isAccessibilityServiceEnabled()) {
                 showAntiUninstallAccessibilityDialog = true
             } else if (!dpm.isAdminActive(component)) {

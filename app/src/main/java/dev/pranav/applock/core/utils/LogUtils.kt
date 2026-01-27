@@ -1,15 +1,35 @@
 package dev.pranav.applock.core.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
 import java.io.File
-import java.io.FileWriter
+import java.time.Instant
 
+@SuppressLint("StaticFieldLeak")
 object LogUtils {
     private const val TAG = "LogUtils"
     private const val FILE_NAME = "app_logs.txt"
+    private const val SECURITY_LOGS = "audit_log.txt"
+    private lateinit var context: Context
+
+    fun initialize(application: Context) {
+        context = application
+    }
+
+    fun d(tag: String, message: String) {
+        val file = File(context.filesDir, SECURITY_LOGS)
+
+        if (!file.exists()) {
+            file.createNewFile()
+        }
+
+        file.appendText(Instant.now().toString() + " D " + tag + ": " + message + "\n")
+
+        Log.d(tag, message)
+    }
 
     fun exportLogs(context: Context): Uri? {
         val file = File(context.cacheDir, FILE_NAME)
@@ -20,17 +40,20 @@ object LogUtils {
             }
             file.createNewFile()
 
-            // Run logcat command to get logs
-            val process = Runtime.getRuntime().exec("logcat -d")
-            val bufferedReader = process.inputStream.bufferedReader()
-            val writer = FileWriter(file)
+            val pid = android.os.Process.myPid()
+            val process = Runtime.getRuntime().exec("logcat -d --pid $pid")
 
-            // Write logs to file
-            bufferedReader.use { reader ->
-                writer.use { out ->
-                    var line: String?
-                    while (reader.readLine().also { line = it } != null) {
-                        out.write(line + "\n")
+            val excludedTags = listOf("ApkAssets", "SystemServiceRegistry")
+
+            process.inputStream.bufferedReader().use { reader ->
+                file.writer().use { writer ->
+                    reader.forEachLine { line ->
+                        // Check if the line contains ANY of our excluded words
+                        val isNoise = excludedTags.any { line.contains(it) }
+
+                        if (!isNoise) {
+                            writer.write(line + "\n")
+                        }
                     }
                 }
             }

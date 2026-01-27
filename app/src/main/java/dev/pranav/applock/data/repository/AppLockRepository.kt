@@ -11,7 +11,7 @@ class AppLockRepository(private val context: Context) {
 
     private val preferencesRepository = PreferencesRepository(context)
     private val lockedAppsRepository = LockedAppsRepository(context)
-    private val backendServiceManager = BackendServiceManager(context)
+    private val backendServiceManager = BackendServiceManager()
 
     fun getLockedApps(): Set<String> = lockedAppsRepository.getLockedApps()
     fun addLockedApp(packageName: String) = lockedAppsRepository.addLockedApp(packageName)

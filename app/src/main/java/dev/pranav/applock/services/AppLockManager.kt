@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.data.repository.BackendImplementation
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -77,7 +78,7 @@ object AppLockManager {
     fun setRecentlyLeftApp(packageName: String) {
         recentlyLeftApp = packageName
         recentlyLeftTime = System.currentTimeMillis()
-        Log.d(TAG, "Left app $packageName at $recentlyLeftTime")
+        LogUtils.d(TAG, "Left app $packageName at $recentlyLeftTime")
     }
 
     fun checkAndRestoreRecentlyLeftApp(packageName: String): Boolean {
@@ -85,14 +86,14 @@ object AppLockManager {
         if (packageName == recentlyLeftApp && packageName.isNotEmpty()) {
             val elapsed = System.currentTimeMillis() - recentlyLeftTime
             if (elapsed <= GRACE_PERIOD_MS) {
-                Log.d(TAG, "Restoring unlock state for $packageName (elapsed: ${elapsed}ms)")
+                LogUtils.d(TAG, "Restoring unlock state for $packageName (elapsed: ${elapsed}ms)")
                 temporarilyUnlockedApp = packageName
                 // Clear the tracking so it doesn't trigger again inappropriately
                 recentlyLeftApp = ""
                 recentlyLeftTime = 0L
                 return true
             } else {
-                Log.d(TAG, "Grace period expired for $packageName (elapsed: ${elapsed}ms)")
+                LogUtils.d(TAG, "Grace period expired for $packageName (elapsed: ${elapsed}ms)")
                 recentlyLeftApp = "" // Expired
             }
         }
@@ -110,7 +111,7 @@ object AppLockManager {
     fun unlockApp(packageName: String) {
         temporarilyUnlockedApp = packageName
         appUnlockTimes[packageName] = System.currentTimeMillis()
-        Log.d(
+        LogUtils.d(
             TAG,
             "App $packageName unlocked at timestamp: ${appUnlockTimes[packageName]}, current time: ${System.currentTimeMillis()}"
         )
@@ -146,9 +147,6 @@ object AppLockManager {
         when (targetBackend) {
             BackendImplementation.ACCESSIBILITY -> {
                 if (AppLockAccessibilityService.isServiceRunning) return
-                // Check if accessibility service is enabled in system settings
-                // But don't show toast if we are just restarting or if it's not enabled yet
-                // The user needs to enable it manually anyway if they chose this backend.
                 Log.d(
                     TAG,
                     "Attempting ACCESSIBILITY backend restart. (Manually enabled in settings)"
@@ -161,7 +159,7 @@ object AppLockManager {
 
             null -> {
                 if (failedService == AppLockAccessibilityService::class.java) {
-                    Log.d(
+                    LogUtils.d(
                         TAG,
                         "Accessibility Service stopped. Waiting for system restart or manual re-enable."
                     )
@@ -180,13 +178,13 @@ object AppLockManager {
             .forEach {
                 context.stopService(Intent(context, it))
             }
-        Log.d(TAG, "Stopped all main app lock services except ${excludeService.simpleName}.")
+        LogUtils.d(TAG, "Stopped all main app lock services except ${excludeService.simpleName}.")
     }
 
     fun resetRestartAttempts(serviceName: String) {
         serviceRestartAttempts.remove(serviceName)
         lastRestartTime.remove(serviceName)
-        Log.d(TAG, "Reset restart attempts for $serviceName")
+        LogUtils.d(TAG, "Reset restart attempts for $serviceName")
     }
 
     private fun showNoPermissionsToast(context: Context) {
@@ -242,7 +240,7 @@ object AppLockManager {
                 else -> return
             }
 
-            Log.d(TAG, "Starting $backend service as fallback.")
+            LogUtils.d(TAG, "Starting $backend service as fallback.")
             context.startService(Intent(context, serviceClass))
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start fallback service for backend: $backend", e)
