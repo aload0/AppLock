@@ -5,8 +5,3 @@
 * Remove fallback dialog and instead try every backend
 * Show toast if none of the backends are configured properly
 * Fix dismiss button not working in join community dialog
-
----
-
-Thank you for choosing AppLock for your privacy needs. We welcome your feedback and suggestions
-through GitHub issues!
