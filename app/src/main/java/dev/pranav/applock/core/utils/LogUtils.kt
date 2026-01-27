@@ -3,6 +3,7 @@ package dev.pranav.applock.core.utils
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.core.content.FileProvider
 import java.io.File
@@ -31,34 +32,41 @@ object LogUtils {
         Log.d(tag, message)
     }
 
-    fun exportLogs(context: Context): Uri? {
+    fun exportAuditLogs(): Uri? {
+        val file = File(context.filesDir, SECURITY_LOGS)
+        return if (file.exists()) {
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+        } else {
+            null
+        }
+    }
+
+    fun exportLogs(): Uri? {
         val file = File(context.cacheDir, FILE_NAME)
         try {
-            // Clear previous logs if file exists
             if (file.exists()) {
                 file.delete()
             }
             file.createNewFile()
 
-            val pid = android.os.Process.myPid()
-            val process = Runtime.getRuntime().exec("logcat -d --pid $pid")
-
-            val excludedTags = listOf("ApkAssets", "SystemServiceRegistry")
+            val process = Runtime.getRuntime().exec("logcat -d")
 
             process.inputStream.bufferedReader().use { reader ->
                 file.writer().use { writer ->
-                    reader.forEachLine { line ->
-                        // Check if the line contains ANY of our excluded words
-                        val isNoise = excludedTags.any { line.contains(it) }
-
-                        if (!isNoise) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        reader.transferTo(writer)
+                    } else {
+                        reader.forEachLine { line ->
                             writer.write(line + "\n")
                         }
                     }
                 }
             }
 
-            // Return Uri using FileProvider
             return FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",

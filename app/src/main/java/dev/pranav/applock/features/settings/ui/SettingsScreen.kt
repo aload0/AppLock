@@ -5,19 +5,24 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
+import androidx.compose.animation.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,7 +54,6 @@ import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
 import kotlin.math.abs
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -57,54 +61,45 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val appLockRepository = remember { AppLockRepository(context) }
+
     var showDialog by remember { mutableStateOf(false) }
     var showUnlockTimeDialog by remember { mutableStateOf(false) }
 
-    val shizukuPermissionLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.settings_screen_shizuku_permission_granted),
-                    Toast.LENGTH_SHORT
-                ).show()
-            } else {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.settings_screen_shizuku_permission_required_desc),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+    val shizukuPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.settings_screen_shizuku_permission_granted),
+                Toast.LENGTH_SHORT
+            ).show()
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.settings_screen_shizuku_permission_required_desc),
+                Toast.LENGTH_SHORT
+            ).show()
         }
-
-    var autoUnlock by remember {
-        mutableStateOf(appLockRepository.isAutoUnlockEnabled())
     }
 
-    var useMaxBrightness by remember {
-        mutableStateOf(appLockRepository.shouldUseMaxBrightness())
-    }
-    var useBiometricAuth by remember {
-        mutableStateOf(appLockRepository.isBiometricAuthEnabled())
-    }
-    var unlockTimeDuration by remember {
-        mutableIntStateOf(appLockRepository.getUnlockTimeDuration())
-    }
+    var autoUnlock by remember { mutableStateOf(appLockRepository.isAutoUnlockEnabled()) }
+    var useMaxBrightness by remember { mutableStateOf(appLockRepository.shouldUseMaxBrightness()) }
+    var useBiometricAuth by remember { mutableStateOf(appLockRepository.isBiometricAuthEnabled()) }
+    var unlockTimeDuration by remember { mutableIntStateOf(appLockRepository.getUnlockTimeDuration()) }
+    var antiUninstallEnabled by remember { mutableStateOf(appLockRepository.isAntiUninstallEnabled()) }
+    var disableHapticFeedback by remember { mutableStateOf(appLockRepository.shouldDisableHaptics()) }
 
-    var antiUninstallEnabled by remember {
-        mutableStateOf(appLockRepository.isAntiUninstallEnabled())
-    }
-    var disableHapticFeedback by remember {
-        mutableStateOf(appLockRepository.shouldDisableHaptics())
-    }
     var showPermissionDialog by remember { mutableStateOf(false) }
     var showDeviceAdminDialog by remember { mutableStateOf(false) }
     var showAccessibilityDialog by remember { mutableStateOf(false) }
 
     val biometricManager = remember { BiometricManager.from(context) }
-
     val isBiometricAvailable = remember {
-        biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK or BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
+        biometricManager.canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG
+        ) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
     if (showDialog) {
@@ -123,12 +118,14 @@ fun SettingsScreen(
                         )
                         showDialog = false
                     }
-                ) { Text(stringResource(R.string.settings_screen_support_development_donate_button)) }
+                ) {
+                    Text(stringResource(R.string.settings_screen_support_development_donate_button))
+                }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showDialog = false
-                }) { Text(stringResource(R.string.cancel_button)) }
+                TextButton(onClick = { showDialog = false }) {
+                    Text(stringResource(R.string.cancel_button))
+                }
             },
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -180,8 +177,6 @@ fun SettingsScreen(
             onConfirm = {
                 showAccessibilityDialog = false
                 openAccessibilitySettings(context)
-
-                // Check if device admin is still needed after accessibility is granted
                 val dpm =
                     context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
                 val component = ComponentName(context, DeviceAdmin::class.java)
@@ -200,9 +195,7 @@ fun SettingsScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = {
-                    Text(stringResource(R.string.settings_screen_title))
-                },
+                title = { Text(stringResource(R.string.settings_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -213,24 +206,23 @@ fun SettingsScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        containerColor = MaterialTheme.colorScheme.surface
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                start = 24.dp,
-                end = 24.dp,
+                start = 16.dp,
+                end = 16.dp,
                 top = innerPadding.calculateTopPadding(),
                 bottom = innerPadding.calculateBottomPadding() + 24.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             item {
                 val packageInfo = remember {
                     try {
@@ -240,102 +232,107 @@ fun SettingsScreen(
                     }
                 }
                 val versionName = packageInfo?.versionName ?: "Unknown"
-
                 Text(
                     text = stringResource(R.string.settings_screen_version_template, versionName),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
                 )
             }
+
             item {
                 DonateButton()
             }
+
             item {
                 SectionTitle(text = stringResource(R.string.settings_screen_lock_screen_customization_title))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-                ) {
-                    Column {
-                        SettingItem(
+            }
+
+            item {
+                SettingsGroup(
+                    items = listOf(
+                        ToggleSettingItem(
                             icon = BrightnessHigh,
                             title = stringResource(R.string.settings_screen_max_brightness_title),
-                            description = stringResource(R.string.settings_screen_max_brightness_desc),
+                            subtitle = stringResource(R.string.settings_screen_max_brightness_desc),
                             checked = useMaxBrightness,
+                            enabled = true,
                             onCheckedChange = { isChecked ->
                                 useMaxBrightness = isChecked
                                 appLockRepository.setUseMaxBrightness(isChecked)
                             }
-                        )
-                        SettingItem(
+                        ),
+                        ToggleSettingItem(
                             icon = if (useBiometricAuth) Fingerprint else FingerprintOff,
                             title = stringResource(R.string.settings_screen_biometric_auth_title),
-                            description = if (isBiometricAvailable) stringResource(R.string.settings_screen_biometric_auth_desc_available) else stringResource(
-                                R.string.settings_screen_biometric_auth_desc_unavailable
-                            ),
+                            subtitle = if (isBiometricAvailable)
+                                stringResource(R.string.settings_screen_biometric_auth_desc_available)
+                            else
+                                stringResource(R.string.settings_screen_biometric_auth_desc_unavailable),
                             checked = useBiometricAuth && isBiometricAvailable,
                             enabled = isBiometricAvailable,
                             onCheckedChange = { isChecked ->
                                 useBiometricAuth = isChecked
                                 appLockRepository.setBiometricAuthEnabled(isChecked)
                             }
-                        )
-                        SettingItem(
+                        ),
+                        ToggleSettingItem(
                             icon = Icons.Default.Vibration,
                             title = stringResource(R.string.settings_screen_haptic_feedback_title),
-                            description = stringResource(R.string.settings_screen_haptic_feedback_desc),
+                            subtitle = stringResource(R.string.settings_screen_haptic_feedback_desc),
                             checked = disableHapticFeedback,
+                            enabled = true,
                             onCheckedChange = { isChecked ->
                                 disableHapticFeedback = isChecked
                                 appLockRepository.setDisableHaptics(isChecked)
                             }
-                        )
-                        SettingItem(
+                        ),
+                        ToggleSettingItem(
                             icon = Icons.Default.ShieldMoon,
                             title = stringResource(R.string.settings_screen_auto_unlock_title),
-                            description = stringResource(R.string.settings_screen_auto_unlock_desc),
+                            subtitle = stringResource(R.string.settings_screen_auto_unlock_desc),
                             checked = autoUnlock,
+                            enabled = true,
                             onCheckedChange = { isChecked ->
                                 autoUnlock = isChecked
                                 appLockRepository.setAutoUnlockEnabled(isChecked)
                             }
                         )
-                    }
-                }
+                    )
+                )
             }
+
             item {
                 SectionTitle(text = stringResource(R.string.settings_screen_security_title))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-                ) {
-                    Column {
+            }
+
+            item {
+                SettingsGroup(
+                    items = listOf(
                         ActionSettingItem(
                             icon = Icons.Default.Lock,
                             title = stringResource(R.string.settings_screen_change_pin_title),
-                            description = stringResource(R.string.settings_screen_change_pin_desc),
-                            onClick = {
-                                navController.navigate(Screen.ChangePassword.route)
-                            }
-                        )
+                            subtitle = stringResource(R.string.settings_screen_change_pin_desc),
+                            onClick = { navController.navigate(Screen.ChangePassword.route) }
+                        ),
                         ActionSettingItem(
                             icon = Timer,
                             title = stringResource(R.string.settings_screen_unlock_duration_title),
-                            description = if (unlockTimeDuration > 0) {
-                                if (unlockTimeDuration > 10_000) "Until screen off" else stringResource(
+                            subtitle = if (unlockTimeDuration > 0) {
+                                if (unlockTimeDuration > 10_000) "Until screen off"
+                                else stringResource(
                                     R.string.settings_screen_unlock_duration_summary_minutes,
                                     unlockTimeDuration
                                 )
                             } else stringResource(R.string.settings_screen_unlock_duration_summary_immediate),
                             onClick = { showUnlockTimeDialog = true }
-                        )
-                        SettingItem(
+                        ),
+                        ToggleSettingItem(
                             icon = Icons.Default.Lock,
                             title = stringResource(R.string.settings_screen_anti_uninstall_title),
-                            description = stringResource(R.string.settings_screen_anti_uninstall_desc),
+                            subtitle = stringResource(R.string.settings_screen_anti_uninstall_desc),
                             checked = antiUninstallEnabled,
+                            enabled = true,
                             onCheckedChange = { isChecked ->
                                 if (isChecked) {
                                     val dpm =
@@ -348,15 +345,12 @@ fun SettingsScreen(
                                         !hasDeviceAdmin && !hasAccessibility -> {
                                             showPermissionDialog = true
                                         }
-
                                         !hasDeviceAdmin -> {
                                             showDeviceAdminDialog = true
                                         }
-
                                         !hasAccessibility -> {
                                             showAccessibilityDialog = true
                                         }
-
                                         else -> {
                                             antiUninstallEnabled = true
                                             appLockRepository.setAntiUninstallEnabled(true)
@@ -364,32 +358,28 @@ fun SettingsScreen(
                                     }
                                 } else {
                                     context.startActivity(
-                                        Intent(
-                                            context,
-                                            AdminDisableActivity::class.java
-                                        )
+                                        Intent(context, AdminDisableActivity::class.java)
                                     )
                                 }
                             }
                         )
-                    }
-                }
+                    )
+                )
             }
 
             item {
                 SectionTitle(text = stringResource(R.string.settings_screen_advanced_title))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-                ) {
-                    Column {
+            }
+
+            item {
+                SettingsGroup(
+                    items = listOf(
                         ActionSettingItem(
-                            icon = Icons.Outlined.BugReport,
-                            title = stringResource(R.string.settings_screen_export_logs_title),
-                            description = stringResource(R.string.settings_screen_export_logs_desc),
+                            icon = Icons.Outlined.Security,
+                            title = stringResource(R.string.settings_Screen_export_audit),
+                            subtitle = stringResource(R.string.settings_screen_export_audit_desc),
                             onClick = {
-                                val uri = LogUtils.exportLogs(context)
+                                val uri = LogUtils.exportAuditLogs()
                                 if (uri != null) {
                                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                         type = "text/plain"
@@ -397,10 +387,31 @@ fun SettingsScreen(
                                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                     }
                                     context.startActivity(
-                                        Intent.createChooser(
-                                            shareIntent,
-                                            "Share logs"
-                                        )
+                                        Intent.createChooser(shareIntent, "Share audit logs")
+                                    )
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.settings_screen_export_logs_error),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        ),
+                        ActionSettingItem(
+                            icon = Icons.Outlined.BugReport,
+                            title = stringResource(R.string.settings_screen_export_logs_title),
+                            subtitle = stringResource(R.string.settings_screen_export_logs_desc),
+                            onClick = {
+                                val uri = LogUtils.exportLogs()
+                                if (uri != null) {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_STREAM, uri)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(
+                                        Intent.createChooser(shareIntent, "Share logs")
                                     )
                                 } else {
                                     Toast.makeText(
@@ -411,9 +422,10 @@ fun SettingsScreen(
                                 }
                             }
                         )
-                    }
-                }
+                    )
+                )
             }
+
             item {
                 BackendSelectionCard(
                     appLockRepository = appLockRepository,
@@ -421,6 +433,7 @@ fun SettingsScreen(
                     shizukuPermissionLauncher = shizukuPermissionLauncher
                 )
             }
+
             item {
                 LinksSection()
             }
@@ -435,99 +448,229 @@ fun SectionTitle(text: String) {
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
+        modifier = Modifier.padding(start = 16.dp, bottom = 4.dp, top = 4.dp)
+    )
+}
+
+sealed class SettingItemType {
+    data class Toggle(
+        val icon: ImageVector,
+        val title: String,
+        val subtitle: String,
+        val checked: Boolean,
+        val enabled: Boolean,
+        val onCheckedChange: (Boolean) -> Unit
+    ): SettingItemType()
+
+    data class Action(
+        val icon: ImageVector,
+        val title: String,
+        val subtitle: String,
+        val onClick: () -> Unit
+    ): SettingItemType()
+}
+
+data class ToggleSettingItem(
+    val icon: ImageVector,
+    val title: String,
+    val subtitle: String,
+    val checked: Boolean,
+    val enabled: Boolean,
+    val onCheckedChange: (Boolean) -> Unit
+)
+
+data class ActionSettingItem(
+    val icon: ImageVector,
+    val title: String,
+    val subtitle: String,
+    val onClick: () -> Unit
+)
+
+@Composable
+fun SettingsGroup(
+    items: List<Any>
+) {
+    Column {
+        items.forEachIndexed { index, item ->
+            SettingsCard(index = index, listSize = items.size) {
+                when (item) {
+                    is ToggleSettingItem -> {
+                        ToggleSettingRow(
+                            icon = item.icon,
+                            title = item.title,
+                            subtitle = item.subtitle,
+                            checked = item.checked,
+                            enabled = item.enabled,
+                            onCheckedChange = item.onCheckedChange
+                        )
+                    }
+
+                    is ActionSettingItem -> {
+                        ActionSettingRow(
+                            icon = item.icon,
+                            title = item.title,
+                            subtitle = item.subtitle,
+                            onClick = item.onClick
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsCard(
+    index: Int,
+    listSize: Int,
+    content: @Composable () -> Unit
+) {
+    val shape = when {
+        listSize == 1 -> RoundedCornerShape(24.dp)
+        index == 0 -> RoundedCornerShape(
+            topStart = 24.dp,
+            topEnd = 24.dp,
+            bottomStart = 6.dp,
+            bottomEnd = 6.dp
+        )
+
+        index == listSize - 1 -> RoundedCornerShape(
+            topStart = 6.dp,
+            topEnd = 6.dp,
+            bottomStart = 24.dp,
+            bottomEnd = 24.dp
+        )
+
+        else -> RoundedCornerShape(6.dp)
+    }
+
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn() + scaleIn(
+            initialScale = 0.95f,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+        ),
+        exit = fadeOut() + shrinkVertically()
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 1.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            ),
+            shape = shape
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+fun ToggleSettingRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    ListItem(
+        modifier = Modifier
+            .clickable(enabled = enabled) { if (enabled) onCheckedChange(!checked) }
+            .padding(vertical = 2.dp, horizontal = 4.dp),
+        headlineContent = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
+        supportingContent = {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall
+            )
+        },
+        leadingContent = {
+            Box(
+                modifier = Modifier.size(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            }
+        },
+        trailingContent = {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Switch(
+                    checked = checked,
+                    onCheckedChange = null,
+                    enabled = enabled
+                )
+            }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent
+        )
     )
 }
 
 @Composable
-fun SettingItem(
+fun ActionSettingRow(
     icon: ImageVector,
     title: String,
-    description: String,
-    checked: Boolean,
-    enabled: Boolean = true,
-    onCheckedChange: (Boolean) -> Unit
+    subtitle: String,
+    onClick: () -> Unit
 ) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(enabled = enabled) { if (enabled) onCheckedChange(!checked) }
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
+    ListItem(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp, horizontal = 4.dp),
+        headlineContent = {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+        },
+        supportingContent = {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall
+            )
+        },
+        leadingContent = {
+            Box(
                 modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.surfaceTint
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(
-                checked = checked,
-                onCheckedChange = null,
-                enabled = enabled
-            )
-        }
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-    }
-}
-
-@Composable
-fun ActionSettingItem(
-    modifier: Modifier = Modifier,
-    icon: ImageVector,
-    title: String,
-    description: String? = null,
-    onClick: () -> Unit,
-    iconTint: Color = MaterialTheme.colorScheme.surfaceTint
-) {
-    Column {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                modifier = Modifier.size(24.dp),
-                tint = iconTint
-            )
-            Column(
-                modifier = Modifier.weight(1f)
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.secondary
                 )
-                if (description != null) {
-                    Text(
-                        description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
-        }
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-    }
+        },
+        trailingContent = {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = null
+                )
+            }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent
+        )
+    )
 }
 
 @Composable
@@ -539,7 +682,6 @@ fun UnlockTimeDurationDialog(
     val durations = listOf(0, 1, 5, 15, 30, 60, Integer.MAX_VALUE)
     var selectedDuration by remember { mutableIntStateOf(currentDuration) }
 
-    // If the current duration is not in our list, default to the closest value
     if (!durations.contains(selectedDuration)) {
         selectedDuration = durations.minByOrNull { abs(it - currentDuration) } ?: 0
     }
@@ -550,7 +692,6 @@ fun UnlockTimeDurationDialog(
         text = {
             Column {
                 Text(stringResource(R.string.settings_screen_unlock_duration_dialog_description_new))
-
                 durations.forEach { duration ->
                     Row(
                         modifier = Modifier
@@ -570,7 +711,6 @@ fun UnlockTimeDurationDialog(
                                     R.string.settings_screen_unlock_duration_dialog_option_minute,
                                     duration
                                 )
-
                                 60 -> stringResource(R.string.settings_screen_unlock_duration_dialog_option_hour)
                                 Integer.MAX_VALUE -> "Until Screen Off"
                                 else -> stringResource(
@@ -608,13 +748,12 @@ fun BackendSelectionCard(
     Column {
         SectionTitle(text = stringResource(R.string.settings_screen_backend_implementation_title))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-        ) {
-            Column {
-                BackendImplementation.entries.forEach { backend ->
+        Column {
+            BackendImplementation.entries.forEachIndexed { index, backend ->
+                SettingsCard(
+                    index = index,
+                    listSize = BackendImplementation.entries.size
+                ) {
                     BackendSelectionItem(
                         backend = backend,
                         isSelected = selectedBackend == backend,
@@ -639,19 +778,14 @@ fun BackendSelectionCard(
                                             BackendImplementation.SHIZUKU
                                         )
                                         context.startService(
-                                            Intent(
-                                                context,
-                                                ShizukuAppLockService::class.java
-                                            )
+                                            Intent(context, ShizukuAppLockService::class.java)
                                         )
                                     }
                                 }
-
                                 BackendImplementation.USAGE_STATS -> {
                                     if (!context.hasUsagePermission()) {
-                                        val intent = Intent(
-                                            android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS
-                                        )
+                                        val intent =
+                                            Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
                                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                         context.startActivity(intent)
                                         Toast.makeText(
@@ -661,25 +795,18 @@ fun BackendSelectionCard(
                                         ).show()
                                         return@BackendSelectionItem
                                     }
-
                                     selectedBackend = backend
-
                                     appLockRepository.setBackendImplementation(BackendImplementation.USAGE_STATS)
                                     context.startService(
-                                        Intent(
-                                            context,
-                                            ExperimentalAppLockService::class.java
-                                        )
+                                        Intent(context, ExperimentalAppLockService::class.java)
                                     )
                                 }
-
                                 BackendImplementation.ACCESSIBILITY -> {
                                     if (!context.isAccessibilityServiceEnabled()) {
                                         openAccessibilitySettings(context)
                                         return@BackendSelectionItem
                                     }
                                     selectedBackend = backend
-
                                     appLockRepository.setBackendImplementation(BackendImplementation.ACCESSIBILITY)
                                 }
                             }
@@ -698,61 +825,70 @@ fun BackendSelectionItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onClick() }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = getBackendIcon(backend),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.surfaceTint
-            )
-            Spacer(modifier = Modifier.width(24.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = getBackendDisplayName(backend),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                    )
-                    if (backend == BackendImplementation.SHIZUKU) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Badge(
-                            containerColor = MaterialTheme.colorScheme.tertiary,
-                            contentColor = MaterialTheme.colorScheme.onTertiary
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_screen_backend_implementation_shizuku_advanced),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
+    ListItem(
+        modifier = Modifier
+            .clickable { onClick() }
+            .padding(vertical = 2.dp, horizontal = 4.dp),
+        headlineContent = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = getBackendDisplayName(backend),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface
+                )
+                if (backend == BackendImplementation.SHIZUKU) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_screen_backend_implementation_shizuku_advanced),
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
-                Text(
-                    text = getBackendDescription(backend),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        },
+        supportingContent = {
+            Text(
+                text = getBackendDescription(backend),
+                style = MaterialTheme.typography.bodySmall
+            )
+        },
+        leadingContent = {
+            Box(
+                modifier = Modifier.size(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = getBackendIcon(backend),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.secondary
                 )
             }
-
-            RadioButton(
-                selected = isSelected,
-                onClick = onClick,
-                colors = RadioButtonDefaults.colors(
-                    selectedColor = MaterialTheme.colorScheme.primary
+        },
+        trailingContent = {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                RadioButton(
+                    selected = isSelected,
+                    onClick = onClick,
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = MaterialTheme.colorScheme.primary
+                    )
                 )
-            )
-        }
-
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-    }
+            }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent
+        )
+    )
 }
 
 private fun getBackendDisplayName(backend: BackendImplementation): String {
@@ -865,92 +1001,96 @@ fun AccessibilityDialog(
 fun LinksSection() {
     val context = LocalContext.current
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = "Links",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-        )
+    Column {
+        SectionTitle(text = "Links")
 
-        LinkCard(
-            title = "Discord Community",
-            icon = Discord,
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                val intent = Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://discord.gg/46wCMRVAre")
+        Column {
+            SettingsCard(index = 0, listSize = 3) {
+                LinkItem(
+                    title = "Discord Community",
+                    icon = Discord,
+                    onClick = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://discord.gg/46wCMRVAre".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
                 )
-                context.startActivity(intent)
             }
-        )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            LinkCard(
-                title = "Source Code",
-                icon = Icons.Outlined.Code,
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("https://github.com/PranavPurwar/AppLock")
-                    )
-                    context.startActivity(intent)
-                }
-            )
+            SettingsCard(index = 1, listSize = 3) {
+                LinkItem(
+                    title = "Source Code",
+                    icon = Icons.Outlined.Code,
+                    onClick = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/PranavPurwar/AppLock".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+            }
 
-            LinkCard(
-                title = "Report Issue",
-                icon = Icons.Outlined.BugReport,
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    val intent = Intent(
-                        Intent.ACTION_VIEW,
-                        Uri.parse("https://github.com/PranavPurwar/AppLock/issues")
-                    )
-                    context.startActivity(intent)
-                }
-            )
+            SettingsCard(index = 2, listSize = 3) {
+                LinkItem(
+                    title = "Report Issue",
+                    icon = Icons.Outlined.BugReport,
+                    onClick = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://github.com/PranavPurwar/AppLock/issues".toUri()
+                        )
+                        context.startActivity(intent)
+                    }
+                )
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun LinkCard(
+fun LinkItem(
     title: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    OutlinedButton(
-        modifier = modifier,
-        onClick = onClick,
-        colors = ButtonDefaults.outlinedButtonColors(),
-        shapes = ButtonDefaults.shapes()
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.surfaceTint
-            )
-
+    ListItem(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp, horizontal = 4.dp),
+        headlineContent = {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.titleMedium
             )
-        }
-    }
+        },
+        leadingContent = {
+            Box(
+                modifier = Modifier.size(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+            }
+        },
+        trailingContent = {
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = null
+                )
+            }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = Color.Transparent
+        )
+    )
 }
-

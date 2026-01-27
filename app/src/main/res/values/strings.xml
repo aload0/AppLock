@@ -265,7 +265,9 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="enable_button">Enable</string>
     <string name="settings_screen_advanced_title">Advanced</string>
     <string name="settings_screen_export_logs_title">Export Logs</string>
-    <string name="settings_screen_export_logs_desc">Export the app logs for debugging/audit.</string>
+    <string name="settings_screen_export_logs_desc">Export the app logs for debugging.</string>
+    <string name="settings_Screen_export_audit">Export Security Logs</string>
+    <string name="settings_screen_export_audit_desc">Export security logs for review.</string>
     <string name="settings_screen_export_logs_success">Logs exported</string>
     <string name="settings_screen_export_logs_error">Failed to export logs</string>
     <string name="settings_screen_version_template">Version %1$s</string>
