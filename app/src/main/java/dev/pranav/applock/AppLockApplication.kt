@@ -24,7 +24,8 @@ class AppLockApplication : Application() {
         initializeComponents()
 
         LogUtils.initialize(this)
-        checkAndHandleAppUpdate()
+        // Purge logs older than 3 days on every app start
+        LogUtils.purgeOldLogs()
     }
 
     private fun initializeHiddenApiBypass() {
@@ -54,35 +55,6 @@ class AppLockApplication : Application() {
             Log.d(TAG, "Sui initialized successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize Sui", e)
-        }
-    }
-
-    /**
-     * Check if the app has been updated and handle accordingly.
-     * On update: clear all old logs
-     * On every start: purge logs older than 3 days
-     */
-    private fun checkAndHandleAppUpdate() {
-        try {
-            val prefsRepo = appLockRepository.preferencesRepository
-            val lastVersionCode = prefsRepo.getLastVersionCode()
-            val currentVersionCode = BuildConfig.VERSION_CODE
-
-            // Always purge old logs (older than 3 days) on app start
-            LogUtils.purgeOldLogs()
-
-            // If app was updated, clear all logs and update version code
-            if (lastVersionCode != 0 && lastVersionCode < currentVersionCode) {
-                Log.d(TAG, "App updated from version $lastVersionCode to $currentVersionCode. Clearing logs.")
-                LogUtils.clearAllLogs()
-                prefsRepo.setLastVersionCode(currentVersionCode)
-            } else if (lastVersionCode == 0) {
-                // First time app is running, just save the version code
-                Log.d(TAG, "First app launch. Setting version code to $currentVersionCode")
-                prefsRepo.setLastVersionCode(currentVersionCode)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking app update", e)
         }
     }
 
