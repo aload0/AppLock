@@ -8,6 +8,7 @@ import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.data.repository.AppLockRepository
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import rikka.sui.Sui
+import kotlin.concurrent.thread
 
 class AppLockApplication : Application() {
 
@@ -24,8 +25,10 @@ class AppLockApplication : Application() {
         initializeComponents()
 
         LogUtils.initialize(this)
-        // Purge logs older than 3 days on every app start
-        LogUtils.purgeOldLogs()
+        // Purge logs older than 3 days on every app start (run in background to avoid ANR)
+        thread(start = true, name = "LogPurge") {
+            LogUtils.purgeOldLogs()
+        }
     }
 
     private fun initializeHiddenApiBypass() {

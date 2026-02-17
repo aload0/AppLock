@@ -134,8 +134,14 @@ object LogUtils {
 
             // Rewrite the file with only recent logs
             if (recentLines.size < lines.size) {
-                securityLogFile.writeText(recentLines.joinToString("\n") + "\n")
-                Log.d(TAG, "Purged ${lines.size - recentLines.size} old log entries")
+                if (recentLines.isEmpty()) {
+                    // Delete the file if no recent logs remain
+                    securityLogFile.delete()
+                    Log.d(TAG, "Deleted log file - all entries were older than 3 days")
+                } else {
+                    securityLogFile.writeText(recentLines.joinToString("\n") + "\n")
+                    Log.d(TAG, "Purged ${lines.size - recentLines.size} old log entries")
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error purging old logs", e)
