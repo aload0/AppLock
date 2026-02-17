@@ -146,6 +146,14 @@ class PreferencesRepository(context: Context) {
         settingsPrefs.edit { putBoolean(KEY_SHOW_DONATE_LINK, show) }
     }
 
+    fun getLastVersionCode(): Int {
+        return settingsPrefs.getInt(LAST_VERSION_CODE, 0)
+    }
+
+    fun setLastVersionCode(versionCode: Int) {
+        settingsPrefs.edit { putInt(LAST_VERSION_CODE, versionCode) }
+    }
+
     companion object {
         private const val PREFS_NAME_APP_LOCK = "app_lock_prefs"
         private const val PREFS_NAME_SETTINGS = "app_lock_settings"
