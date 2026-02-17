@@ -119,7 +119,7 @@ object LogUtils {
 
             for (line in lines) {
                 try {
-                    // Extract timestamp from log line format: "2024-01-15T10:30:00Z D TAG: message"
+                    // Extract timestamp from log line format: "[ISO-8601 timestamp] D [TAG]: [message]"
                     val timestampStr = line.substringBefore(" ")
                     val timestamp = Instant.parse(timestampStr)
                     

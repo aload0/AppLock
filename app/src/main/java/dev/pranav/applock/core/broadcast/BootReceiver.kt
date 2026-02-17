@@ -25,8 +25,7 @@ class BootReceiver : BroadcastReceiver() {
             }
             Intent.ACTION_BOOT_COMPLETED -> {
                 try {
-                    val appLockRepository = context.appLockRepository()
-                    startAppropriateServices(context, appLockRepository)
+                    startAppropriateServices(context, repository)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error starting services on boot", e)
                 }
