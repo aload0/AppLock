@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.core.content.FileProvider
 import java.io.File
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @SuppressLint("StaticFieldLeak")
 object LogUtils {
@@ -76,6 +77,74 @@ object LogUtils {
         } catch (e: Exception) {
             Log.e(TAG, "Error exporting logs", e)
             return null
+        }
+    }
+
+    /**
+     * Clear all security and audit logs.
+     * Called when the app is updated.
+     */
+    fun clearAllLogs() {
+        try {
+            val securityLogFile = File(context.filesDir, SECURITY_LOGS)
+            if (securityLogFile.exists()) {
+                securityLogFile.delete()
+                Log.d(TAG, "Cleared security logs")
+            }
+            
+            val appLogFile = File(context.cacheDir, FILE_NAME)
+            if (appLogFile.exists()) {
+                appLogFile.delete()
+                Log.d(TAG, "Cleared app logs")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing logs", e)
+        }
+    }
+
+    /**
+     * Purge log entries older than 3 days from the audit log file.
+     * This prevents logs from growing indefinitely.
+     */
+    fun purgeOldLogs() {
+        try {
+            val securityLogFile = File(context.filesDir, SECURITY_LOGS)
+            if (!securityLogFile.exists()) {
+                return
+            }
+
+            val threeDaysAgo = Instant.now().minus(3, ChronoUnit.DAYS)
+            val lines = securityLogFile.readLines()
+            val recentLines = mutableListOf<String>()
+
+            for (line in lines) {
+                try {
+                    // Extract timestamp from log line format: "[ISO-8601 timestamp] D [TAG]: [message]"
+                    val timestampStr = line.substringBefore(" ")
+                    val timestamp = Instant.parse(timestampStr)
+                    
+                    if (timestamp.isAfter(threeDaysAgo)) {
+                        recentLines.add(line)
+                    }
+                } catch (e: Exception) {
+                    // If we can't parse the timestamp, keep the line to avoid data loss
+                    recentLines.add(line)
+                }
+            }
+
+            // Rewrite the file with only recent logs
+            if (recentLines.size < lines.size) {
+                if (recentLines.isEmpty()) {
+                    // Delete the file if no recent logs remain
+                    securityLogFile.delete()
+                    Log.d(TAG, "Deleted log file - all entries were older than 3 days")
+                } else {
+                    securityLogFile.writeText(recentLines.joinToString("\n") + "\n")
+                    Log.d(TAG, "Purged ${lines.size - recentLines.size} old log entries")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error purging old logs", e)
         }
     }
 }

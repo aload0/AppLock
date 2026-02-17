@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.data.repository.BackendImplementation
 import dev.pranav.applock.services.AppLockAccessibilityService
@@ -14,19 +15,24 @@ class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val repository = context.appLockRepository()
-        if (intent.action == Intent.ACTION_PACKAGE_REPLACED) {
-            repository.setShowDonateLink(true)
-        }
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED) {
-            Log.w(TAG, "Invalid context or intent action")
-            return
-        }
-
-        try {
-            val appLockRepository = context.appLockRepository()
-            startAppropriateServices(context, appLockRepository)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error starting services on boot", e)
+        
+        when (intent.action) {
+            Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                Log.d(TAG, "App package replaced, clearing old logs and showing donate link")
+                repository.setShowDonateLink(true)
+                // Clear all old logs on app update
+                LogUtils.clearAllLogs()
+            }
+            Intent.ACTION_BOOT_COMPLETED -> {
+                try {
+                    startAppropriateServices(context, repository)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error starting services on boot", e)
+                }
+            }
+            else -> {
+                Log.w(TAG, "Invalid intent action: ${intent.action}")
+            }
         }
     }
 
