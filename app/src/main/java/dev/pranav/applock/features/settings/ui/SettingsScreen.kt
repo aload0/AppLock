@@ -1026,7 +1026,7 @@ fun LinksSection() {
                     onClick = {
                         val intent = Intent(
                             Intent.ACTION_VIEW,
-                            "https://github.com/PranavPurwar/AppLock".toUri()
+                            "https://github.com/aload0/AppLock".toUri()
                         )
                         context.startActivity(intent)
                     }
@@ -1040,7 +1040,7 @@ fun LinksSection() {
                     onClick = {
                         val intent = Intent(
                             Intent.ACTION_VIEW,
-                            "https://github.com/PranavPurwar/AppLock/issues".toUri()
+                            "https://github.com/aload0/AppLock/issues".toUri()
                         )
                         context.startActivity(intent)
                     }
