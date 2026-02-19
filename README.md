@@ -110,6 +110,7 @@ found [here](https://github.com/PranavPurwar/AppLock/raw/refs/heads/master/app/d
 If you find AppLock useful, please consider supporting its development with a small donation.
 Every contribution matters.
 
+**OpenCollective:** https://opencollective.com/invokevirtual
 
 **Bitcoin (BTC):** `bc1qec5ccz85qn90a6zxnqnes0rx274cv6vw7j5x4g`
 
