@@ -146,6 +146,14 @@ class PreferencesRepository(context: Context) {
         settingsPrefs.edit { putBoolean(KEY_SHOW_DONATE_LINK, show) }
     }
 
+    fun isLoggingEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_LOGGING_ENABLED, false)
+    }
+
+    fun setLoggingEnabled(enabled: Boolean) {
+        settingsPrefs.edit { putBoolean(KEY_LOGGING_ENABLED, enabled) }
+    }
+
     companion object {
         private const val PREFS_NAME_APP_LOCK = "app_lock_prefs"
         private const val PREFS_NAME_SETTINGS = "app_lock_settings"
@@ -160,6 +168,7 @@ class PreferencesRepository(context: Context) {
         private const val KEY_BACKEND_IMPLEMENTATION = "backend_implementation"
         private const val KEY_COMMUNITY_LINK_SHOWN = "community_link_shown"
         private const val KEY_SHOW_DONATE_LINK = "show_donate_link"
+        private const val KEY_LOGGING_ENABLED = "logging_enabled"
         private const val LAST_VERSION_CODE = "last_version_code"
         private const val KEY_APPLOCK_ENABLED = "applock_enabled"
         private const val KEY_AUTO_UNLOCK = "auto_unlock"

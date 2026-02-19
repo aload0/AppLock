@@ -25,6 +25,7 @@ class AppLockApplication : Application() {
         initializeComponents()
 
         LogUtils.initialize(this)
+        LogUtils.setLoggingEnabled(appLockRepository.isLoggingEnabled())
         // Purge logs older than 3 days on every app start (run in background to avoid ANR)
         thread(start = true, name = "LogPurge") {
             LogUtils.purgeOldLogs()

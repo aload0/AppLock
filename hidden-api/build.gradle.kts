@@ -28,6 +28,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    compileSdkMinor = 1
+    buildToolsVersion = "37.0.0 rc1"
     kotlin.compilerOptions {
         jvmTarget.set(JvmTarget.JVM_11)
     }

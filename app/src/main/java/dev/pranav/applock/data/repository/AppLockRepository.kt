@@ -76,6 +76,9 @@ class AppLockRepository(private val context: Context) {
     fun isShowDonateLink(): Boolean = preferencesRepository.isShowDonateLink(context)
     fun setShowDonateLink(show: Boolean) = preferencesRepository.setShowDonateLink(context, show)
 
+    fun isLoggingEnabled(): Boolean = preferencesRepository.isLoggingEnabled()
+    fun setLoggingEnabled(enabled: Boolean) = preferencesRepository.setLoggingEnabled(enabled)
+
     fun setActiveBackend(backend: BackendImplementation) =
         backendServiceManager.setActiveBackend(backend)
 

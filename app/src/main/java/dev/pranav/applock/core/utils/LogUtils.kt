@@ -9,6 +9,7 @@ import androidx.core.content.FileProvider
 import java.io.File
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlin.concurrent.thread
 
 @SuppressLint("StaticFieldLeak")
 object LogUtils {
@@ -16,12 +17,19 @@ object LogUtils {
     private const val FILE_NAME = "app_logs.txt"
     private const val SECURITY_LOGS = "audit_log.txt"
     private lateinit var context: Context
+    private var loggingEnabled = false
 
     fun initialize(application: Context) {
         context = application
     }
 
+    fun setLoggingEnabled(enabled: Boolean) {
+        loggingEnabled = enabled
+    }
+
     fun d(tag: String, message: String) {
+        if (!loggingEnabled) return
+
         val file = File(context.filesDir, SECURITY_LOGS)
 
         if (!file.exists()) {
@@ -103,48 +111,73 @@ object LogUtils {
     }
 
     /**
-     * Purge log entries older than 3 days from the audit log file.
+     * Purge log entries older than 3 days from both audit and app log files.
      * This prevents logs from growing indefinitely.
+     * Runs asynchronously to avoid blocking the main thread.
      */
     fun purgeOldLogs() {
+        thread(name = "LogPurgeThread", isDaemon = true) {
+            purgeOldLogsFromFile(File(context.filesDir, SECURITY_LOGS), "audit")
+            purgeOldLogsFromFile(File(context.cacheDir, FILE_NAME), "app")
+        }
+    }
+
+    private fun purgeOldLogsFromFile(logFile: File, logType: String) {
         try {
-            val securityLogFile = File(context.filesDir, SECURITY_LOGS)
-            if (!securityLogFile.exists()) {
+            if (!logFile.exists()) {
                 return
             }
 
-            val threeDaysAgo = Instant.now().minus(3, ChronoUnit.DAYS)
-            val lines = securityLogFile.readLines()
-            val recentLines = mutableListOf<String>()
+            val tempDir = context.cacheDir
+            val tempLogFile = File(tempDir, logFile.name + ".processing")
+            val backupFile = File(tempDir, logFile.name + ".backup")
 
-            for (line in lines) {
-                try {
-                    // Extract timestamp from log line format: "[ISO-8601 timestamp] D [TAG]: [message]"
-                    val timestampStr = line.substringBefore(" ")
-                    val timestamp = Instant.parse(timestampStr)
-                    
-                    if (timestamp.isAfter(threeDaysAgo)) {
-                        recentLines.add(line)
+            try {
+                logFile.copyTo(backupFile, overwrite = true)
+
+                val threeDaysAgo = Instant.now().minus(7, ChronoUnit.DAYS)
+                var purgedCount = 0
+                var keptCount = 0
+
+                backupFile.bufferedReader().use { reader ->
+                    tempLogFile.bufferedWriter().use { writer ->
+                        reader.forEachLine { line ->
+                            try {
+                                val timestampStr = line.substringBefore(" ")
+                                val timestamp = Instant.parse(timestampStr)
+
+                                if (timestamp.isAfter(threeDaysAgo)) {
+                                    writer.write(line)
+                                    writer.newLine()
+                                    keptCount++
+                                } else {
+                                    purgedCount++
+                                }
+                            } catch (_: Exception) {
+                                writer.write(line)
+                                writer.newLine()
+                                keptCount++
+                            }
+                        }
                     }
-                } catch (e: Exception) {
-                    // If we can't parse the timestamp, keep the line to avoid data loss
-                    recentLines.add(line)
                 }
-            }
 
-            // Rewrite the file with only recent logs
-            if (recentLines.size < lines.size) {
-                if (recentLines.isEmpty()) {
-                    // Delete the file if no recent logs remain
-                    securityLogFile.delete()
-                    Log.d(TAG, "Deleted log file - all entries were older than 3 days")
+                if (keptCount == 0) {
+                    logFile.delete()
+                    tempLogFile.delete()
+                    Log.d(TAG, "Deleted $logType log file - all entries were older than 3 days")
+                } else if (purgedCount > 0) {
+                    tempLogFile.copyTo(logFile, overwrite = true)
+                    tempLogFile.delete()
+                    Log.d(TAG, "Purged $purgedCount old $logType log entries")
                 } else {
-                    securityLogFile.writeText(recentLines.joinToString("\n") + "\n")
-                    Log.d(TAG, "Purged ${lines.size - recentLines.size} old log entries")
+                    tempLogFile.delete()
                 }
+            } finally {
+                backupFile.delete()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error purging old logs", e)
+            Log.e(TAG, "Error purging old $logType logs", e)
         }
     }
 }

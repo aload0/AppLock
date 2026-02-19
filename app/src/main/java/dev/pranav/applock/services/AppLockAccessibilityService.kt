@@ -269,13 +269,12 @@ class AppLockAccessibilityService : AccessibilityService() {
         ) {
             LogUtils.d(
                 TAG,
-                "Switched from unlocked app $unlockedApp to $currentForegroundPackage. Setting grace period tracking."
+                "Switched from unlocked app $unlockedApp to $currentForegroundPackage."
             )
             AppLockManager.setRecentlyLeftApp(unlockedApp)
             AppLockManager.clearTemporarilyUnlockedApp()
         }
 
-        LogUtils.d(TAG, event.toString())
         checkAndLockApp(currentForegroundPackage, triggeringPackage, System.currentTimeMillis())
     }
 

@@ -89,6 +89,7 @@ fun SettingsScreen(
     var unlockTimeDuration by remember { mutableIntStateOf(appLockRepository.getUnlockTimeDuration()) }
     var antiUninstallEnabled by remember { mutableStateOf(appLockRepository.isAntiUninstallEnabled()) }
     var disableHapticFeedback by remember { mutableStateOf(appLockRepository.shouldDisableHaptics()) }
+    var loggingEnabled by remember { mutableStateOf(appLockRepository.isLoggingEnabled()) }
 
     var showPermissionDialog by remember { mutableStateOf(false) }
     var showDeviceAdminDialog by remember { mutableStateOf(false) }
@@ -420,6 +421,18 @@ fun SettingsScreen(
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
+                            }
+                        ),
+                        ToggleSettingItem(
+                            icon = Icons.Default.Troubleshoot,
+                            title = "Logging",
+                            subtitle = "Enable debug logging for troubleshooting",
+                            checked = loggingEnabled,
+                            enabled = true,
+                            onCheckedChange = { isChecked ->
+                                loggingEnabled = isChecked
+                                appLockRepository.setLoggingEnabled(isChecked)
+                                LogUtils.setLoggingEnabled(isChecked)
                             }
                         )
                     )
