@@ -103,6 +103,7 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        Log.d(TAG, event.toString())
         try {
             handleAccessibilityEvent(event)
         } catch (e: Exception) {
@@ -403,8 +404,10 @@ class AppLockAccessibilityService : AccessibilityService() {
                 event.text.any { it.contains("App Lock") }
         val isSubSettings = event.className == "com.android.settings.SubSettings" &&
                 event.text.any { it.contains("App Lock") }
-        val isAlertDialog = event.className == "android.app.AlertDialog" &&
-                event.text.isNotEmpty() && event.text.first().contains("App Lock")
+        val isAlertDialog =
+            event.packageName == "com.google.android.packageinstaller" && event.className == "android.app.AlertDialog" && event.text.toString()
+                .lowercase().contains("App Lock")
+
 
         return isAccessibilitySettings || isSubSettings || isAlertDialog
     }

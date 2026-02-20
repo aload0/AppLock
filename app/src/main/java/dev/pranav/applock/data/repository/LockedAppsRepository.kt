@@ -15,23 +15,18 @@ class LockedAppsRepository(context: Context) {
 
     // Locked Apps Management
     fun getLockedApps(): Set<String> {
-        return preferences.getStringSet(KEY_LOCKED_APPS, emptySet()) ?: emptySet()
+        return preferences.getStringSet(KEY_LOCKED_APPS, emptySet())?.toSet() ?: emptySet()
     }
 
     fun addLockedApp(packageName: String) {
         if (packageName.isBlank()) return
-
-        val currentApps = getLockedApps().toMutableSet()
-        if (currentApps.add(packageName)) {
-            preferences.edit { putStringSet(KEY_LOCKED_APPS, currentApps) }
-        }
+        val updated = getLockedApps() + packageName
+        preferences.edit { putStringSet(KEY_LOCKED_APPS, updated) }
     }
 
     fun removeLockedApp(packageName: String) {
-        val currentApps = getLockedApps().toMutableSet()
-        if (currentApps.remove(packageName)) {
-            preferences.edit { putStringSet(KEY_LOCKED_APPS, currentApps) }
-        }
+        val updated = getLockedApps() - packageName
+        preferences.edit { putStringSet(KEY_LOCKED_APPS, updated) }
     }
 
     fun isAppLocked(packageName: String): Boolean {
@@ -44,23 +39,19 @@ class LockedAppsRepository(context: Context) {
 
     // Trigger Exclusions Management
     fun getTriggerExcludedApps(): Set<String> {
-        return preferences.getStringSet(KEY_TRIGGER_EXCLUDED_APPS, emptySet()) ?: emptySet()
+        return preferences.getStringSet(KEY_TRIGGER_EXCLUDED_APPS, emptySet())?.toSet()
+            ?: emptySet()
     }
 
     fun addTriggerExcludedApp(packageName: String) {
         if (packageName.isBlank()) return
-
-        val currentApps = getTriggerExcludedApps().toMutableSet()
-        if (currentApps.add(packageName)) {
-            preferences.edit { putStringSet(KEY_TRIGGER_EXCLUDED_APPS, currentApps) }
-        }
+        val updated = getTriggerExcludedApps() + packageName
+        preferences.edit { putStringSet(KEY_TRIGGER_EXCLUDED_APPS, updated) }
     }
 
     fun removeTriggerExcludedApp(packageName: String) {
-        val currentApps = getTriggerExcludedApps().toMutableSet()
-        if (currentApps.remove(packageName)) {
-            preferences.edit { putStringSet(KEY_TRIGGER_EXCLUDED_APPS, currentApps) }
-        }
+        val updated = getTriggerExcludedApps() - packageName
+        preferences.edit { putStringSet(KEY_TRIGGER_EXCLUDED_APPS, updated) }
     }
 
     fun isAppTriggerExcluded(packageName: String): Boolean {
@@ -75,18 +66,13 @@ class LockedAppsRepository(context: Context) {
     fun addMultipleLockedApps(packageNames: Set<String>) {
         val validPackageNames = packageNames.filter { it.isNotBlank() }.toSet()
         if (validPackageNames.isEmpty()) return
-
-        val currentApps = getLockedApps().toMutableSet()
-        if (currentApps.addAll(validPackageNames)) {
-            preferences.edit { putStringSet(KEY_LOCKED_APPS, currentApps) }
-        }
+        val updated = getLockedApps() + validPackageNames
+        preferences.edit { putStringSet(KEY_LOCKED_APPS, updated) }
     }
 
     fun removeMultipleLockedApps(packageNames: Set<String>) {
-        val currentApps = getLockedApps().toMutableSet()
-        if (currentApps.removeAll(packageNames)) {
-            preferences.edit { putStringSet(KEY_LOCKED_APPS, currentApps) }
-        }
+        val updated = getLockedApps() - packageNames
+        preferences.edit { putStringSet(KEY_LOCKED_APPS, updated) }
     }
 
     companion object {

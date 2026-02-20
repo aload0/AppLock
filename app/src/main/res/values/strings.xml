@@ -275,6 +275,18 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <!-- Pattern Lock Strings -->
     <string name="enter_pattern_to_continue">Draw pattern to continue</string>
     <string name="incorrect_pattern_try_again">Incorrect pattern. Please try again.</string>
+    <!-- Permission Warning Banner Strings -->
+    <string name="permission_warning_overlay_title">Display over other apps</string>
+    <string name="permission_warning_overlay_desc">Displays the lock screen over protected apps.</string>
+    <string name="permission_warning_accessibility_title">Accessibility Service</string>
+    <string name="permission_warning_accessibility_desc">Detects when protected apps are launched.</string>
+    <string name="permission_warning_usage_stats_title">Usage Access</string>
+    <string name="permission_warning_usage_stats_desc">Detects when protected apps are launched.</string>
+    <string name="permission_warning_shizuku_title">Shizuku Permission</string>
+    <string name="permission_warning_shizuku_desc">Securely detects when protected apps are launched.</string>
+    <string name="permission_warning_device_admin_title">Device Admin</string>
+    <string name="permission_warning_device_admin_desc">Prevents AppLock from being uninstalled.</string>
+    <string name="permission_warning_title_suffix"> Required</string>
 
     <string name="join_community">Join Community</string>
     <string name="join_community_desc">Join our Discord community to connect with other users, share feedback, and stay updated on the latest news and features.</string>

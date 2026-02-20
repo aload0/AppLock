@@ -15,6 +15,8 @@ class AppLockRepository(private val context: Context) {
 
     fun getLockedApps(): Set<String> = lockedAppsRepository.getLockedApps()
     fun addLockedApp(packageName: String) = lockedAppsRepository.addLockedApp(packageName)
+    fun addMultipleLockedApps(packageNames: Set<String>) =
+        lockedAppsRepository.addMultipleLockedApps(packageNames)
     fun removeLockedApp(packageName: String) = lockedAppsRepository.removeLockedApp(packageName)
     fun isAppLocked(packageName: String): Boolean = lockedAppsRepository.isAppLocked(packageName)
 
