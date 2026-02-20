@@ -42,6 +42,20 @@ class ExperimentalAppLockService : Service() {
     private var timer: Timer? = null
     private var previousForegroundPackage = ""
 
+    private val screenStateReceiver = object: android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context?, intent: Intent?) {
+            if (intent?.action == Intent.ACTION_SCREEN_OFF) {
+                LogUtils.d(
+                    TAG,
+                    "Screen off detected in Usage Stats fallback. Resetting AppLock state."
+                )
+                AppLockManager.isLockScreenShown.set(false)
+                AppLockManager.clearTemporarilyUnlockedApp()
+                previousForegroundPackage = ""
+            }
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!shouldStartService(appLockRepository, this::class.java) || !hasUsagePermission()) {
             Log.e(TAG, "Permissions missing or service not needed. Falling back.")
@@ -55,6 +69,12 @@ class ExperimentalAppLockService : Service() {
         AppLockManager.stopAllOtherServices(this, this::class.java)
         AppLockManager.isLockScreenShown.set(false)
 
+        val filter = android.content.IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        registerReceiver(screenStateReceiver, filter)
+
         startMonitoringTimer()
         startForegroundService()
 
@@ -67,6 +87,12 @@ class ExperimentalAppLockService : Service() {
 
         if (shouldStartService(appLockRepository, this::class.java)) {
             AppLockManager.startFallbackServices(this, this::class.java)
+        }
+
+        try {
+            unregisterReceiver(screenStateReceiver)
+        } catch (e: IllegalArgumentException) {
+            Log.w(TAG, "Receiver not registered or already unregistered")
         }
 
         AppLockManager.isLockScreenShown.set(false)
@@ -85,6 +111,7 @@ class ExperimentalAppLockService : Service() {
             if (!appLockRepository.isProtectEnabled() || applicationContext.isDeviceLocked()) {
                 if (applicationContext.isDeviceLocked()) {
                     AppLockManager.appUnlockTimes.clear()
+                    previousForegroundPackage = ""
                 }
                 return@timerTask
             }
