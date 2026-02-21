@@ -9,6 +9,7 @@ plugins {
 android {
     namespace = "dev.pranav.applock"
     compileSdk = 36
+
     // Builds with Canary Preview won't work on non-Canary devices
     // compileSdkPreview = "CANARY"
 
@@ -17,8 +18,8 @@ android {
         minSdk = 26
         targetSdk = 36
         // targetSdkPreview = "CANARY"
-        versionCode = 222
-        versionName = "2.2.2"
+        versionCode = 223
+        versionName = "2.2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
