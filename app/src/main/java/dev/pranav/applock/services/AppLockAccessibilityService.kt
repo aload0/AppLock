@@ -153,7 +153,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         }
 
         try {
-            processPackageLocking(packageName, event)
+            processPackageLocking(packageName)
         } catch (e: Exception) {
             logError("Error processing package locking for $packageName", e)
         }
@@ -189,6 +189,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         }
     }
 
+    @SuppressLint("InlinedApi")
     private fun isRecentlyOpened(event: AccessibilityEvent): Boolean {
         return (event.packageName == getSystemDefaultLauncherPackageName() &&
                 event.contentChangeTypes == AccessibilityEvent.CONTENT_CHANGE_TYPE_PANE_APPEARED) ||
@@ -201,6 +202,7 @@ class AppLockAccessibilityService : AccessibilityService() {
                 event.text.toString().lowercase().contains("home screen")
     }
 
+    @SuppressLint("InlinedApi")
     private fun isHomeScreenTransition(event: AccessibilityEvent): Boolean {
         return event.contentChangeTypes == AccessibilityEvent.CONTENT_CHANGE_TYPE_PANE_DISAPPEARED &&
                 event.packageName == getSystemDefaultLauncherPackageName()
@@ -246,13 +248,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         return true
     }
 
-    private fun processPackageLocking(packageName: String, event: AccessibilityEvent) {
-        // Check for grace period first
-        if (AppLockManager.checkAndRestoreRecentlyLeftApp(packageName)) {
-            // If restored, we don't need to do anything else, it's efficiently unlocked
-            // But we continue to letting the logic flow, checkAndLockApp will handle "temporarilyUnlocked" check
-        }
-
+    private fun processPackageLocking(packageName: String) {
         val currentForegroundPackage = packageName
         val triggeringPackage = lastForegroundPackage
         lastForegroundPackage = currentForegroundPackage
@@ -412,6 +408,7 @@ class AppLockAccessibilityService : AccessibilityService() {
         return isAccessibilitySettings || isSubSettings || isAlertDialog
     }
 
+    @SuppressLint("InlinedApi")
     private fun blockDeactivationAttempt() {
         try {
             performGlobalAction(GLOBAL_ACTION_BACK)
@@ -423,13 +420,16 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     private fun isDeviceAdminPage(event: AccessibilityEvent): Boolean {
-        val hasDeviceAdminDescription = event.contentDescription?.contains("Device admin app") == true &&
+        val hasDeviceAdminDescription = event.contentDescription?.toString()?.lowercase()
+            ?.contains("Device admin app") == true &&
                 event.className == "android.widget.FrameLayout"
-        val isAdminConfigClass = event.className in ADMIN_CONFIG_CLASSES
+        val isAdminConfigClass =
+            event.className!!.endsWith("DeviceAdminAdd") || event.className in ADMIN_CONFIG_CLASSES
 
         return hasDeviceAdminDescription || isAdminConfigClass
     }
 
+    @SuppressLint("InlinedApi")
     private fun blockDeviceAdminDeactivation() {
         try {
             val dpm: DevicePolicyManager? = getSystemService()
@@ -572,7 +572,7 @@ class AppLockAccessibilityService : AccessibilityService() {
 
             try {
                 unregisterReceiver(screenStateReceiver)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 // Ignore if not registered
                 Log.w(TAG, "Receiver not registered or already unregistered")
             }

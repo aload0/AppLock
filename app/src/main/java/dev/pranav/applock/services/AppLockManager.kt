@@ -33,8 +33,6 @@ object AppLockConstants {
     )
 
     val ADMIN_CONFIG_CLASSES = setOf(
-        "com.android.settings.deviceadmin.DeviceAdminAdd",
-        "com.android.settings.applications.specialaccess.deviceadmin.DeviceAdminAdd",
         "com.android.settings.deviceadmin.DeviceAdminSettings"
     )
     // com.android.settings.spa.SpaActivity

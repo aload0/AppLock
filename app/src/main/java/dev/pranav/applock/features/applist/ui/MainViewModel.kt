@@ -75,7 +75,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _isLoading.value = true
             try {
                 val apps = withContext(Dispatchers.IO) {
-                    appSearchManager.loadApps(true) // Always load system apps
+                    appSearchManager.loadApps(true)
                 }
                 _allApps.value = apps
             } catch (e: Exception) {
@@ -91,10 +91,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _lockedApps.value = appLockRepository.getLockedApps()
     }
 
-    fun onSearchQueryChanged(query: String) {
-        _searchQuery.value = query
-    }
-
     fun lockApps(packageNames: List<String>) {
         appLockRepository.addMultipleLockedApps(packageNames.toSet())
         _lockedApps.value = appLockRepository.getLockedApps()
@@ -103,9 +99,5 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun unlockApp(packageName: String) {
         appLockRepository.removeLockedApp(packageName)
         _lockedApps.value = appLockRepository.getLockedApps()
-    }
-
-    fun isAppLocked(packageName: String): Boolean {
-        return _lockedApps.value.contains(packageName)
     }
 }
