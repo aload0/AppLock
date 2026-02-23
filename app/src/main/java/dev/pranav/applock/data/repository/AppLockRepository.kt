@@ -30,6 +30,16 @@ class AppLockRepository(private val context: Context) {
     fun isAppTriggerExcluded(packageName: String): Boolean =
         lockedAppsRepository.isAppTriggerExcluded(packageName)
 
+    fun getAntiUninstallApps(): Set<String> = lockedAppsRepository.getAntiUninstallApps()
+    fun addAntiUninstallApp(packageName: String) =
+        lockedAppsRepository.addAntiUninstallApp(packageName)
+
+    fun removeAntiUninstallApp(packageName: String) =
+        lockedAppsRepository.removeAntiUninstallApp(packageName)
+
+    fun isAppAntiUninstall(packageName: String): Boolean =
+        lockedAppsRepository.isAppAntiUninstall(packageName)
+
     fun getPassword(): String? = preferencesRepository.getPassword()
     fun setPassword(password: String) = preferencesRepository.setPassword(password)
     fun validatePassword(inputPassword: String): Boolean =

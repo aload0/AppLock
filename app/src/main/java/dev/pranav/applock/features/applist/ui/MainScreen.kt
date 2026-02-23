@@ -1,5 +1,6 @@
 package dev.pranav.applock.features.applist.ui
 
+import android.annotation.SuppressLint
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.rounded.Forum
@@ -54,6 +56,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(
     ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalMaterial3Api::class
@@ -66,7 +69,6 @@ fun MainScreen(
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    val searchQuery by mainViewModel.searchQuery.collectAsState()
     val isLoading by mainViewModel.isLoading.collectAsState()
     val lockedApps by mainViewModel.lockedAppsFlow.collectAsState()
     val unlockedApps by mainViewModel.unlockedAppsFlow.collectAsState()
@@ -207,6 +209,19 @@ fun MainScreen(
                         Icon(
                             imageVector = Icons.Default.Block,
                             contentDescription = "Trigger exclusions",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screen.AntiUninstall.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Lock,
+                            contentDescription = "Anti-Uninstall",
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }

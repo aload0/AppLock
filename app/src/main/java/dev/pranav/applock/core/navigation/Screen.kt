@@ -9,5 +9,5 @@ sealed class Screen(val route: String) {
     object PasswordOverlay : Screen("password_overlay")
     object Settings : Screen("settings")
     object TriggerExclusions : Screen("trigger_exclusions")
+    object AntiUninstall: Screen("anti_uninstall")
 }
-

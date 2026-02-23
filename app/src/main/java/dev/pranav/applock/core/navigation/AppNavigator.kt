@@ -17,6 +17,7 @@ import androidx.navigation.compose.composable
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.data.repository.PreferencesRepository
+import dev.pranav.applock.features.antiuninstall.ui.AntiUninstallScreen
 import dev.pranav.applock.features.appintro.ui.AppIntroScreen
 import dev.pranav.applock.features.applist.ui.MainScreen
 import dev.pranav.applock.features.lockscreen.ui.PasswordOverlayScreen
@@ -108,6 +109,10 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
         composable(Screen.TriggerExclusions.route) {
             TriggerExclusionsScreen(navController)
+        }
+
+        composable(Screen.AntiUninstall.route) {
+            AntiUninstallScreen(navController)
         }
     }
 }

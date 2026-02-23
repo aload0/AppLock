@@ -2,7 +2,7 @@ package android.app
 
 import android.content.ComponentName
 
-class ActivityManager {
+object ActivityManager {
     class RunningTaskInfo {
         fun getActivityType() = 0
 

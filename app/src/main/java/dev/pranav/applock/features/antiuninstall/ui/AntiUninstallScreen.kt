@@ -1,5 +1,8 @@
-package dev.pranav.applock.features.triggerexclusions.ui
+package dev.pranav.applock.features.antiuninstall.ui
 
+import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,21 +25,147 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import dev.pranav.applock.core.utils.appLockRepository
+import dev.pranav.applock.core.utils.blockUninstallForUser
+import dev.pranav.applock.core.utils.unblockUninstallForUser
 import dev.pranav.applock.features.applist.domain.AppInfo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+class AntiUninstallViewModel: ViewModel() {
+    private val _allApps = MutableStateFlow<List<AppInfo>>(emptyList())
+    val allApps: StateFlow<List<AppInfo>> = _allApps.asStateFlow()
+
+    private val _filteredApps = MutableStateFlow<List<AppInfo>>(emptyList())
+    val filteredApps: StateFlow<List<AppInfo>> = _filteredApps.asStateFlow()
+
+    private val _protectedApps = MutableStateFlow<Set<String>>(emptySet())
+    val protectedApps: StateFlow<Set<String>> = _protectedApps.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _manualPackageName = MutableStateFlow("")
+    val manualPackageName: StateFlow<String> = _manualPackageName.asStateFlow()
+
+    fun loadApps(context: Context) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val repository = context.appLockRepository()
+            _protectedApps.value = repository.getAntiUninstallApps()
+
+            val apps = withContext(Dispatchers.IO) {
+                getInstalledApps(context)
+            }
+
+            _allApps.value = apps
+            _filteredApps.value = apps
+            _isLoading.value = false
+        }
+    }
+
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+        filterApps(query)
+    }
+
+    fun updateManualPackageName(packageName: String) {
+        _manualPackageName.value = packageName
+    }
+
+    private fun filterApps(query: String) {
+        _filteredApps.value = if (query.isEmpty()) {
+            _allApps.value
+        } else {
+            _allApps.value.filter { app ->
+                app.name.contains(query, ignoreCase = true) ||
+                        app.packageName.contains(query, ignoreCase = true)
+            }
+        }
+    }
+
+    fun toggleAppProtection(context: Context, packageName: String) {
+        val repository = context.appLockRepository()
+        val currentProtected = _protectedApps.value.toMutableSet()
+
+        if (currentProtected.contains(packageName)) {
+            repository.removeAntiUninstallApp(packageName)
+            currentProtected.remove(packageName)
+            unblockUninstallForUser(packageName)
+        } else {
+            repository.addAntiUninstallApp(packageName)
+            currentProtected.add(packageName)
+            blockUninstallForUser(packageName)
+        }
+
+        _protectedApps.value = currentProtected
+    }
+
+    fun addManualPackage(context: Context, packageName: String) {
+        if (packageName.isNotBlank()) {
+            val repository = context.appLockRepository()
+            repository.addAntiUninstallApp(packageName.trim())
+
+            val currentProtected = _protectedApps.value.toMutableSet()
+            currentProtected.add(packageName.trim())
+            _protectedApps.value = currentProtected
+
+            _manualPackageName.value = ""
+        }
+    }
+
+    private fun getInstalledApps(context: Context): List<AppInfo> {
+        val packageManager = context.packageManager
+        val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+
+        return installedApps
+            .filter { it.flags and ApplicationInfo.FLAG_SYSTEM == 0 || isImportantSystemApp(it) }
+            .map { appInfo ->
+                AppInfo(
+                    name = packageManager.getApplicationLabel(appInfo).toString(),
+                    packageName = appInfo.packageName,
+                    icon = packageManager.getApplicationIcon(appInfo)
+                )
+            }
+            .sortedBy { it.name.lowercase() }
+    }
+
+    private fun isImportantSystemApp(appInfo: ApplicationInfo): Boolean {
+        val importantSystemApps = setOf(
+            "com.android.chrome",
+            "com.android.vending",
+            "com.google.android.gms",
+            "com.android.settings",
+            "com.android.systemui",
+            "com.android.launcher3"
+        )
+        return appInfo.packageName in importantSystemApps
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TriggerExclusionsScreen(
+fun AntiUninstallScreen(
     navController: NavController,
-    viewModel: TriggerExclusionsViewModel = viewModel()
+    viewModel: AntiUninstallViewModel = viewModel()
 ) {
     val context = LocalContext.current
 
     val allApps by viewModel.allApps.collectAsState()
     val filteredApps by viewModel.filteredApps.collectAsState()
-    val excludedApps by viewModel.excludedApps.collectAsState()
+    val protectedApps by viewModel.protectedApps.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val manualPackageName by viewModel.manualPackageName.collectAsState()
@@ -50,7 +180,7 @@ fun TriggerExclusionsScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             SearchTopBar(
-                title = "Trigger Exclusions",
+                title = "Anti-Uninstall Protection",
                 searchQuery = searchQuery,
                 onSearchQueryChange = viewModel::updateSearchQuery,
                 onBack = { navController.navigateUp() },
@@ -70,7 +200,7 @@ fun TriggerExclusionsScreen(
         ) {
             item {
                 Text(
-                    text = "Select apps that will NOT trigger locks when switching to locked apps.",
+                    text = "Select apps that will be protected from uninstallation.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -83,15 +213,18 @@ fun TriggerExclusionsScreen(
                             .padding(vertical = 24.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            strokeWidth = 4.dp
+                        )
                     }
                 }
             } else {
-                val excludedNotInList = excludedApps.filter { pkg ->
+                val protectedNotInList = protectedApps.filter { pkg ->
                     allApps.none { it.packageName == pkg }
                 }
 
-                if (excludedNotInList.isNotEmpty()) {
+                if (protectedNotInList.isNotEmpty()) {
                     item {
                         Text(
                             text = "Manually Added Packages",
@@ -100,10 +233,10 @@ fun TriggerExclusionsScreen(
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }
-                    items(excludedNotInList) { packageName ->
+                    items(protectedNotInList) { packageName ->
                         ManualPackageItem(
                             packageName = packageName,
-                            onToggle = { viewModel.toggleAppExclusion(context, packageName) }
+                            onToggle = { viewModel.toggleAppProtection(context, packageName) }
                         )
                     }
                     item {
@@ -117,10 +250,10 @@ fun TriggerExclusionsScreen(
                 }
 
                 items(filteredApps) { app ->
-                    AppExclusionItem(
+                    AppProtectionItem(
                         app = app,
-                        isExcluded = excludedApps.contains(app.packageName),
-                        onToggle = { viewModel.toggleAppExclusion(context, app.packageName) }
+                        isProtected = protectedApps.contains(app.packageName),
+                        onToggle = { viewModel.toggleAppProtection(context, app.packageName) }
                     )
                 }
             }
@@ -134,7 +267,7 @@ fun TriggerExclusionsScreen(
             text = {
                 Column {
                     Text(
-                        text = "Enter the package name of the app you want to exclude:",
+                        text = "Enter the package name of the app you want to protect:",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
@@ -223,7 +356,7 @@ private fun SearchTopBar(
 }
 
 @Composable
-private fun AppExclusionItem(app: AppInfo, isExcluded: Boolean, onToggle: () -> Unit) {
+private fun AppProtectionItem(app: AppInfo, isProtected: Boolean, onToggle: () -> Unit) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -260,7 +393,7 @@ private fun AppExclusionItem(app: AppInfo, isExcluded: Boolean, onToggle: () -> 
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Switch(checked = isExcluded, onCheckedChange = { onToggle() })
+            Switch(checked = isProtected, onCheckedChange = { onToggle() })
         }
     }
 }
@@ -282,7 +415,12 @@ private fun ManualPackageItem(packageName: String, onToggle: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                Text("📦", style = MaterialTheme.typography.headlineMedium)
+                Icon(
+                    imageVector = Icons.Outlined.Shield,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {

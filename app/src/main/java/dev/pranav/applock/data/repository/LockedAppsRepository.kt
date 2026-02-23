@@ -62,6 +62,30 @@ class LockedAppsRepository(context: Context) {
         preferences.edit { putStringSet(KEY_TRIGGER_EXCLUDED_APPS, emptySet()) }
     }
 
+    // Anti-Uninstall Apps Management
+    fun getAntiUninstallApps(): Set<String> {
+        return preferences.getStringSet(KEY_ANTI_UNINSTALL_APPS, emptySet())?.toSet() ?: emptySet()
+    }
+
+    fun addAntiUninstallApp(packageName: String) {
+        if (packageName.isBlank()) return
+        val updated = getAntiUninstallApps() + packageName
+        preferences.edit { putStringSet(KEY_ANTI_UNINSTALL_APPS, updated) }
+    }
+
+    fun removeAntiUninstallApp(packageName: String) {
+        val updated = getAntiUninstallApps() - packageName
+        preferences.edit { putStringSet(KEY_ANTI_UNINSTALL_APPS, updated) }
+    }
+
+    fun isAppAntiUninstall(packageName: String): Boolean {
+        return getAntiUninstallApps().contains(packageName)
+    }
+
+    fun clearAllAntiUninstallApps() {
+        preferences.edit { putStringSet(KEY_ANTI_UNINSTALL_APPS, emptySet()) }
+    }
+
     // Bulk operations
     fun addMultipleLockedApps(packageNames: Set<String>) {
         val validPackageNames = packageNames.filter { it.isNotBlank() }.toSet()
@@ -79,5 +103,6 @@ class LockedAppsRepository(context: Context) {
         private const val PREFS_NAME = "app_lock_prefs"
         private const val KEY_LOCKED_APPS = "locked_apps"
         private const val KEY_TRIGGER_EXCLUDED_APPS = "trigger_excluded_apps"
+        private const val KEY_ANTI_UNINSTALL_APPS = "anti_uninstall_apps"
     }
 }
