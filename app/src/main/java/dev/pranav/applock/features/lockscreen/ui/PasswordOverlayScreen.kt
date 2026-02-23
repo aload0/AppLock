@@ -1,6 +1,7 @@
 package dev.pranav.applock.features.lockscreen.ui
 
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -107,6 +108,10 @@ class PasswordOverlayActivity : FragmentActivity() {
         }
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        Log.d(TAG, "Configuration changed - orientation: ${newConfig.orientation}")
+    }
 
     private fun setupWindow() {
         window.addFlags(
@@ -285,7 +290,7 @@ class PasswordOverlayActivity : FragmentActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (!isBiometricPromptShowingLocal && !movedToBackground) {
+        if (!isChangingConfigurations() && !isBiometricPromptShowingLocal && !movedToBackground) {
             AppLockManager.isLockScreenShown.set(false)
             AppLockManager.reportBiometricAuthFinished()
             finish()
@@ -301,7 +306,7 @@ class PasswordOverlayActivity : FragmentActivity() {
         super.onStop()
         movedToBackground = true
         AppLockManager.isLockScreenShown.set(false)
-        if (!isFinishing && !isDestroyed) {
+        if (!isChangingConfigurations() && !isFinishing && !isDestroyed) {
             AppLockManager.reportBiometricAuthFinished()
             finish()
         }

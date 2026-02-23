@@ -22,7 +22,6 @@ import dev.pranav.applock.data.repository.AppLockRepository
 import dev.pranav.applock.data.repository.BackendImplementation
 import dev.pranav.applock.features.lockscreen.ui.PasswordOverlayActivity
 import dev.pranav.applock.services.AppLockConstants.ACCESSIBILITY_SETTINGS_CLASSES
-import dev.pranav.applock.services.AppLockConstants.ADMIN_CONFIG_CLASSES
 import dev.pranav.applock.services.AppLockConstants.EXCLUDED_APPS
 import rikka.shizuku.Shizuku
 
@@ -112,15 +111,10 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     private fun handleAccessibilityEvent(event: AccessibilityEvent) {
-        // Check for device admin deactivation (anti-uninstall feature)
         if (appLockRepository.isAntiUninstallEnabled() &&
             event.packageName == DEVICE_ADMIN_SETTINGS_PACKAGE
         ) {
-            try {
-                checkForDeviceAdminDeactivation(event)
-            } catch (e: Exception) {
-                logError("Error checking device admin deactivation", e)
-            }
+            checkForDeviceAdminDeactivation(event)
         }
 
         // Early return if protection is disabled or service is not running
@@ -372,8 +366,6 @@ class AppLockAccessibilityService : AccessibilityService() {
     }
 
     private fun checkForDeviceAdminDeactivation(event: AccessibilityEvent) {
-        val rootNode = rootInActiveWindow ?: return
-
         Log.d(TAG, "Checking for device admin deactivation for event: $event")
 
         // Check if user is trying to deactivate the accessibility service
@@ -385,10 +377,12 @@ class AppLockAccessibilityService : AccessibilityService() {
 
         // Check if on device admin page and our app is visible
         val isDeviceAdminPage = isDeviceAdminPage(event)
-        val isOurAppVisible = findNodeWithTextContaining(rootNode, "App Lock") != null ||
-                findNodeWithTextContaining(rootNode, "AppLock") != null
+        //val isOurAppVisible = findNodeWithTextContaining(rootNode, "App Lock") != null ||
+        //        findNodeWithTextContaining(rootNode, "AppLock") != null
 
-        if (!isDeviceAdminPage || !isOurAppVisible) {
+        LogUtils.d(TAG, "User is on device admin page: $isDeviceAdminPage, $event")
+
+        if (!isDeviceAdminPage) {
             return
         }
 
@@ -403,7 +397,6 @@ class AppLockAccessibilityService : AccessibilityService() {
         val isAlertDialog =
             event.packageName == "com.google.android.packageinstaller" && event.className == "android.app.AlertDialog" && event.text.toString()
                 .lowercase().contains("App Lock")
-
 
         return isAccessibilitySettings || isSubSettings || isAlertDialog
     }
@@ -423,8 +416,9 @@ class AppLockAccessibilityService : AccessibilityService() {
         val hasDeviceAdminDescription = event.contentDescription?.toString()?.lowercase()
             ?.contains("Device admin app") == true &&
                 event.className == "android.widget.FrameLayout"
+
         val isAdminConfigClass =
-            event.className!!.endsWith("DeviceAdminAdd") || event.className in ADMIN_CONFIG_CLASSES
+            event.className!!.contains("DeviceAdminAdd") || event.className!!.contains("DeviceAdminSettings")
 
         return hasDeviceAdminDescription || isAdminConfigClass
     }

@@ -32,11 +32,6 @@ object AppLockConstants {
         "com.google.android.webview"
     )
 
-    val ADMIN_CONFIG_CLASSES = setOf(
-        "com.android.settings.deviceadmin.DeviceAdminSettings"
-    )
-    // com.android.settings.spa.SpaActivity
-
     val ACCESSIBILITY_SETTINGS_CLASSES = setOf(
         "com.android.settings.accessibility.AccessibilitySettings",
         "com.android.settings.accessibility.AccessibilityMenuActivity",

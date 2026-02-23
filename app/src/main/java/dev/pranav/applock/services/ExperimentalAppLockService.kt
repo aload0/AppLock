@@ -159,9 +159,7 @@ class ExperimentalAppLockService : Service() {
             if (event.eventType != UsageEvents.Event.ACTIVITY_RESUMED) continue
             if (event.className == "dev.pranav.applock.features.lockscreen.ui.PasswordOverlayActivity") continue
 
-            if (event.className in AppLockConstants.KNOWN_RECENTS_CLASSES ||
-                event.className in AppLockConstants.ADMIN_CONFIG_CLASSES ||
-                event.className in AppLockConstants.ACCESSIBILITY_SETTINGS_CLASSES
+            if (event.className in AppLockConstants.KNOWN_RECENTS_CLASSES
             ) {
                 continue
             }
