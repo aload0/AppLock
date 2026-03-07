@@ -91,6 +91,23 @@ fun SettingsScreen(
     var disableHapticFeedback by remember { mutableStateOf(appLockRepository.shouldDisableHaptics()) }
     var loggingEnabled by remember { mutableStateOf(appLockRepository.isLoggingEnabled()) }
 
+    // NEW: System Settings Restriction State Variables
+    var restrictDrawOverAppsEnabled by remember { 
+        mutableStateOf(appLockRepository.isRestrictDrawOverAppsSettings()) 
+    }
+    var restrictUsageAccessEnabled by remember { 
+        mutableStateOf(appLockRepository.isRestrictUsageAccessSettings()) 
+    }
+    var restrictAccessibilityEnabled by remember { 
+        mutableStateOf(appLockRepository.isRestrictAccessibilitySettings()) 
+    }
+    var restrictDeviceAdminEnabled by remember { 
+        mutableStateOf(appLockRepository.isRestrictDeviceAdminSettings()) 
+    }
+    var requireUnrestrictedBatteryEnabled by remember { 
+        mutableStateOf(appLockRepository.isRequireUnrestrictedBattery()) 
+    }
+
     var showPermissionDialog by remember { mutableStateOf(false) }
     var showDeviceAdminDialog by remember { mutableStateOf(false) }
     var showAccessibilityDialog by remember { mutableStateOf(false) }
@@ -148,42 +165,38 @@ fun SettingsScreen(
         PermissionRequiredDialog(
             onDismiss = { showPermissionDialog = false },
             onConfirm = {
-                showPermissionDialog = false
                 showDeviceAdminDialog = true
+                showAccessibilityDialog = true
+                showPermissionDialog = false
             }
         )
     }
 
     if (showDeviceAdminDialog) {
-        DeviceAdminDialog(
+        DeviceAdminPermissionDialog(
             onDismiss = { showDeviceAdminDialog = false },
             onConfirm = {
-                showDeviceAdminDialog = false
-                val component = ComponentName(context, DeviceAdmin::class.java)
-                val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN).apply {
-                    putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, component)
-                    putExtra(
-                        DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                        context.getString(R.string.main_screen_device_admin_explanation)
-                    )
-                }
+                val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+                intent.putExtra(
+                    DevicePolicyManager.EXTRA_DEVICE_ADMIN,
+                    ComponentName(context, DeviceAdmin::class.java)
+                )
+                intent.putExtra(
+                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+                    context.getString(R.string.device_admin_explanation)
+                )
                 context.startActivity(intent)
+                showDeviceAdminDialog = false
             }
         )
     }
 
     if (showAccessibilityDialog) {
-        AccessibilityDialog(
+        AntiUninstallAccessibilityPermissionDialog(
             onDismiss = { showAccessibilityDialog = false },
             onConfirm = {
-                showAccessibilityDialog = false
                 openAccessibilitySettings(context)
-                val dpm =
-                    context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-                val component = ComponentName(context, DeviceAdmin::class.java)
-                if (!dpm.isAdminActive(component)) {
-                    showDeviceAdminDialog = true
-                }
+                showAccessibilityDialog = false
             }
         )
     }
@@ -195,8 +208,13 @@ fun SettingsScreen(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { Text(stringResource(R.string.settings_screen_title)) },
+            MediumTopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.settings_screen_title),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -327,45 +345,171 @@ fun SettingsScreen(
                                 )
                             } else stringResource(R.string.settings_screen_unlock_duration_summary_immediate),
                             onClick = { showUnlockTimeDialog = true }
-                        ),
-                        ToggleSettingItem(
-                            icon = Icons.Default.Lock,
-                            title = stringResource(R.string.settings_screen_anti_uninstall_title),
-                            subtitle = stringResource(R.string.settings_screen_anti_uninstall_desc),
-                            checked = antiUninstallEnabled,
-                            enabled = true,
-                            onCheckedChange = { isChecked ->
-                                if (isChecked) {
-                                    val dpm =
-                                        context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-                                    val component = ComponentName(context, DeviceAdmin::class.java)
-                                    val hasDeviceAdmin = dpm.isAdminActive(component)
-                                    val hasAccessibility = context.isAccessibilityServiceEnabled()
-
-                                    when {
-                                        !hasDeviceAdmin && !hasAccessibility -> {
-                                            showPermissionDialog = true
-                                        }
-                                        !hasDeviceAdmin -> {
-                                            showDeviceAdminDialog = true
-                                        }
-                                        !hasAccessibility -> {
-                                            showAccessibilityDialog = true
-                                        }
-                                        else -> {
-                                            antiUninstallEnabled = true
-                                            appLockRepository.setAntiUninstallEnabled(true)
-                                        }
-                                    }
-                                } else {
-                                    context.startActivity(
-                                        Intent(context, AdminDisableActivity::class.java)
-                                    )
-                                }
-                            }
                         )
                     )
                 )
+            }
+
+            // NEW: ANTI-UNINSTALL WITH SYSTEM SETTINGS RESTRICTIONS
+            item {
+                Column {
+                    // Main Anti-Uninstall Toggle
+                    SettingsGroup(
+                        items = listOf(
+                            ToggleSettingItem(
+                                icon = Icons.Default.Lock,
+                                title = stringResource(R.string.settings_screen_anti_uninstall_title),
+                                subtitle = stringResource(R.string.settings_screen_anti_uninstall_desc),
+                                checked = antiUninstallEnabled,
+                                enabled = true,
+                                onCheckedChange = { isChecked ->
+                                    if (isChecked) {
+                                        val dpm =
+                                            context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+                                        val component = ComponentName(context, DeviceAdmin::class.java)
+                                        val hasDeviceAdmin = dpm.isAdminActive(component)
+                                        val hasAccessibility = context.isAccessibilityServiceEnabled()
+
+                                        when {
+                                            !hasDeviceAdmin && !hasAccessibility -> {
+                                                showPermissionDialog = true
+                                            }
+                                            !hasDeviceAdmin -> {
+                                                showDeviceAdminDialog = true
+                                            }
+                                            !hasAccessibility -> {
+                                                showAccessibilityDialog = true
+                                            }
+                                            else -> {
+                                                antiUninstallEnabled = true
+                                                appLockRepository.setAntiUninstallEnabled(true)
+                                            }
+                                        }
+                                    } else {
+                                        context.startActivity(
+                                            Intent(context, AdminDisableActivity::class.java)
+                                        )
+                                    }
+                                }
+                            )
+                        )
+                    )
+
+                    // Sub-Switches - Only visible when Anti-Uninstall is enabled
+                    AnimatedVisibility(
+                        visible = antiUninstallEnabled,
+                        enter = expandVertically(
+                            animationSpec = spring(
+                                dampingRatio = 0.8f,
+                                stiffness = 100f
+                            )
+                        ) + fadeIn(),
+                        exit = shrinkVertically(
+                            animationSpec = spring(
+                                dampingRatio = 0.8f,
+                                stiffness = 100f
+                            )
+                        ) + fadeOut()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Restrict System Settings Access",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            // Disable "Draw Over Other Apps" Settings Page
+                            SettingsGroup(
+                                items = listOf(
+                                    ToggleSettingItem(
+                                        icon = Icons.Default.Visibility,
+                                        title = "Disable Draw Over Other Apps",
+                                        subtitle = "Prevent disabling overlay permission used by unlock screen",
+                                        checked = restrictDrawOverAppsEnabled,
+                                        enabled = antiUninstallEnabled,
+                                        onCheckedChange = { isChecked ->
+                                            restrictDrawOverAppsEnabled = isChecked
+                                            appLockRepository.setRestrictDrawOverAppsSettings(isChecked)
+                                        }
+                                    )
+                                )
+                            )
+
+                            // Disable "Usage Access" Settings Page
+                            SettingsGroup(
+                                items = listOf(
+                                    ToggleSettingItem(
+                                        icon = Icons.Default.BarChart,
+                                        title = "Disable Usage Access",
+                                        subtitle = "Prevent disabling Usage Stats permission required for foreground app detection",
+                                        checked = restrictUsageAccessEnabled,
+                                        enabled = antiUninstallEnabled,
+                                        onCheckedChange = { isChecked ->
+                                            restrictUsageAccessEnabled = isChecked
+                                            appLockRepository.setRestrictUsageAccessSettings(isChecked)
+                                        }
+                                    )
+                                )
+                            )
+
+                            // Disable "Accessibility Settings" Page
+                            SettingsGroup(
+                                items = listOf(
+                                    ToggleSettingItem(
+                                        icon = Accessibility,
+                                        title = "Disable Accessibility Settings",
+                                        subtitle = "Prevent disabling Accessibility Service used for app lock monitoring",
+                                        checked = restrictAccessibilityEnabled,
+                                        enabled = antiUninstallEnabled,
+                                        onCheckedChange = { isChecked ->
+                                            restrictAccessibilityEnabled = isChecked
+                                            appLockRepository.setRestrictAccessibilitySettings(isChecked)
+                                        }
+                                    )
+                                )
+                            )
+
+                            // Disable "Device Administrator Settings" Page
+                            SettingsGroup(
+                                items = listOf(
+                                    ToggleSettingItem(
+                                        icon = Icons.Outlined.Security,
+                                        title = "Disable Device Administrator Settings",
+                                        subtitle = "Prevent removing Device Administrator privilege",
+                                        checked = restrictDeviceAdminEnabled,
+                                        enabled = antiUninstallEnabled,
+                                        onCheckedChange = { isChecked ->
+                                            restrictDeviceAdminEnabled = isChecked
+                                            appLockRepository.setRestrictDeviceAdminSettings(isChecked)
+                                        }
+                                    )
+                                )
+                            )
+
+                            // Require "Unrestricted Battery Usage"
+                            SettingsGroup(
+                                items = listOf(
+                                    ToggleSettingItem(
+                                        icon = BatterySaver,
+                                        title = "Require Unrestricted Battery Usage",
+                                        subtitle = "Ensure app is not restricted by battery optimization",
+                                        checked = requireUnrestrictedBatteryEnabled,
+                                        enabled = antiUninstallEnabled,
+                                        onCheckedChange = { isChecked ->
+                                            requireUnrestrictedBatteryEnabled = isChecked
+                                            appLockRepository.setRequireUnrestrictedBattery(isChecked)
+                                        }
+                                    )
+                                )
+                            )
+                        }
+                    }
+                }
             }
 
             item {
@@ -400,39 +544,24 @@ fun SettingsScreen(
                             }
                         ),
                         ActionSettingItem(
-                            icon = Icons.Outlined.BugReport,
-                            title = stringResource(R.string.settings_screen_export_logs_title),
-                            subtitle = stringResource(R.string.settings_screen_export_logs_desc),
+                            icon = Icons.Outlined.Code,
+                            title = stringResource(R.string.settings_screen_backend_title),
+                            subtitle = when (appLockRepository.getBackendImplementation()) {
+                                BackendImplementation.ACCESSIBILITY -> stringResource(R.string.settings_screen_backend_accessibility)
+                                BackendImplementation.USAGE_STATS -> stringResource(R.string.settings_screen_backend_usage_stats)
+                                BackendImplementation.SHIZUKU -> stringResource(R.string.settings_screen_backend_shizuku)
+                            },
                             onClick = {
-                                val uri = LogUtils.exportLogs()
-                                if (uri != null) {
-                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_STREAM, uri)
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    context.startActivity(
-                                        Intent.createChooser(shareIntent, "Share logs")
-                                    )
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.settings_screen_export_logs_error),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+                                navController.navigate(Screen.ChooseBackend.route)
                             }
                         ),
-                        ToggleSettingItem(
-                            icon = Icons.Default.Troubleshoot,
-                            title = "Logging",
-                            subtitle = "Enable debug logging for troubleshooting",
-                            checked = loggingEnabled,
-                            enabled = true,
-                            onCheckedChange = { isChecked ->
-                                loggingEnabled = isChecked
-                                appLockRepository.setLoggingEnabled(isChecked)
-                                LogUtils.setLoggingEnabled(isChecked)
+                        ActionSettingItem(
+                            icon = Icons.Outlined.BugReport,
+                            title = stringResource(R.string.settings_screen_logging_title),
+                            subtitle = stringResource(R.string.settings_screen_logging_desc),
+                            onClick = {
+                                loggingEnabled = !loggingEnabled
+                                appLockRepository.setLoggingEnabled(loggingEnabled)
                             }
                         )
                     )
@@ -440,670 +569,258 @@ fun SettingsScreen(
             }
 
             item {
-                BackendSelectionCard(
-                    appLockRepository = appLockRepository,
-                    context = context,
-                    shizukuPermissionLauncher = shizukuPermissionLauncher
-                )
-            }
-
-            item {
-                LinksSection()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    FilledTonalButton(onClick = { showDialog = true }) {
+                        Text(stringResource(R.string.settings_screen_support_development_button))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextButton(onClick = { navController.navigate("https://github.com/PranavPurwar/AppLock") }) {
+                        Icon(
+                            imageVector = Github,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.settings_screen_github_button))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
     }
 }
 
 @Composable
-fun SectionTitle(text: String) {
+private fun SectionTitle(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, bottom = 4.dp, top = 4.dp)
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
     )
 }
 
-sealed class SettingItemType {
-    data class Toggle(
-        val icon: ImageVector,
-        val title: String,
-        val subtitle: String,
-        val checked: Boolean,
-        val enabled: Boolean,
-        val onCheckedChange: (Boolean) -> Unit
-    ): SettingItemType()
-
-    data class Action(
-        val icon: ImageVector,
-        val title: String,
-        val subtitle: String,
-        val onClick: () -> Unit
-    ): SettingItemType()
+@Composable
+private fun SettingsGroup(items: List<SettingItem>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer),
+        verticalArrangement = Arrangement.spacedBy(1.dp)
+    ) {
+        items.forEachIndexed { index, item ->
+            when (item) {
+                is ToggleSettingItem -> ToggleSettingItemComposable(item)
+                is ActionSettingItem -> ActionSettingItemComposable(item)
+            }
+            if (index < items.lastIndex) {
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                )
+            }
+        }
+    }
 }
 
+@Composable
+private fun ToggleSettingItemComposable(item: ToggleSettingItem) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = item.enabled) { item.onCheckedChange(!item.checked) }
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = item.icon,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = if (item.enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = if (item.enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = item.subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = item.checked,
+            onCheckedChange = { item.onCheckedChange(it) },
+            enabled = item.enabled
+        )
+    }
+}
+
+@Composable
+private fun ActionSettingItemComposable(item: ActionSettingItem) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { item.onClick() }
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = item.icon,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = MaterialTheme.colorScheme.onSurface
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = item.subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+sealed class SettingItem
 data class ToggleSettingItem(
     val icon: ImageVector,
     val title: String,
     val subtitle: String,
     val checked: Boolean,
-    val enabled: Boolean,
+    val enabled: Boolean = true,
     val onCheckedChange: (Boolean) -> Unit
-)
+) : SettingItem()
 
 data class ActionSettingItem(
     val icon: ImageVector,
     val title: String,
     val subtitle: String,
     val onClick: () -> Unit
-)
+) : SettingItem()
 
 @Composable
-fun SettingsGroup(
-    items: List<Any>
-) {
-    Column {
-        items.forEachIndexed { index, item ->
-            SettingsCard(index = index, listSize = items.size) {
-                when (item) {
-                    is ToggleSettingItem -> {
-                        ToggleSettingRow(
-                            icon = item.icon,
-                            title = item.title,
-                            subtitle = item.subtitle,
-                            checked = item.checked,
-                            enabled = item.enabled,
-                            onCheckedChange = item.onCheckedChange
-                        )
-                    }
-
-                    is ActionSettingItem -> {
-                        ActionSettingRow(
-                            icon = item.icon,
-                            title = item.title,
-                            subtitle = item.subtitle,
-                            onClick = item.onClick
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SettingsCard(
-    index: Int,
-    listSize: Int,
-    content: @Composable () -> Unit
-) {
-    val shape = when {
-        listSize == 1 -> RoundedCornerShape(24.dp)
-        index == 0 -> RoundedCornerShape(
-            topStart = 24.dp,
-            topEnd = 24.dp,
-            bottomStart = 6.dp,
-            bottomEnd = 6.dp
-        )
-
-        index == listSize - 1 -> RoundedCornerShape(
-            topStart = 6.dp,
-            topEnd = 6.dp,
-            bottomStart = 24.dp,
-            bottomEnd = 24.dp
-        )
-
-        else -> RoundedCornerShape(6.dp)
-    }
-
-    AnimatedVisibility(
-        visible = true,
-        enter = fadeIn() + scaleIn(
-            initialScale = 0.95f,
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-        ),
-        exit = fadeOut() + shrinkVertically()
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 1.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer
-            ),
-            shape = shape
-        ) {
-            content()
-        }
-    }
-}
-
-@Composable
-fun ToggleSettingRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    enabled: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    ListItem(
-        modifier = Modifier
-            .clickable(enabled = enabled) { if (enabled) onCheckedChange(!checked) }
-            .padding(vertical = 2.dp, horizontal = 4.dp),
-        headlineContent = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium
-            )
-        },
-        supportingContent = {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall
-            )
-        },
-        leadingContent = {
-            Box(
-                modifier = Modifier.size(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            }
-        },
-        trailingContent = {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                Switch(
-                    checked = checked,
-                    onCheckedChange = null,
-                    enabled = enabled
-                )
-            }
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent
-        )
-    )
-}
-
-@Composable
-fun ActionSettingRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    ListItem(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = 2.dp, horizontal = 4.dp),
-        headlineContent = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium
-            )
-        },
-        supportingContent = {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall
-            )
-        },
-        leadingContent = {
-            Box(
-                modifier = Modifier.size(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            }
-        },
-        trailingContent = {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                    contentDescription = null
-                )
-            }
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent
-        )
-    )
-}
-
-@Composable
-fun UnlockTimeDurationDialog(
+private fun UnlockTimeDurationDialog(
     currentDuration: Int,
     onDismiss: () -> Unit,
     onConfirm: (Int) -> Unit
 ) {
-    val durations = listOf(0, 1, 5, 15, 30, 60, Integer.MAX_VALUE)
-    var selectedDuration by remember { mutableIntStateOf(currentDuration) }
-
-    if (!durations.contains(selectedDuration)) {
-        selectedDuration = durations.minByOrNull { abs(it - currentDuration) } ?: 0
-    }
+    var duration by remember { mutableIntStateOf(currentDuration) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_screen_unlock_duration_dialog_title)) },
+        title = { Text("Set Unlock Duration") },
         text = {
             Column {
-                Text(stringResource(R.string.settings_screen_unlock_duration_dialog_description_new))
-                durations.forEach { duration ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { selectedDuration = duration }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = selectedDuration == duration,
-                            onClick = { selectedDuration = duration }
-                        )
-                        Text(
-                            text = when (duration) {
-                                0 -> stringResource(R.string.settings_screen_unlock_duration_dialog_option_immediate)
-                                1 -> stringResource(
-                                    R.string.settings_screen_unlock_duration_dialog_option_minute,
-                                    duration
-                                )
-                                60 -> stringResource(R.string.settings_screen_unlock_duration_dialog_option_hour)
-                                Integer.MAX_VALUE -> "Until Screen Off"
-                                else -> stringResource(
-                                    R.string.settings_screen_unlock_duration_summary_minutes,
-                                    duration
-                                )
-                            },
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
+                Text("Duration in seconds (0 = immediately, 10000+ = until screen off)")
+                OutlinedTextField(
+                    value = duration.toString(),
+                    onValueChange = { duration = it.toIntOrNull() ?: 0 },
+                    label = { Text("Seconds") },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(selectedDuration) }) {
-                Text(stringResource(R.string.confirm_button))
+            TextButton(onClick = { onConfirm(duration) }) {
+                Text("Set")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel_button))
+                Text("Cancel")
             }
         }
     )
 }
 
 @Composable
-fun BackendSelectionCard(
-    appLockRepository: AppLockRepository,
-    context: Context,
-    shizukuPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>
-) {
-    var selectedBackend by remember { mutableStateOf(appLockRepository.getBackendImplementation()) }
-
-    Column {
-        SectionTitle(text = stringResource(R.string.settings_screen_backend_implementation_title))
-
-        Column {
-            BackendImplementation.entries.forEachIndexed { index, backend ->
-                SettingsCard(
-                    index = index,
-                    listSize = BackendImplementation.entries.size
-                ) {
-                    BackendSelectionItem(
-                        backend = backend,
-                        isSelected = selectedBackend == backend,
-                        onClick = {
-                            when (backend) {
-                                BackendImplementation.SHIZUKU -> {
-                                    if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() == PackageManager.PERMISSION_DENIED) {
-                                        if (Shizuku.isPreV11()) {
-                                            shizukuPermissionLauncher.launch(ShizukuProvider.PERMISSION)
-                                        } else if (Shizuku.pingBinder()) {
-                                            Shizuku.requestPermission(423)
-                                        } else {
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.settings_screen_shizuku_not_running_toast),
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    } else {
-                                        selectedBackend = backend
-                                        appLockRepository.setBackendImplementation(
-                                            BackendImplementation.SHIZUKU
-                                        )
-                                        context.startService(
-                                            Intent(context, ShizukuAppLockService::class.java)
-                                        )
-                                    }
-                                }
-                                BackendImplementation.USAGE_STATS -> {
-                                    if (!context.hasUsagePermission()) {
-                                        val intent =
-                                            Intent(android.provider.Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        context.startActivity(intent)
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.settings_screen_usage_permission_toast),
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                        return@BackendSelectionItem
-                                    }
-                                    selectedBackend = backend
-                                    appLockRepository.setBackendImplementation(BackendImplementation.USAGE_STATS)
-                                    context.startService(
-                                        Intent(context, ExperimentalAppLockService::class.java)
-                                    )
-                                }
-                                BackendImplementation.ACCESSIBILITY -> {
-                                    if (!context.isAccessibilityServiceEnabled()) {
-                                        openAccessibilitySettings(context)
-                                        return@BackendSelectionItem
-                                    }
-                                    selectedBackend = backend
-                                    appLockRepository.setBackendImplementation(BackendImplementation.ACCESSIBILITY)
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun BackendSelectionItem(
-    backend: BackendImplementation,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    ListItem(
-        modifier = Modifier
-            .clickable { onClick() }
-            .padding(vertical = 2.dp, horizontal = 4.dp),
-        headlineContent = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = getBackendDisplayName(backend),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurface
-                )
-                if (backend == BackendImplementation.SHIZUKU) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
-                    ) {
-                        Text(
-                            text = stringResource(R.string.settings_screen_backend_implementation_shizuku_advanced),
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
-                }
-            }
-        },
-        supportingContent = {
-            Text(
-                text = getBackendDescription(backend),
-                style = MaterialTheme.typography.bodySmall
-            )
-        },
-        leadingContent = {
-            Box(
-                modifier = Modifier.size(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = getBackendIcon(backend),
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            }
-        },
-        trailingContent = {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                RadioButton(
-                    selected = isSelected,
-                    onClick = onClick,
-                    colors = RadioButtonDefaults.colors(
-                        selectedColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-            }
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent
-        )
-    )
-}
-
-private fun getBackendDisplayName(backend: BackendImplementation): String {
-    return when (backend) {
-        BackendImplementation.ACCESSIBILITY -> "Accessibility Service"
-        BackendImplementation.USAGE_STATS -> "Usage Statistics"
-        BackendImplementation.SHIZUKU -> "Shizuku Service"
-    }
-}
-
-private fun getBackendDescription(backend: BackendImplementation): String {
-    return when (backend) {
-        BackendImplementation.ACCESSIBILITY -> "Standard method that works on most devices"
-        BackendImplementation.USAGE_STATS -> "Experimental method using app usage statistics"
-        BackendImplementation.SHIZUKU -> "Advanced method using Shizuku and internal APIs"
-    }
-}
-
-private fun getBackendIcon(backend: BackendImplementation): ImageVector {
-    return when (backend) {
-        BackendImplementation.ACCESSIBILITY -> Accessibility
-        BackendImplementation.USAGE_STATS -> Icons.Default.QueryStats
-        BackendImplementation.SHIZUKU -> Icons.Default.AutoAwesome
-    }
-}
-
-@Composable
-fun PermissionRequiredDialog(
+private fun PermissionRequiredDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_screen_permission_required_dialog_title)) },
-        text = {
-            Column {
-                Text(stringResource(R.string.settings_screen_permission_required_dialog_text_1))
-                Text(stringResource(R.string.settings_screen_permission_required_dialog_text_2))
-            }
-        },
+        title = { Text("Permissions Required") },
+        text = { Text("Device Administrator and Accessibility Service permissions are required for Anti-Uninstall protection.") },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.grant_permission_button))
+                Text("Grant")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel_button))
+                Text("Cancel")
             }
         }
     )
 }
 
 @Composable
-fun DeviceAdminDialog(
+private fun DeviceAdminPermissionDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_screen_device_admin_dialog_title)) },
-        text = {
-            Column {
-                Text(stringResource(R.string.settings_screen_device_admin_dialog_text_1))
-                Text(stringResource(R.string.settings_screen_device_admin_dialog_text_2))
-            }
-        },
+        title = { Text("Device Administrator Required") },
+        text = { Text("Grant Device Administrator permission to enable Anti-Uninstall protection.") },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.enable_button))
+                Text("Grant")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel_button))
+                Text("Cancel")
             }
         }
     )
 }
 
 @Composable
-fun AccessibilityDialog(
+private fun AntiUninstallAccessibilityPermissionDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_screen_accessibility_dialog_title)) },
-        text = {
-            Column {
-                Text(stringResource(R.string.settings_screen_accessibility_dialog_text_1))
-                Text(stringResource(R.string.settings_screen_accessibility_dialog_text_2))
-                Text(stringResource(R.string.settings_screen_accessibility_dialog_text_3))
-            }
-        },
+        title = { Text("Accessibility Service Required") },
+        text = { Text("Enable Accessibility Service for App Lock to provide Anti-Uninstall protection.") },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.enable_button))
+                Text("Enable")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel_button))
+                Text("Cancel")
             }
         }
-    )
-}
-
-@Composable
-fun LinksSection() {
-    val context = LocalContext.current
-
-    Column {
-        SectionTitle(text = "Links")
-
-        Column {
-            SettingsCard(index = 0, listSize = 3) {
-                LinkItem(
-                    title = "Discord Community",
-                    icon = Discord,
-                    onClick = {
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            "https://discord.gg/46wCMRVAre".toUri()
-                        )
-                        context.startActivity(intent)
-                    }
-                )
-            }
-
-            SettingsCard(index = 1, listSize = 3) {
-                LinkItem(
-                    title = "Source Code",
-                    icon = Icons.Outlined.Code,
-                    onClick = {
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            "https://github.com/aload0/AppLock".toUri()
-                        )
-                        context.startActivity(intent)
-                    }
-                )
-            }
-
-            SettingsCard(index = 2, listSize = 3) {
-                LinkItem(
-                    title = "Report Issue",
-                    icon = Icons.Outlined.BugReport,
-                    onClick = {
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            "https://github.com/aload0/AppLock/issues".toUri()
-                        )
-                        context.startActivity(intent)
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun LinkItem(
-    title: String,
-    icon: ImageVector,
-    onClick: () -> Unit
-) {
-    ListItem(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = 2.dp, horizontal = 4.dp),
-        headlineContent = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium
-            )
-        },
-        leadingContent = {
-            Box(
-                modifier = Modifier.size(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-            }
-        },
-        trailingContent = {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                    contentDescription = null
-                )
-            }
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = Color.Transparent
-        )
     )
 }

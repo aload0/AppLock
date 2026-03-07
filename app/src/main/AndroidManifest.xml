@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="internalOnly">
 
+    <!-- EXISTING PERMISSIONS -->
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
@@ -26,8 +27,11 @@
         tools:ignore="ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
-
     <uses-permission android:name="android.permission.SET_ACTIVITY_WATCHER" />
+
+    <!-- NEW PERMISSIONS FOR SYSTEM SETTINGS RESTRICTION -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+    <uses-permission android:name="android.permission.ACCESS_DEVICE_ADMIN" />
 
     <application
         android:name=".AppLockApplication"
@@ -43,6 +47,7 @@
         android:theme="@style/Theme.AppLock"
         tools:targetApi="33">
 
+        <!-- MAIN ACTIVITY -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -53,6 +58,7 @@
             </intent-filter>
         </activity>
 
+        <!-- LOCK SCREEN ACTIVITY -->
         <activity
             android:name=".features.lockscreen.ui.PasswordOverlayActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
@@ -61,17 +67,20 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.Material.NoActionBar.TranslucentDecor" />
 
+        <!-- ADMIN DISABLE ACTIVITY -->
         <activity
             android:name=".features.admin.AdminDisableActivity"
             android:exported="false"
             android:theme="@style/Theme.AppLock" />
 
+        <!-- SHIZUKU SERVICE -->
         <service
             android:name=".services.ShizukuAppLockService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse|systemExempted" />
 
+        <!-- EXPERIMENTAL SERVICE -->
         <service
             android:name=".services.ExperimentalAppLockService"
             android:enabled="true"
@@ -82,6 +91,7 @@
                 android:value="app_lock" />
         </service>
 
+        <!-- ACCESSIBILITY SERVICE - UPDATED EVENT TYPES -->
         <service
             android:name=".services.AppLockAccessibilityService"
             android:exported="false"
@@ -100,6 +110,7 @@
                 android:value="accessibility" />
         </service>
 
+        <!-- DEVICE ADMIN RECEIVER -->
         <receiver
             android:name=".core.broadcast.DeviceAdmin"
             android:description="@string/device_admin_description"
@@ -113,6 +124,7 @@
                 android:resource="@xml/device_admin_policies" />
         </receiver>
 
+        <!-- BOOT RECEIVER -->
         <receiver
             android:name=".core.broadcast.BootReceiver"
             android:enabled="true"
@@ -126,6 +138,45 @@
             </intent-filter>
         </receiver>
 
+        <!-- NEW: BROADCAST RECEIVER FOR SYSTEM SETTINGS INTENT INTERCEPTION -->
+        <receiver
+            android:name=".core.broadcast.SettingsIntentInterceptor"
+            android:exported="false"
+            android:enabled="true"
+            android:permission="android.permission.MANAGE_APP_PERMISSIONS">
+            
+            <intent-filter android:priority="1000">
+                <!-- Overlay/Draw Over Apps Settings -->
+                <action android:name="android.intent.action.MANAGE_OVERLAY_PERMISSION" />
+                <action android:name="android.settings.MANAGE_OVERLAY_PERMISSION" />
+                
+                <!-- Usage Access Settings -->
+                <action android:name="android.settings.USAGE_ACCESS_SETTINGS" />
+                <action android:name="android.intent.action.USAGE_ACCESS_SETTINGS" />
+                
+                <!-- Accessibility Settings -->
+                <action android:name="android.settings.ACCESSIBILITY_SETTINGS" />
+                <action android:name="android.intent.action.ACCESSIBILITY_SETTINGS" />
+                
+                <!-- Device Administrator Settings -->
+                <action android:name="android.settings.SECURITY_SETTINGS" />
+                <action android:name="android.intent.action.SECURITY_SETTINGS" />
+                <action android:name="com.android.settings.DEVICE_ADMIN_DELETE_CONFIRM" />
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
+                
+                <!-- Battery Optimization Settings -->
+                <action android:name="android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS" />
+                <action android:name="android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+                <action android:name="android.intent.action.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+                
+                <!-- Samsung-specific Settings -->
+                <action android:name="com.android.settings.MANAGE_APP_PERMISSIONS" />
+                <action android:name="com.sec.android.settings.MANAGE_PERMISSION" />
+            </intent-filter>
+        </receiver>
+
+        <!-- FILE PROVIDER -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -136,6 +187,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- SHIZUKU PROVIDER -->
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"
@@ -145,4 +197,5 @@
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
 
     </application>
+
 </manifest>
