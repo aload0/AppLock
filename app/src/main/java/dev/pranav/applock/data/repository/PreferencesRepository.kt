@@ -7,7 +7,7 @@ import androidx.core.content.edit
 /**
  * Repository for managing application preferences and settings.
  * Handles all SharedPreferences operations with proper separation of concerns.
- * Updated to include system settings restriction preferences.
+ * COMPLETE FILE - Copy and paste to replace your existing PreferencesRepository.kt
  */
 class PreferencesRepository(context: Context) {
 
@@ -103,8 +103,7 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_APPLOCK_ENABLED, DEFAULT_PROTECT_ENABLED)
     }
 
-    // ============= SYSTEM SETTINGS RESTRICTIONS =============
-    // NEW: Restrict Draw Over Other Apps Settings Page
+    // ============= SYSTEM SETTINGS RESTRICTIONS (NEW) =============
     fun setRestrictDrawOverAppsSettings(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_RESTRICT_DRAW_OVER_APPS, enabled) }
     }
@@ -113,7 +112,6 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_RESTRICT_DRAW_OVER_APPS, false)
     }
 
-    // NEW: Restrict Usage Access Settings Page
     fun setRestrictUsageAccessSettings(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_RESTRICT_USAGE_ACCESS, enabled) }
     }
@@ -122,7 +120,6 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_RESTRICT_USAGE_ACCESS, false)
     }
 
-    // NEW: Restrict Accessibility Settings Page
     fun setRestrictAccessibilitySettings(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_RESTRICT_ACCESSIBILITY_SETTINGS, enabled) }
     }
@@ -131,7 +128,6 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_RESTRICT_ACCESSIBILITY_SETTINGS, false)
     }
 
-    // NEW: Restrict Device Administrator Settings Page
     fun setRestrictDeviceAdminSettings(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_RESTRICT_DEVICE_ADMIN_SETTINGS, enabled) }
     }
@@ -140,7 +136,6 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_RESTRICT_DEVICE_ADMIN_SETTINGS, false)
     }
 
-    // NEW: Require Unrestricted Battery Usage
     fun setRequireUnrestrictedBattery(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_REQUIRE_UNRESTRICTED_BATTERY, enabled) }
     }
@@ -149,7 +144,6 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_REQUIRE_UNRESTRICTED_BATTERY, false)
     }
 
-    // NEW: Disable all system settings restrictions (used when Anti-Uninstall is disabled)
     fun disableAllSystemSettingsRestrictions() {
         settingsPrefs.edit {
             putBoolean(KEY_RESTRICT_DRAW_OVER_APPS, false)
@@ -205,7 +199,6 @@ class PreferencesRepository(context: Context) {
         settingsPrefs.edit { putBoolean(KEY_SHOW_DONATE_LINK, show) }
     }
 
-    // Overloaded version for context parameter (for backward compatibility)
     fun isShowDonateLink(context: Context): Boolean {
         return settingsPrefs.getBoolean(KEY_SHOW_DONATE_LINK, true)
     }
@@ -227,7 +220,6 @@ class PreferencesRepository(context: Context) {
         private const val PREFS_NAME_APP_LOCK = "applock_prefs"
         private const val PREFS_NAME_SETTINGS = "settings_prefs"
 
-        // Keys
         private const val KEY_PASSWORD = "password"
         private const val KEY_PATTERN = "pattern"
         private const val KEY_LOCK_TYPE = "lock_type"
@@ -238,7 +230,7 @@ class PreferencesRepository(context: Context) {
         private const val KEY_ANTI_UNINSTALL = "anti_uninstall"
         private const val KEY_APPLOCK_ENABLED = "applock_enabled"
 
-        // NEW: System Settings Restriction Keys
+        // System Settings Restriction Keys
         private const val KEY_RESTRICT_DRAW_OVER_APPS = "restrict_draw_over_apps"
         private const val KEY_RESTRICT_USAGE_ACCESS = "restrict_usage_access"
         private const val KEY_RESTRICT_ACCESSIBILITY_SETTINGS = "restrict_accessibility_settings"
@@ -252,12 +244,16 @@ class PreferencesRepository(context: Context) {
         private const val KEY_SHOW_DONATE_LINK = "show_donate_link"
         private const val KEY_LOGGING_ENABLED = "logging_enabled"
 
-        // Lock type constants
         const val LOCK_TYPE_PIN = "pin"
         const val LOCK_TYPE_PATTERN = "pattern"
         const val LOCK_TYPE_PASSWORD = "password"
 
-        // Default values
         const val DEFAULT_PROTECT_ENABLED = true
     }
+}
+
+enum class BackendImplementation {
+    ACCESSIBILITY,
+    USAGE_STATS,
+    SHIZUKU
 }
