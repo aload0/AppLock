@@ -1,0 +1,220 @@
+package dev.pranav.applock.core.utils
+
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
+import dev.pranav.applock.core.utils.LogUtils
+import dev.pranav.applock.data.repository.AppLockRepository
+
+/**
+ * Manages restriction of critical system settings pages.
+ * Detects when users try to access restricted settings and blocks them.
+ * 
+ * Supported restrictions:
+ * - Draw Over Other Apps (Overlay Permission)
+ * - Usage Access (Usage Stats Permission)
+ * - Accessibility Settings
+ * - Device Administrator Settings
+ * - Battery Optimization Settings
+ */
+class SystemSettingsRestrictionManager(private val context: Context) {
+
+    private val repository = context.appLockRepository()
+
+    /**
+     * Check if an intent is trying to access a restricted settings page.
+     * If restricted, log the attempt and return true.
+     */
+    fun isIntentRestricted(intent: Intent?): Boolean {
+        if (intent == null || !repository.isAntiUninstallEnabled()) {
+            return false
+        }
+
+        return when {
+            isDrawOverAppsSettings(intent) && repository.isRestrictDrawOverAppsSettings() -> {
+                logRestrictionAttempt("Draw Over Other Apps", intent)
+                true
+            }
+            isUsageAccessSettings(intent) && repository.isRestrictUsageAccessSettings() -> {
+                logRestrictionAttempt("Usage Access", intent)
+                true
+            }
+            isAccessibilitySettings(intent) && repository.isRestrictAccessibilitySettings() -> {
+                logRestrictionAttempt("Accessibility", intent)
+                true
+            }
+            isDeviceAdminSettings(intent) && repository.isRestrictDeviceAdminSettings() -> {
+                logRestrictionAttempt("Device Administrator", intent)
+                true
+            }
+            isBatteryOptimizationSettings(intent) && repository.isRequireUnrestrictedBattery() -> {
+                logRestrictionAttempt("Battery Optimization", intent)
+                true
+            }
+            else -> false
+        }
+    }
+
+    /**
+     * Get all currently restricted actions.
+     * Used by accessibility service to monitor specific intents.
+     */
+    fun getRestrictedActions(): List<String> {
+        val actions = mutableListOf<String>()
+
+        if (repository.isAntiUninstallEnabled()) {
+            if (repository.isRestrictDrawOverAppsSettings()) {
+                actions.addAll(DRAW_OVER_APPS_ACTIONS)
+            }
+            if (repository.isRestrictUsageAccessSettings()) {
+                actions.addAll(USAGE_ACCESS_ACTIONS)
+            }
+            if (repository.isRestrictAccessibilitySettings()) {
+                actions.addAll(ACCESSIBILITY_ACTIONS)
+            }
+            if (repository.isRestrictDeviceAdminSettings()) {
+                actions.addAll(DEVICE_ADMIN_ACTIONS)
+            }
+            if (repository.isRequireUnrestrictedBattery()) {
+                actions.addAll(BATTERY_OPTIMIZATION_ACTIONS)
+            }
+        }
+
+        return actions
+    }
+
+    /**
+     * Check if battery optimization check is required.
+     * If enabled, ensure app is in unrestricted battery usage.
+     */
+    fun checkBatteryOptimizationRequirement(): Boolean {
+        if (!repository.isRequireUnrestrictedBattery() ||
+            !repository.isAntiUninstallEnabled()) {
+            return false
+        }
+
+        // Check if app is ignored by battery optimization
+        val pm = context.getSystemService(Context.POWER_SERVICE)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val powerManager = pm as? android.os.PowerManager
+            !(powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: false)
+        } else {
+            false
+        }
+    }
+
+    /**
+     * Request unrestricted battery usage permission.
+     */
+    fun requestUnrestrictedBatteryUsage() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return
+        }
+
+        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+            data = android.net.Uri.parse("package:${context.packageName}")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            LogUtils.logError("Failed to request unrestricted battery usage", e)
+        }
+    }
+
+    // ============= DETECTION METHODS =============
+
+    private fun isDrawOverAppsSettings(intent: Intent): Boolean {
+        val action = intent.action ?: return false
+        return action in DRAW_OVER_APPS_ACTIONS
+    }
+
+    private fun isUsageAccessSettings(intent: Intent): Boolean {
+        val action = intent.action ?: return false
+        return action in USAGE_ACCESS_ACTIONS
+    }
+
+    private fun isAccessibilitySettings(intent: Intent): Boolean {
+        val action = intent.action ?: return false
+        return action in ACCESSIBILITY_ACTIONS
+    }
+
+    private fun isDeviceAdminSettings(intent: Intent): Boolean {
+        val action = intent.action ?: return false
+        return action in DEVICE_ADMIN_ACTIONS
+    }
+
+    private fun isBatteryOptimizationSettings(intent: Intent): Boolean {
+        val action = intent.action ?: return false
+        return action in BATTERY_OPTIMIZATION_ACTIONS
+    }
+
+    // ============= LOGGING =============
+
+    private fun logRestrictionAttempt(settingType: String, intent: Intent) {
+        try {
+            val message = "Blocked access to $settingType settings (Action: ${intent.action})"
+            LogUtils.logSecurityEvent(message)
+        } catch (e: Exception) {
+            LogUtils.logError("Failed to log restriction attempt", e)
+        }
+    }
+
+    companion object {
+        // Draw Over Other Apps Settings Actions
+        private val DRAW_OVER_APPS_ACTIONS = listOf(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            "com.android.settings.MANAGE_APP_PERMISSIONS",  // Samsung specific
+            "com.sec.android.settings.MANAGE_PERMISSION"    // Samsung specific
+        )
+
+        // Usage Access Settings Actions
+        private val USAGE_ACCESS_ACTIONS = listOf(
+            Settings.ACTION_USAGE_ACCESS_SETTINGS,
+            "android.settings.USAGE_ACCESS_SETTINGS",
+            "android.intent.action.USAGE_ACCESS_SETTINGS"
+        )
+
+        // Accessibility Settings Actions
+        private val ACCESSIBILITY_ACTIONS = listOf(
+            Settings.ACTION_ACCESSIBILITY_SETTINGS,
+            "android.settings.ACCESSIBILITY_SETTINGS",
+            "android.intent.action.ACCESSIBILITY_SETTINGS"
+        )
+
+        // Device Administrator Settings Actions
+        private val DEVICE_ADMIN_ACTIONS = listOf(
+            Settings.ACTION_SECURITY_SETTINGS,
+            Settings.ACTION_DEVICE_ADMIN_DELETE_CONFIRM,
+            "android.app.action.DEVICE_ADMIN_ENABLED",
+            "android.app.action.DEVICE_ADMIN_DISABLED",
+            "com.android.settings.DEVICE_ADMIN_DELETE_CONFIRM"
+        )
+
+        // Battery Optimization Settings Actions
+        private val BATTERY_OPTIMIZATION_ACTIONS = listOf(
+            Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS,
+            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+            "android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS",
+            "android.intent.action.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+        )
+
+        // Combined list for easy access
+        val ALL_RESTRICTED_ACTIONS = listOf(
+            *DRAW_OVER_APPS_ACTIONS.toTypedArray(),
+            *USAGE_ACCESS_ACTIONS.toTypedArray(),
+            *ACCESSIBILITY_ACTIONS.toTypedArray(),
+            *DEVICE_ADMIN_ACTIONS.toTypedArray(),
+            *BATTERY_OPTIMIZATION_ACTIONS.toTypedArray()
+        )
+    }
+}
+
+/**
+ * Extension function to create SystemSettingsRestrictionManager from context
+ */
+fun Context.systemSettingsRestrictionManager(): SystemSettingsRestrictionManager {
+    return SystemSettingsRestrictionManager(this)
+}
