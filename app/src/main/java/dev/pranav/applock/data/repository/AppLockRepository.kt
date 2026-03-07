@@ -5,8 +5,7 @@ import dev.pranav.applock.data.manager.BackendServiceManager
 
 /**
  * Main repository that coordinates between different specialized repositories and managers.
- * Provides a unified interface for all app lock functionality.
- * Updated to include system settings restriction methods.
+ * COMPLETE FILE - Copy and paste to replace your existing AppLockRepository.kt
  */
 class AppLockRepository(private val context: Context) {
 
@@ -75,7 +74,6 @@ class AppLockRepository(private val context: Context) {
     // ============= ANTI-UNINSTALL & PROTECTION =============
     fun setAntiUninstallEnabled(enabled: Boolean) {
         preferencesRepository.setAntiUninstallEnabled(enabled)
-        // When disabling Anti-Uninstall, also disable all system settings restrictions
         if (!enabled) {
             preferencesRepository.disableAllSystemSettingsRestrictions()
         }
@@ -86,42 +84,36 @@ class AppLockRepository(private val context: Context) {
     fun isProtectEnabled(): Boolean = preferencesRepository.isProtectEnabled()
 
     // ============= SYSTEM SETTINGS RESTRICTIONS (NEW) =============
-    // NEW: Restrict Draw Over Other Apps Settings Page
     fun setRestrictDrawOverAppsSettings(enabled: Boolean) =
         preferencesRepository.setRestrictDrawOverAppsSettings(enabled)
 
     fun isRestrictDrawOverAppsSettings(): Boolean =
         preferencesRepository.isRestrictDrawOverAppsSettings()
 
-    // NEW: Restrict Usage Access Settings Page
     fun setRestrictUsageAccessSettings(enabled: Boolean) =
         preferencesRepository.setRestrictUsageAccessSettings(enabled)
 
     fun isRestrictUsageAccessSettings(): Boolean =
         preferencesRepository.isRestrictUsageAccessSettings()
 
-    // NEW: Restrict Accessibility Settings Page
     fun setRestrictAccessibilitySettings(enabled: Boolean) =
         preferencesRepository.setRestrictAccessibilitySettings(enabled)
 
     fun isRestrictAccessibilitySettings(): Boolean =
         preferencesRepository.isRestrictAccessibilitySettings()
 
-    // NEW: Restrict Device Administrator Settings Page
     fun setRestrictDeviceAdminSettings(enabled: Boolean) =
         preferencesRepository.setRestrictDeviceAdminSettings(enabled)
 
     fun isRestrictDeviceAdminSettings(): Boolean =
         preferencesRepository.isRestrictDeviceAdminSettings()
 
-    // NEW: Require Unrestricted Battery Usage
     fun setRequireUnrestrictedBattery(enabled: Boolean) =
         preferencesRepository.setRequireUnrestrictedBattery(enabled)
 
     fun isRequireUnrestrictedBattery(): Boolean =
         preferencesRepository.isRequireUnrestrictedBattery()
 
-    // NEW: Check if any system settings restriction is enabled
     fun hasAnySystemSettingsRestriction(): Boolean {
         return isRestrictDrawOverAppsSettings() ||
                 isRestrictUsageAccessSettings() ||
@@ -149,7 +141,6 @@ class AppLockRepository(private val context: Context) {
     fun isShowDonateLink(): Boolean = preferencesRepository.isShowDonateLink()
     fun setShowDonateLink(show: Boolean) = preferencesRepository.setShowDonateLink(show)
     
-    // Overloaded versions for context parameter (for backward compatibility)
     fun isShowDonateLink(context: Context): Boolean = preferencesRepository.isShowDonateLink(context)
     fun setShowDonateLink(context: Context, show: Boolean) = preferencesRepository.setShowDonateLink(context, show)
 
