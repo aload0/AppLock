@@ -69,6 +69,31 @@ class AppLockRepository(private val context: Context) {
         preferencesRepository.setAntiUninstallEnabled(enabled)
 
     fun isAntiUninstallEnabled(): Boolean = preferencesRepository.isAntiUninstallEnabled()
+
+    fun setAntiUninstallAdminSettingsEnabled(enabled: Boolean) =
+        preferencesRepository.setAntiUninstallAdminSettingsEnabled(enabled)
+
+    fun isAntiUninstallAdminSettingsEnabled(): Boolean =
+        preferencesRepository.isAntiUninstallAdminSettingsEnabled()
+
+    fun setAntiUninstallUsageStatsEnabled(enabled: Boolean) =
+        preferencesRepository.setAntiUninstallUsageStatsEnabled(enabled)
+
+    fun isAntiUninstallUsageStatsEnabled(): Boolean =
+        preferencesRepository.isAntiUninstallUsageStatsEnabled()
+
+    fun setAntiUninstallAccessibilityEnabled(enabled: Boolean) =
+        preferencesRepository.setAntiUninstallAccessibilityEnabled(enabled)
+
+    fun isAntiUninstallAccessibilityEnabled(): Boolean =
+        preferencesRepository.isAntiUninstallAccessibilityEnabled()
+
+    fun setAntiUninstallOverlayEnabled(enabled: Boolean) =
+        preferencesRepository.setAntiUninstallOverlayEnabled(enabled)
+
+    fun isAntiUninstallOverlayEnabled(): Boolean =
+        preferencesRepository.isAntiUninstallOverlayEnabled()
+
     fun setProtectEnabled(enabled: Boolean) = preferencesRepository.setProtectEnabled(enabled)
     fun isProtectEnabled(): Boolean = preferencesRepository.isProtectEnabled()
 

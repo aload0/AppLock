@@ -15,6 +15,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -31,10 +32,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import dev.pranav.applock.R
 import dev.pranav.applock.core.broadcast.DeviceAdmin
@@ -60,7 +65,16 @@ fun SettingsScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val appLockRepository = remember { AppLockRepository(context) }
+
+    // Pre-fetch strings to avoid LocalContext.current resource querying in lambdas
+    val shizukuPermissionGrantedMsg = stringResource(R.string.settings_screen_shizuku_permission_granted)
+    val shizukuPermissionRequiredMsg = stringResource(R.string.settings_screen_shizuku_permission_required_desc)
+    val deviceAdminExplanation = stringResource(R.string.main_screen_device_admin_explanation)
+    val exportLogsError = stringResource(R.string.settings_screen_export_logs_error)
+    val shizukuNotRunningMsg = stringResource(R.string.settings_screen_shizuku_not_running_toast)
+    val usagePermissionMsg = stringResource(R.string.settings_screen_usage_permission_toast)
 
     var showDialog by remember { mutableStateOf(false) }
     var showUnlockTimeDialog by remember { mutableStateOf(false) }
@@ -69,17 +83,9 @@ fun SettingsScreen(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.settings_screen_shizuku_permission_granted),
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(context, shizukuPermissionGrantedMsg, Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(
-                context,
-                context.getString(R.string.settings_screen_shizuku_permission_required_desc),
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(context, shizukuPermissionRequiredMsg, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -88,6 +94,12 @@ fun SettingsScreen(
     var useBiometricAuth by remember { mutableStateOf(appLockRepository.isBiometricAuthEnabled()) }
     var unlockTimeDuration by remember { mutableIntStateOf(appLockRepository.getUnlockTimeDuration()) }
     var antiUninstallEnabled by remember { mutableStateOf(appLockRepository.isAntiUninstallEnabled()) }
+    
+    var antiUninstallAdminSettings by remember { mutableStateOf(appLockRepository.isAntiUninstallAdminSettingsEnabled()) }
+    var antiUninstallUsageStats by remember { mutableStateOf(appLockRepository.isAntiUninstallUsageStatsEnabled()) }
+    var antiUninstallAccessibility by remember { mutableStateOf(appLockRepository.isAntiUninstallAccessibilityEnabled()) }
+    var antiUninstallOverlay by remember { mutableStateOf(appLockRepository.isAntiUninstallOverlayEnabled()) }
+
     var disableHapticFeedback by remember { mutableStateOf(appLockRepository.shouldDisableHaptics()) }
     var loggingEnabled by remember { mutableStateOf(appLockRepository.isLoggingEnabled()) }
 
@@ -95,12 +107,49 @@ fun SettingsScreen(
     var showDeviceAdminDialog by remember { mutableStateOf(false) }
     var showAccessibilityDialog by remember { mutableStateOf(false) }
 
+    // Sync state with repository on resume (e.g. after returning from AdminDisableActivity)
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                autoUnlock = appLockRepository.isAutoUnlockEnabled()
+                useMaxBrightness = appLockRepository.shouldUseMaxBrightness()
+                useBiometricAuth = appLockRepository.isBiometricAuthEnabled()
+                unlockTimeDuration = appLockRepository.getUnlockTimeDuration()
+                antiUninstallEnabled = appLockRepository.isAntiUninstallEnabled()
+                antiUninstallAdminSettings = appLockRepository.isAntiUninstallAdminSettingsEnabled()
+                antiUninstallUsageStats = appLockRepository.isAntiUninstallUsageStatsEnabled()
+                antiUninstallAccessibility = appLockRepository.isAntiUninstallAccessibilityEnabled()
+                antiUninstallOverlay = appLockRepository.isAntiUninstallOverlayEnabled()
+                disableHapticFeedback = appLockRepository.shouldDisableHaptics()
+                loggingEnabled = appLockRepository.isLoggingEnabled()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     val biometricManager = remember { BiometricManager.from(context) }
     val isBiometricAvailable = remember {
         biometricManager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_WEAK or
                     BiometricManager.Authenticators.BIOMETRIC_STRONG
         ) == BiometricManager.BIOMETRIC_SUCCESS
+    }
+
+    // Effect to handle anti-uninstall settings reset when disabled
+    LaunchedEffect(antiUninstallEnabled) {
+        if (!antiUninstallEnabled) {
+            antiUninstallAdminSettings = false
+            antiUninstallUsageStats = false
+            antiUninstallAccessibility = false
+            antiUninstallOverlay = false
+            appLockRepository.setAntiUninstallAdminSettingsEnabled(false)
+            appLockRepository.setAntiUninstallUsageStatsEnabled(false)
+            appLockRepository.setAntiUninstallAccessibilityEnabled(false)
+            appLockRepository.setAntiUninstallOverlayEnabled(false)
+        }
     }
 
     if (showDialog) {
@@ -164,7 +213,7 @@ fun SettingsScreen(
                     putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, component)
                     putExtra(
                         DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                        context.getString(R.string.main_screen_device_admin_explanation)
+                        deviceAdminExplanation
                     )
                 }
                 context.startActivity(intent)
@@ -343,14 +392,11 @@ fun SettingsScreen(
                                     val hasAccessibility = context.isAccessibilityServiceEnabled()
 
                                     when {
-                                        !hasDeviceAdmin && !hasAccessibility -> {
-                                            showPermissionDialog = true
+                                        !hasAccessibility -> {
+                                            showAccessibilityDialog = true
                                         }
                                         !hasDeviceAdmin -> {
                                             showDeviceAdminDialog = true
-                                        }
-                                        !hasAccessibility -> {
-                                            showAccessibilityDialog = true
                                         }
                                         else -> {
                                             antiUninstallEnabled = true
@@ -366,6 +412,62 @@ fun SettingsScreen(
                         )
                     )
                 )
+            }
+
+            if (antiUninstallEnabled) {
+                item {
+                    SectionTitle(text = "Anti-Uninstall Settings")
+                }
+                item {
+                    SettingsGroup(
+                        items = listOf(
+                            ToggleSettingItem(
+                                icon = Icons.Default.AdminPanelSettings,
+                                title = "Protect Device Admin",
+                                subtitle = "Prevent access to device admin settings",
+                                checked = antiUninstallAdminSettings,
+                                enabled = antiUninstallEnabled,
+                                onCheckedChange = { isChecked ->
+                                    antiUninstallAdminSettings = isChecked
+                                    appLockRepository.setAntiUninstallAdminSettingsEnabled(isChecked)
+                                }
+                            ),
+                            ToggleSettingItem(
+                                icon = Icons.Default.QueryStats,
+                                title = "Protect Usage Stats",
+                                subtitle = "Prevent access to usage stats settings",
+                                checked = antiUninstallUsageStats,
+                                enabled = antiUninstallEnabled,
+                                onCheckedChange = { isChecked ->
+                                    antiUninstallUsageStats = isChecked
+                                    appLockRepository.setAntiUninstallUsageStatsEnabled(isChecked)
+                                }
+                            ),
+                            ToggleSettingItem(
+                                icon = Accessibility,
+                                title = "Protect Accessibility",
+                                subtitle = "Prevent access to accessibility settings",
+                                checked = antiUninstallAccessibility,
+                                enabled = antiUninstallEnabled,
+                                onCheckedChange = { isChecked ->
+                                    antiUninstallAccessibility = isChecked
+                                    appLockRepository.setAntiUninstallAccessibilityEnabled(isChecked)
+                                }
+                            ),
+                            ToggleSettingItem(
+                                icon = Display,
+                                title = "Protect Overlay Settings",
+                                subtitle = "Prevent access to appear on top settings",
+                                checked = antiUninstallOverlay,
+                                enabled = antiUninstallEnabled,
+                                onCheckedChange = { isChecked ->
+                                    antiUninstallOverlay = isChecked
+                                    appLockRepository.setAntiUninstallOverlayEnabled(isChecked)
+                                }
+                            )
+                        )
+                    )
+                }
             }
 
             item {
@@ -393,7 +495,7 @@ fun SettingsScreen(
                                 } else {
                                     Toast.makeText(
                                         context,
-                                        context.getString(R.string.settings_screen_export_logs_error),
+                                        exportLogsError,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -417,7 +519,7 @@ fun SettingsScreen(
                                 } else {
                                     Toast.makeText(
                                         context,
-                                        context.getString(R.string.settings_screen_export_logs_error),
+                                        exportLogsError,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
@@ -443,7 +545,9 @@ fun SettingsScreen(
                 BackendSelectionCard(
                     appLockRepository = appLockRepository,
                     context = context,
-                    shizukuPermissionLauncher = shizukuPermissionLauncher
+                    shizukuPermissionLauncher = shizukuPermissionLauncher,
+                    shizukuNotRunningMsg = shizukuNotRunningMsg,
+                    usagePermissionMsg = usagePermissionMsg
                 )
             }
 
@@ -590,7 +694,12 @@ fun ToggleSettingRow(
 ) {
     ListItem(
         modifier = Modifier
-            .clickable(enabled = enabled) { if (enabled) onCheckedChange(!checked) }
+            .toggleable(
+                value = checked,
+                enabled = enabled,
+                role = Role.Switch,
+                onValueChange = { onCheckedChange(it) }
+            )
             .padding(vertical = 2.dp, horizontal = 4.dp),
         headlineContent = {
             Text(
@@ -754,7 +863,9 @@ fun UnlockTimeDurationDialog(
 fun BackendSelectionCard(
     appLockRepository: AppLockRepository,
     context: Context,
-    shizukuPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>
+    shizukuPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    shizukuNotRunningMsg: String,
+    usagePermissionMsg: String
 ) {
     var selectedBackend by remember { mutableStateOf(appLockRepository.getBackendImplementation()) }
 
@@ -781,7 +892,7 @@ fun BackendSelectionCard(
                                         } else {
                                             Toast.makeText(
                                                 context,
-                                                context.getString(R.string.settings_screen_shizuku_not_running_toast),
+                                                shizukuNotRunningMsg,
                                                 Toast.LENGTH_LONG
                                             ).show()
                                         }
@@ -803,7 +914,7 @@ fun BackendSelectionCard(
                                         context.startActivity(intent)
                                         Toast.makeText(
                                             context,
-                                            context.getString(R.string.settings_screen_usage_permission_toast),
+                                            usagePermissionMsg,
                                             Toast.LENGTH_LONG
                                         ).show()
                                         return@BackendSelectionItem

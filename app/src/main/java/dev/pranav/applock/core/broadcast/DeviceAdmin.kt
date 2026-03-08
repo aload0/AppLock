@@ -17,10 +17,6 @@ class DeviceAdmin : DeviceAdminReceiver() {
         context.getSharedPreferences("app_lock_settings", Context.MODE_PRIVATE).edit {
             putBoolean("anti_uninstall", true)
         }
-
-        val component = ComponentName(context, DeviceAdmin::class.java)
-
-        getManager(context).setUninstallBlocked(component, context.packageName, true)
     }
 
     override fun onDisabled(context: Context, intent: android.content.Intent) {
