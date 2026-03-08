@@ -1,6 +1,5 @@
 package dev.pranav.applock.services
 
-import android.app.ActivityManager
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
@@ -19,6 +18,8 @@ object AppLockConstants {
         "com.android.quickstep.RecentsActivity",
         "com.android.systemui.recents.RecentsView",
         "com.android.systemui.recents.RecentsPanelView",
+        "com.sec.android.app.launcher.recents.RecentsActivity",
+        "com.google.android.apps.nexuslauncher.RecentsActivity"
     )
 
     val EXCLUDED_APPS = setOf(
@@ -36,7 +37,51 @@ object AppLockConstants {
         "com.android.settings.accessibility.AccessibilitySettings",
         "com.android.settings.accessibility.AccessibilityMenuActivity",
         "com.android.settings.accessibility.AccessibilityShortcutActivity",
-        "com.android.settings.Settings\$AccessibilitySettingsActivity"
+        "com.android.settings.Settings\$AccessibilitySettingsActivity",
+        "com.android.settings.Settings\$AccessibilitySettings",
+        // Samsung specific
+        "com.samsung.android.settings.accessibility.AccessibilitySettings",
+        "com.samsung.android.settings.accessibility.AccessibilityShortcutActivity",
+        "com.samsung.android.settings.accessibility.AccessibilityMenuActivity",
+        "com.samsung.android.settings.accessibility.home.AccessibilitySettings",
+        "com.samsung.android.settings.accessibility.AccessibilityDetailsSettings",
+        "com.samsung.android.settings.accessibility.InstalledAppsActivity",
+        "com.samsung.android.settings.accessibility.ListServiceAccessibilitySettings",
+        "com.samsung.android.settings.accessibility.advanced.AdvancedSettingsActivity",
+        "com.samsung.android.settings.Settings\$AccessibilitySettingsActivity",
+        "com.samsung.android.settings.Settings\$AccessibilitySettings"
+    )
+
+    val DEVICE_ADMIN_SETTINGS_CLASSES = setOf(
+        "com.android.settings.Settings\$DeviceAdminSettingsActivity",
+        "com.android.settings.DeviceAdminSettings",
+        "com.android.settings.applications.specialaccess.deviceadmin.DeviceAdminSettings",
+        "com.android.settings.DeviceAdminAdd",
+        // Samsung specific
+        "com.samsung.android.settings.deviceadmin.DeviceAdminSettings",
+        "com.samsung.android.settings.deviceadmin.DeviceAdminAdd",
+        "com.samsung.android.settings.Settings\$DeviceAdminSettingsActivity"
+    )
+
+    val USAGE_ACCESS_SETTINGS_CLASSES = setOf(
+        "com.android.settings.Settings\$UsageAccessSettingsActivity",
+        "com.android.settings.applications.specialaccess.usageaccess.UsageAccessSettings",
+        "com.android.settings.UsageAccessSettings",
+        // Samsung specific
+        "com.samsung.android.settings.usageaccess.UsageAccessSettings",
+        "com.samsung.android.settings.Settings\$UsageAccessSettingsActivity"
+    )
+
+    val OVERLAY_SETTINGS_CLASSES = setOf(
+        "com.android.settings.Settings\$OverlaySettingsActivity",
+        "com.android.settings.Settings\$DrawOverlayDetailsActivity",
+        "com.android.settings.applications.specialaccess.drawoverlay.DrawOverlayDetails",
+        "com.android.settings.DrawOverlayDetails",
+        // Samsung specific
+        "com.samsung.android.settings.applications.specialaccess.drawoverlay.DrawOverlayDetails",
+        "com.samsung.android.settings.applications.specialaccess.drawoverlay.OverlaySettings",
+        "com.samsung.android.settings.Settings\$OverlaySettingsActivity",
+        "com.samsung.android.settings.Settings\$DrawOverlayDetailsActivity"
     )
 
     const val MAX_RESTART_ATTEMPTS = 3
@@ -49,11 +94,13 @@ fun Context.isDeviceLocked(): Boolean {
     return keyguardManager?.isKeyguardLocked ?: false
 }
 
-@Suppress("DEPRECATION")
 fun Context.isServiceRunning(serviceClass: Class<*>): Boolean {
-    val manager = getSystemService(ActivityManager::class.java) ?: return false
-    return manager.getRunningServices(Int.MAX_VALUE)
-        .any { serviceClass.name == it.service.className }
+    return when (serviceClass) {
+        AppLockAccessibilityService::class.java -> AppLockAccessibilityService.isServiceRunning
+        ShizukuAppLockService::class.java -> ShizukuAppLockService.isServiceRunning
+        ExperimentalAppLockService::class.java -> ExperimentalAppLockService.isServiceRunning
+        else -> false
+    }
 }
 
 object AppLockManager {

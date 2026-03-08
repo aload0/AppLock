@@ -1,5 +1,6 @@
 package dev.pranav.applock.features.lockscreen.ui
 
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -50,6 +51,7 @@ fun PatternLockScreen(
     modifier: Modifier = Modifier,
     fromMainActivity: Boolean = false,
     lockedAppName: String? = null,
+    lockedAppIcon: Drawable? = null,
     triggeringPackageName: String? = null,
     onPatternAttempt: ((pattern: String) -> Boolean)? = null,
     onBiometricAuth: (() -> Unit)? = null
@@ -119,43 +121,27 @@ fun PatternLockScreen(
                         .weight(1f)
                         .fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    AppHeader(
+                        fromMainActivity = fromMainActivity,
+                        lockedAppName = lockedAppName,
+                        lockedAppIcon = lockedAppIcon,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    if (showError) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                                "Continue to $lockedAppName"
-                            else
-                                stringResource(R.string.enter_pattern_to_continue),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            text = stringResource(R.string.incorrect_pattern_try_again),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
-//
-//                        if (!fromMainActivity && !triggeringPackageName.isNullOrEmpty()) {
-//                            Spacer(modifier = Modifier.height(8.dp))
-//                            Text(
-//                                text = triggeringPackageName,
-//                                style = MaterialTheme.typography.bodySmall,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                                textAlign = TextAlign.Center
-//                            )
-//                        }
-
-                        if (showError) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.incorrect_pattern_try_again),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center
-                            )
-                        }
                     }
 
                     if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
+                        Spacer(modifier = Modifier.height(16.dp))
                         FilledTonalIconButton(
                             onClick = { onBiometricAuth() },
                             modifier = Modifier.size(44.dp),
@@ -206,25 +192,12 @@ fun PatternLockScreen(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                            "Continue to $lockedAppName"
-                        else
-                            stringResource(R.string.enter_pattern_to_continue),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
+                    AppHeader(
+                        fromMainActivity = fromMainActivity,
+                        lockedAppName = lockedAppName,
+                        lockedAppIcon = lockedAppIcon,
+                        style = MaterialTheme.typography.headlineSmall
                     )
-
-//                    if (!fromMainActivity && !triggeringPackageName.isNullOrEmpty()) {
-//                        Spacer(modifier = Modifier.height(8.dp))
-//                        Text(
-//                            text = triggeringPackageName,
-//                            style = MaterialTheme.typography.labelLarge,
-//                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                            textAlign = TextAlign.Center
-//                        )
-//                    }
 
                     if (showError) {
                         Spacer(modifier = Modifier.height(8.dp))

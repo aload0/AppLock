@@ -17,7 +17,7 @@ class PreferencesRepository(context: Context) {
         context.getSharedPreferences(PREFS_NAME_SETTINGS, Context.MODE_PRIVATE)
 
     fun setPassword(password: String) {
-        appLockPrefs.edit { putString(KEY_PASSWORD, password) }
+        appLockPrefs.edit(commit = true) { putString(KEY_PASSWORD, password) }
     }
 
     fun getPassword(): String? {
@@ -30,7 +30,7 @@ class PreferencesRepository(context: Context) {
     }
 
     fun setPattern(pattern: String) {
-        appLockPrefs.edit { putString(KEY_PATTERN, pattern) }
+        appLockPrefs.edit(commit = true) { putString(KEY_PATTERN, pattern) }
     }
 
     fun getPattern(): String? {
@@ -43,7 +43,7 @@ class PreferencesRepository(context: Context) {
     }
 
     fun setLockType(lockType: String) {
-        settingsPrefs.edit { putString(KEY_LOCK_TYPE, lockType) }
+        settingsPrefs.edit(commit = true) { putString(KEY_LOCK_TYPE, lockType) }
     }
 
     fun getLockType(): String {
@@ -83,15 +83,47 @@ class PreferencesRepository(context: Context) {
     }
 
     fun setAntiUninstallEnabled(enabled: Boolean) {
-        settingsPrefs.edit { putBoolean(KEY_ANTI_UNINSTALL, enabled) }
+        settingsPrefs.edit(commit = true) { putBoolean(KEY_ANTI_UNINSTALL, enabled) }
     }
 
     fun isAntiUninstallEnabled(): Boolean {
         return settingsPrefs.getBoolean(KEY_ANTI_UNINSTALL, false)
     }
 
+    fun setAntiUninstallAdminSettingsEnabled(enabled: Boolean) {
+        settingsPrefs.edit(commit = true) { putBoolean(KEY_ANTI_UNINSTALL_ADMIN_SETTINGS, enabled) }
+    }
+
+    fun isAntiUninstallAdminSettingsEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_ANTI_UNINSTALL_ADMIN_SETTINGS, false)
+    }
+
+    fun setAntiUninstallUsageStatsEnabled(enabled: Boolean) {
+        settingsPrefs.edit(commit = true) { putBoolean(KEY_ANTI_UNINSTALL_USAGE_STATS, enabled) }
+    }
+
+    fun isAntiUninstallUsageStatsEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_ANTI_UNINSTALL_USAGE_STATS, false)
+    }
+
+    fun setAntiUninstallAccessibilityEnabled(enabled: Boolean) {
+        settingsPrefs.edit(commit = true) { putBoolean(KEY_ANTI_UNINSTALL_ACCESSIBILITY, enabled) }
+    }
+
+    fun isAntiUninstallAccessibilityEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_ANTI_UNINSTALL_ACCESSIBILITY, false)
+    }
+
+    fun setAntiUninstallOverlayEnabled(enabled: Boolean) {
+        settingsPrefs.edit(commit = true) { putBoolean(KEY_ANTI_UNINSTALL_OVERLAY, enabled) }
+    }
+
+    fun isAntiUninstallOverlayEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_ANTI_UNINSTALL_OVERLAY, false)
+    }
+
     fun setProtectEnabled(enabled: Boolean) {
-        settingsPrefs.edit { putBoolean(KEY_APPLOCK_ENABLED, enabled) }
+        settingsPrefs.edit(commit = true) { putBoolean(KEY_APPLOCK_ENABLED, enabled) }
     }
 
     fun isProtectEnabled(): Boolean {
@@ -115,7 +147,7 @@ class PreferencesRepository(context: Context) {
     }
 
     fun setBackendImplementation(backend: BackendImplementation) {
-        settingsPrefs.edit { putString(KEY_BACKEND_IMPLEMENTATION, backend.name) }
+        settingsPrefs.edit(commit = true) { putString(KEY_BACKEND_IMPLEMENTATION, backend.name) }
     }
 
     fun getBackendImplementation(): BackendImplementation {
@@ -164,6 +196,10 @@ class PreferencesRepository(context: Context) {
         private const val KEY_DISABLE_HAPTICS = "disable_haptics"
         private const val KEY_USE_MAX_BRIGHTNESS = "use_max_brightness"
         private const val KEY_ANTI_UNINSTALL = "anti_uninstall"
+        private const val KEY_ANTI_UNINSTALL_ADMIN_SETTINGS = "anti_uninstall_admin_settings"
+        private const val KEY_ANTI_UNINSTALL_USAGE_STATS = "anti_uninstall_usage_stats"
+        private const val KEY_ANTI_UNINSTALL_ACCESSIBILITY = "anti_uninstall_accessibility"
+        private const val KEY_ANTI_UNINSTALL_OVERLAY = "anti_uninstall_overlay"
         private const val KEY_UNLOCK_TIME_DURATION = "unlock_time_duration"
         private const val KEY_BACKEND_IMPLEMENTATION = "backend_implementation"
         private const val KEY_COMMUNITY_LINK_SHOWN = "community_link_shown"
