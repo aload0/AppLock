@@ -60,6 +60,8 @@ class AppLockRepository(private val context: Context) {
 
     fun setUseMaxBrightness(enabled: Boolean) = preferencesRepository.setUseMaxBrightness(enabled)
     fun shouldUseMaxBrightness(): Boolean = preferencesRepository.shouldUseMaxBrightness()
+    fun setAmoledModeEnabled(enabled: Boolean) = preferencesRepository.setAmoledModeEnabled(enabled)
+    fun isAmoledModeEnabled(): Boolean = preferencesRepository.isAmoledModeEnabled()
     fun setDisableHaptics(enabled: Boolean) = preferencesRepository.setDisableHaptics(enabled)
     fun shouldDisableHaptics(): Boolean = preferencesRepository.shouldDisableHaptics()
     fun setShowSystemApps(enabled: Boolean) = preferencesRepository.setShowSystemApps(enabled)

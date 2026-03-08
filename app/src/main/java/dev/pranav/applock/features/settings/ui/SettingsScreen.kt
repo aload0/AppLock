@@ -91,6 +91,7 @@ fun SettingsScreen(
 
     var autoUnlock by remember { mutableStateOf(appLockRepository.isAutoUnlockEnabled()) }
     var useMaxBrightness by remember { mutableStateOf(appLockRepository.shouldUseMaxBrightness()) }
+    var amoledModeEnabled by remember { mutableStateOf(appLockRepository.isAmoledModeEnabled()) }
     var useBiometricAuth by remember { mutableStateOf(appLockRepository.isBiometricAuthEnabled()) }
     var unlockTimeDuration by remember { mutableIntStateOf(appLockRepository.getUnlockTimeDuration()) }
     var antiUninstallEnabled by remember { mutableStateOf(appLockRepository.isAntiUninstallEnabled()) }
@@ -113,6 +114,7 @@ fun SettingsScreen(
             if (event == Lifecycle.Event.ON_RESUME) {
                 autoUnlock = appLockRepository.isAutoUnlockEnabled()
                 useMaxBrightness = appLockRepository.shouldUseMaxBrightness()
+                amoledModeEnabled = appLockRepository.isAmoledModeEnabled()
                 useBiometricAuth = appLockRepository.isBiometricAuthEnabled()
                 unlockTimeDuration = appLockRepository.getUnlockTimeDuration()
                 antiUninstallEnabled = appLockRepository.isAntiUninstallEnabled()
@@ -310,6 +312,17 @@ fun SettingsScreen(
                             onCheckedChange = { isChecked ->
                                 useMaxBrightness = isChecked
                                 appLockRepository.setUseMaxBrightness(isChecked)
+                            }
+                        ),
+                        ToggleSettingItem(
+                            icon = Icons.Default.DarkMode,
+                            title = stringResource(R.string.settings_screen_amoled_mode_title),
+                            subtitle = stringResource(R.string.settings_screen_amoled_mode_desc),
+                            checked = amoledModeEnabled,
+                            enabled = true,
+                            onCheckedChange = { isChecked ->
+                                amoledModeEnabled = isChecked
+                                appLockRepository.setAmoledModeEnabled(isChecked)
                             }
                         ),
                         ToggleSettingItem(

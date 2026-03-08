@@ -131,6 +131,8 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="settings_screen_lock_screen_customization_title">Lock Screen Customization</string>
     <string name="settings_screen_max_brightness_title">Maximum Brightness</string>
     <string name="settings_screen_max_brightness_desc">Display lock screen at maximum brightness for clarity</string>
+    <string name="settings_screen_amoled_mode_title">AMOLED Mode</string>
+    <string name="settings_screen_amoled_mode_desc">Use pure black as the primary color in dark mode</string>
     <string name="settings_screen_biometric_auth_title">Biometric Authentication</string>
     <string name="settings_screen_biometric_auth_desc">Use fingerprint or face unlock if available</string>
     <string name="settings_screen_biometric_auth_unavailable">Biometric authentication is not available on this device.</string>
