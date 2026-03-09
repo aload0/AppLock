@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.pranav.applock.data.repository.AppLockRepository
+import dev.pranav.applock.data.repository.AppThemeMode
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -28,24 +29,31 @@ fun AppLockTheme(
 ) {
     val context = LocalContext.current
     val appLockRepository = remember(context) { AppLockRepository(context) }
+
+    val themeMode = appLockRepository.getAppThemeMode()
+    val resolvedDarkTheme = when (themeMode) {
+        AppThemeMode.SYSTEM -> darkTheme
+        AppThemeMode.LIGHT -> false
+        AppThemeMode.DARK -> true
+    }
+
     val amoledModeEnabled = appLockRepository.isAmoledModeEnabled()
 
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) {
-                dynamicDarkColorScheme(context).run {
-                    if (amoledModeEnabled) copy(primary = Color.Black) else this
-                }
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !amoledModeEnabled -> {
+            if (resolvedDarkTheme) {
+                dynamicDarkColorScheme(context)
             } else {
                 dynamicLightColorScheme(context)
             }
         }
 
-        darkTheme -> {
+        resolvedDarkTheme -> {
             darkColorScheme().run {
                 if (amoledModeEnabled) copy(primary = Color.Black) else this
             }
         }
+
         else -> expressiveLightColorScheme()
     }
     val shapes = Shapes(largeIncreased = RoundedCornerShape(36.0.dp))

@@ -74,6 +74,19 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_AMOLED_MODE_ENABLED, false)
     }
 
+    fun setAppThemeMode(themeMode: AppThemeMode) {
+        settingsPrefs.edit { putString(KEY_APP_THEME_MODE, themeMode.name) }
+    }
+
+    fun getAppThemeMode(): AppThemeMode {
+        val mode = settingsPrefs.getString(KEY_APP_THEME_MODE, AppThemeMode.SYSTEM.name)
+        return try {
+            AppThemeMode.valueOf(mode ?: AppThemeMode.SYSTEM.name)
+        } catch (_: IllegalArgumentException) {
+            AppThemeMode.SYSTEM
+        }
+    }
+
     fun setDisableHaptics(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_DISABLE_HAPTICS, enabled) }
     }
@@ -204,6 +217,7 @@ class PreferencesRepository(context: Context) {
         private const val KEY_DISABLE_HAPTICS = "disable_haptics"
         private const val KEY_USE_MAX_BRIGHTNESS = "use_max_brightness"
         private const val KEY_AMOLED_MODE_ENABLED = "amoled_mode_enabled"
+        private const val KEY_APP_THEME_MODE = "app_theme_mode"
         private const val KEY_ANTI_UNINSTALL = "anti_uninstall"
         private const val KEY_ANTI_UNINSTALL_ADMIN_SETTINGS = "anti_uninstall_admin_settings"
         private const val KEY_ANTI_UNINSTALL_USAGE_STATS = "anti_uninstall_usage_stats"
@@ -226,4 +240,10 @@ class PreferencesRepository(context: Context) {
         const val LOCK_TYPE_PIN = "pin"
         const val LOCK_TYPE_PATTERN = "pattern"
     }
+}
+
+enum class AppThemeMode {
+    SYSTEM,
+    LIGHT,
+    DARK
 }

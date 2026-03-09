@@ -15,6 +15,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,7 +24,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -49,11 +50,11 @@ import dev.pranav.applock.core.utils.hasUsagePermission
 import dev.pranav.applock.core.utils.isAccessibilityServiceEnabled
 import dev.pranav.applock.core.utils.openAccessibilitySettings
 import dev.pranav.applock.data.repository.AppLockRepository
+import dev.pranav.applock.data.repository.AppThemeMode
 import dev.pranav.applock.data.repository.BackendImplementation
 import dev.pranav.applock.features.admin.AdminDisableActivity
 import dev.pranav.applock.services.ExperimentalAppLockService
 import dev.pranav.applock.services.ShizukuAppLockService
-import dev.pranav.applock.ui.components.DonateButton
 import dev.pranav.applock.ui.icons.*
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
@@ -92,6 +93,7 @@ fun SettingsScreen(
     var autoUnlock by remember { mutableStateOf(appLockRepository.isAutoUnlockEnabled()) }
     var useMaxBrightness by remember { mutableStateOf(appLockRepository.shouldUseMaxBrightness()) }
     var amoledModeEnabled by remember { mutableStateOf(appLockRepository.isAmoledModeEnabled()) }
+    var appThemeMode by remember { mutableStateOf(appLockRepository.getAppThemeMode()) }
     var useBiometricAuth by remember { mutableStateOf(appLockRepository.isBiometricAuthEnabled()) }
     var unlockTimeDuration by remember { mutableIntStateOf(appLockRepository.getUnlockTimeDuration()) }
     var antiUninstallEnabled by remember { mutableStateOf(appLockRepository.isAntiUninstallEnabled()) }
@@ -115,6 +117,7 @@ fun SettingsScreen(
                 autoUnlock = appLockRepository.isAutoUnlockEnabled()
                 useMaxBrightness = appLockRepository.shouldUseMaxBrightness()
                 amoledModeEnabled = appLockRepository.isAmoledModeEnabled()
+                appThemeMode = appLockRepository.getAppThemeMode()
                 useBiometricAuth = appLockRepository.isBiometricAuthEnabled()
                 unlockTimeDuration = appLockRepository.getUnlockTimeDuration()
                 antiUninstallEnabled = appLockRepository.isAntiUninstallEnabled()
@@ -292,8 +295,37 @@ fun SettingsScreen(
                 )
             }
 
+
             item {
-                DonateButton()
+                SectionTitle(text = stringResource(R.string.settings_screen_app_theme_title))
+            }
+
+            item {
+                AppThemeModeCard(
+                    selectedThemeMode = appThemeMode,
+                    onThemeModeSelected = { selectedMode ->
+                        appThemeMode = selectedMode
+                        appLockRepository.setAppThemeMode(selectedMode)
+                    }
+                )
+            }
+
+            item {
+                SettingsGroup(
+                    items = listOf(
+                        ToggleSettingItem(
+                            icon = Icons.Default.DarkMode,
+                            title = stringResource(R.string.settings_screen_amoled_mode_title),
+                            subtitle = stringResource(R.string.settings_screen_amoled_mode_desc),
+                            checked = amoledModeEnabled,
+                            enabled = true,
+                            onCheckedChange = { isChecked ->
+                                amoledModeEnabled = isChecked
+                                appLockRepository.setAmoledModeEnabled(isChecked)
+                            }
+                        )
+                    )
+                )
             }
 
             item {
@@ -312,17 +344,6 @@ fun SettingsScreen(
                             onCheckedChange = { isChecked ->
                                 useMaxBrightness = isChecked
                                 appLockRepository.setUseMaxBrightness(isChecked)
-                            }
-                        ),
-                        ToggleSettingItem(
-                            icon = Icons.Default.DarkMode,
-                            title = stringResource(R.string.settings_screen_amoled_mode_title),
-                            subtitle = stringResource(R.string.settings_screen_amoled_mode_desc),
-                            checked = amoledModeEnabled,
-                            enabled = true,
-                            onCheckedChange = { isChecked ->
-                                amoledModeEnabled = isChecked
-                                appLockRepository.setAmoledModeEnabled(isChecked)
                             }
                         ),
                         ToggleSettingItem(
@@ -761,11 +782,11 @@ fun ActionSettingRow(
     icon: ImageVector,
     title: String,
     subtitle: String,
-    onClick: () -> Unit
+    onClick: (() -> Unit)?
 ) {
     ListItem(
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 2.dp, horizontal = 4.dp),
         headlineContent = {
             Text(
@@ -792,16 +813,18 @@ fun ActionSettingRow(
                 )
             }
         },
-        trailingContent = {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                    contentDescription = null
-                )
+        trailingContent = if (onClick != null) {
+            {
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null
+                    )
+                }
             }
-        },
+        } else null,
         colors = ListItemDefaults.colors(
             containerColor = Color.Transparent
         )
@@ -960,7 +983,7 @@ fun BackendSelectionCard(
 fun BackendSelectionItem(
     backend: BackendImplementation,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: (() -> Unit)?
 ) {
     ListItem(
         modifier = Modifier
@@ -1052,6 +1075,51 @@ private fun getBackendIcon(backend: BackendImplementation): ImageVector {
     }
 }
 
+
+@Composable
+fun AppThemeModeCard(
+    selectedThemeMode: AppThemeMode,
+    onThemeModeSelected: (AppThemeMode) -> Unit
+) {
+    val modes = listOf(
+        AppThemeMode.SYSTEM to stringResource(R.string.settings_screen_theme_mode_system),
+        AppThemeMode.LIGHT to stringResource(R.string.settings_screen_theme_mode_light),
+        AppThemeMode.DARK to stringResource(R.string.settings_screen_theme_mode_dark)
+    )
+
+    SettingsCard(index = 0, listSize = 1) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .selectableGroup()
+        ) {
+            modes.forEach { (mode, label) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = selectedThemeMode == mode,
+                            onClick = { onThemeModeSelected(mode) },
+                            role = Role.RadioButton
+                        )
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = selectedThemeMode == mode,
+                        onClick = null
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun PermissionRequiredDialog(
     onDismiss: () -> Unit,
@@ -1139,45 +1207,53 @@ fun LinksSection() {
     val context = LocalContext.current
 
     Column {
-        SectionTitle(text = "Links")
+        SectionTitle(text = stringResource(R.string.settings_screen_developer_info_title))
 
         Column {
-            SettingsCard(index = 0, listSize = 3) {
+            SettingsCard(index = 0, listSize = 4) {
                 LinkItem(
-                    title = "Discord Community",
-                    icon = Discord,
+                    title = stringResource(R.string.settings_screen_developer_name_ap),
+                    icon = Icons.Default.Person,
+                    onClick = null
+                )
+            }
+
+            SettingsCard(index = 1, listSize = 4) {
+                LinkItem(
+                    title = stringResource(R.string.settings_screen_developer_email_ap),
+                    icon = Icons.Default.Email,
                     onClick = {
                         val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            "https://discord.gg/46wCMRVAre".toUri()
+                            Intent.ACTION_SENDTO,
+                            "mailto:ap0803apap@gmail.com".toUri()
                         )
                         context.startActivity(intent)
                     }
                 )
             }
 
-            SettingsCard(index = 1, listSize = 3) {
+            SettingsCard(index = 2, listSize = 4) {
                 LinkItem(
-                    title = "Source Code",
+                    title = stringResource(R.string.settings_screen_source_code),
                     icon = Icons.Outlined.Code,
                     onClick = {
                         val intent = Intent(
                             Intent.ACTION_VIEW,
-                            "https://github.com/aload0/AppLock".toUri()
+                            "https://github.com/ap0803apap-sketch".toUri()
                         )
                         context.startActivity(intent)
                     }
                 )
             }
 
-            SettingsCard(index = 2, listSize = 3) {
+            SettingsCard(index = 3, listSize = 4) {
                 LinkItem(
-                    title = "Report Issue",
+                    title = stringResource(R.string.settings_screen_report_issue),
                     icon = Icons.Outlined.BugReport,
                     onClick = {
                         val intent = Intent(
                             Intent.ACTION_VIEW,
-                            "https://github.com/aload0/AppLock/issues".toUri()
+                            "https://github.com/ap0803apap-sketch".toUri()
                         )
                         context.startActivity(intent)
                     }
@@ -1191,11 +1267,11 @@ fun LinksSection() {
 fun LinkItem(
     title: String,
     icon: ImageVector,
-    onClick: () -> Unit
+    onClick: (() -> Unit)?
 ) {
     ListItem(
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(vertical = 2.dp, horizontal = 4.dp),
         headlineContent = {
             Text(
@@ -1216,16 +1292,18 @@ fun LinkItem(
                 )
             }
         },
-        trailingContent = {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                    contentDescription = null
-                )
+        trailingContent = if (onClick != null) {
+            {
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null
+                    )
+                }
             }
-        },
+        } else null,
         colors = ListItemDefaults.colors(
             containerColor = Color.Transparent
         )
