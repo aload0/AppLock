@@ -3,6 +3,10 @@ package dev.pranav.applock.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.onStart
 
 /**
  * Repository for managing application preferences and settings.
@@ -74,6 +78,18 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_AMOLED_MODE_ENABLED, false)
     }
 
+    fun amoledModeFlow(): Flow<Boolean> = callbackFlow {
+        val listener = object : SharedPreferences.OnSharedPreferenceChangeListener {
+            override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {
+                if (key == KEY_AMOLED_MODE_ENABLED) {
+                    trySend(isAmoledModeEnabled())
+                }
+            }
+        }
+        settingsPrefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { settingsPrefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }.onStart { emit(isAmoledModeEnabled()) }
+
     fun setAppThemeMode(themeMode: AppThemeMode) {
         settingsPrefs.edit { putString(KEY_APP_THEME_MODE, themeMode.name) }
     }
@@ -86,6 +102,18 @@ class PreferencesRepository(context: Context) {
             AppThemeMode.SYSTEM
         }
     }
+
+    fun appThemeModeFlow(): Flow<AppThemeMode> = callbackFlow {
+        val listener = object : SharedPreferences.OnSharedPreferenceChangeListener {
+            override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {
+                if (key == KEY_APP_THEME_MODE) {
+                    trySend(getAppThemeMode())
+                }
+            }
+        }
+        settingsPrefs.registerOnSharedPreferenceChangeListener(listener)
+        awaitClose { settingsPrefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }.onStart { emit(getAppThemeMode()) }
 
     fun setDisableHaptics(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_DISABLE_HAPTICS, enabled) }

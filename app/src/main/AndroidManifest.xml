@@ -27,7 +27,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
 
-    <uses-permission android:name="android.permission.SET_ACTIVITY_WATCHER" />
+    <uses-permission android:name="android.permission.SET_ACTIVITY_WATCHER"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".AppLockApplication"
@@ -37,6 +38,7 @@
         android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppLock"
@@ -45,7 +47,9 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppLock">
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AppLock"
+            tools:ignore="RedundantLabel">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -57,13 +61,17 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:excludeFromRecents="true"
             android:exported="false"
+            android:label="@string/app_name"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.Material.NoActionBar.TranslucentDecor" />
+            android:theme="@android:style/Theme.Material.NoActionBar.TranslucentDecor"
+            tools:ignore="RedundantLabel" />
 
         <activity
             android:name=".features.admin.AdminDisableActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppLock" />
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AppLock"
+            tools:ignore="RedundantLabel" />
 
         <service
             android:name=".services.ShizukuAppLockService"
@@ -103,6 +111,7 @@
             android:name=".core.broadcast.DeviceAdmin"
             android:description="@string/device_admin_description"
             android:exported="false"
+            android:label="@string/app_name"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />

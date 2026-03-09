@@ -2,6 +2,7 @@ package dev.pranav.applock.data.repository
 
 import android.content.Context
 import dev.pranav.applock.data.manager.BackendServiceManager
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Main repository that coordinates between different specialized repositories and managers.
@@ -62,8 +63,12 @@ class AppLockRepository(private val context: Context) {
     fun shouldUseMaxBrightness(): Boolean = preferencesRepository.shouldUseMaxBrightness()
     fun setAmoledModeEnabled(enabled: Boolean) = preferencesRepository.setAmoledModeEnabled(enabled)
     fun isAmoledModeEnabled(): Boolean = preferencesRepository.isAmoledModeEnabled()
+    fun amoledModeFlow(): Flow<Boolean> = preferencesRepository.amoledModeFlow()
+
     fun setAppThemeMode(themeMode: AppThemeMode) = preferencesRepository.setAppThemeMode(themeMode)
     fun getAppThemeMode(): AppThemeMode = preferencesRepository.getAppThemeMode()
+    fun appThemeModeFlow(): Flow<AppThemeMode> = preferencesRepository.appThemeModeFlow()
+
     fun setDisableHaptics(enabled: Boolean) = preferencesRepository.setDisableHaptics(enabled)
     fun shouldDisableHaptics(): Boolean = preferencesRepository.shouldDisableHaptics()
     fun setShowSystemApps(enabled: Boolean) = preferencesRepository.setShowSystemApps(enabled)

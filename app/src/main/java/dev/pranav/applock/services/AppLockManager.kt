@@ -30,7 +30,16 @@ object AppLockConstants {
         "com.google.android.googlequicksearchbox",
         "android",
         "com.google.android.gms",
-        "com.google.android.webview"
+        "com.google.android.webview",
+        "com.google.android.packageinstaller",
+        "com.android.packageinstaller",
+        "com.samsung.android.incallui",
+        "com.android.incallui",
+        "com.google.android.apps.nexuslauncher",
+        "com.sec.android.app.launcher",
+        "com.miui.home",
+        "com.huawei.android.launcher",
+        "com.oppo.launcher"
     )
 
     val ACCESSIBILITY_SETTINGS_CLASSES = setOf(
@@ -69,7 +78,7 @@ object AppLockConstants {
         "com.android.settings.UsageAccessSettings",
         // Samsung specific
         "com.samsung.android.settings.usageaccess.UsageAccessSettings",
-        "com.samsung.android.settings.Settings\$UsageAccessSettingsActivity"
+        "com.android.settings.Settings\$UsageAccessSettingsActivity"
     )
 
     val OVERLAY_SETTINGS_CLASSES = setOf(
@@ -114,7 +123,7 @@ object AppLockManager {
     // Grace period tracking
     private var recentlyLeftApp: String = ""
     private var recentlyLeftTime: Long = 0L
-    private const val GRACE_PERIOD_MS = 300L
+    private const val GRACE_PERIOD_MS = 2000L // Increased to 2 seconds for better navigation stability
 
     fun setRecentlyLeftApp(packageName: String) {
         recentlyLeftApp = packageName

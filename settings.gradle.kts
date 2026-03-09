@@ -16,10 +16,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
-rootProject.name = "App Lock"
+rootProject.name = "APP Lock by AP"
 include(":app")
 include(":appintro")
 include(":hidden-api")

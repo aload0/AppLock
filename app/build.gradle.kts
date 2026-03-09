@@ -18,8 +18,8 @@ android {
         minSdk = 26
         targetSdk = 36
         // targetSdkPreview = "CANARY"
-        versionCode = 22301
-        versionName = "2.2.3.01(08-03-26)"
+        versionCode = 22302
+        versionName = "2.2.3.02(09-03-26)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
