@@ -182,6 +182,6 @@ private fun navigateToMain(navController: NavHostController) {
 private const val TAG = "AppNavHost"
 private const val ANIMATION_DURATION = 400
 private const val SCALE_INITIAL = 0.9f
-private const val BIOMETRIC_TITLE = "Confirm password"
+private const val BIOMETRIC_TITLE = "APP Lock by AP"
 private const val BIOMETRIC_SUBTITLE = "Confirm biometric to continue"
 private const val BIOMETRIC_NEGATIVE_BUTTON = "Use PIN"

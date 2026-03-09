@@ -269,7 +269,7 @@ class ExperimentalAppLockService : Service() {
     private fun createNotificationChannel() {
         val serviceChannel = NotificationChannel(
             CHANNEL_ID,
-            "AppLock Service (Usage Stats)",
+            "APP Lock by AP Service (Usage Stats)",
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(serviceChannel)
@@ -277,7 +277,7 @@ class ExperimentalAppLockService : Service() {
 
     private fun createNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("App Lock")
+            .setContentTitle("APP Lock by AP")
             .setContentText("Protecting your apps")
             .setSmallIcon(R.drawable.baseline_shield_24)
             .setPriority(NotificationCompat.PRIORITY_MIN)
