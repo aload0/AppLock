@@ -200,7 +200,7 @@ fun AdminDisableScreen(
                 fromMainActivity = false,
                 onBiometricAuth = {},
                 onAuthSuccess = {},
-                onPinAttempt = { pin ->
+                onPinAttempt = { pin, _ ->
                     val isValid = validatePassword(pin)
                     if (isValid) {
                         onPasswordVerified()

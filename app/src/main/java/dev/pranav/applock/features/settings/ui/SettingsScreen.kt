@@ -1,10 +1,13 @@
 package dev.pranav.applock.features.settings.ui
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,10 +18,12 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -38,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -52,14 +58,17 @@ import dev.pranav.applock.core.utils.openAccessibilitySettings
 import dev.pranav.applock.data.repository.AppLockRepository
 import dev.pranav.applock.data.repository.AppThemeMode
 import dev.pranav.applock.data.repository.BackendImplementation
+import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.admin.AdminDisableActivity
 import dev.pranav.applock.services.ExperimentalAppLockService
 import dev.pranav.applock.services.ShizukuAppLockService
 import dev.pranav.applock.ui.icons.*
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
+import java.io.File
 import kotlin.math.abs
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -89,9 +98,32 @@ fun SettingsScreen(
         }
     }
 
+    // Intruder Selfie states
+    var intruderSelfieEnabled by remember { mutableStateOf(appLockRepository.isIntruderSelfieEnabled()) }
+    var intruderSelfieAttempts by remember { mutableIntStateOf(appLockRepository.getIntruderSelfieAttempts()) }
+    var hasSelfies by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val selfieDir = File(context.filesDir, "intruder_selfies")
+        hasSelfies = selfieDir.exists() && (selfieDir.listFiles()?.isNotEmpty() ?: false)
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            intruderSelfieEnabled = true
+            appLockRepository.setIntruderSelfieEnabled(true)
+        } else {
+            Toast.makeText(context, "Camera permission is required for Intruder Selfie", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Reactive states from repository flows
     val amoledModeEnabled by appLockRepository.amoledModeFlow()
         .collectAsState(initial = appLockRepository.isAmoledModeEnabled())
+    val dynamicColorEnabled by appLockRepository.dynamicColorFlow()
+        .collectAsState(initial = appLockRepository.isDynamicColorEnabled())
     val appThemeMode by appLockRepository.appThemeModeFlow()
         .collectAsState(initial = appLockRepository.getAppThemeMode())
 
@@ -128,6 +160,11 @@ fun SettingsScreen(
                 antiUninstallOverlay = appLockRepository.isAntiUninstallOverlayEnabled()
                 disableHapticFeedback = appLockRepository.shouldDisableHaptics()
                 loggingEnabled = appLockRepository.isLoggingEnabled()
+                intruderSelfieEnabled = appLockRepository.isIntruderSelfieEnabled()
+                intruderSelfieAttempts = appLockRepository.getIntruderSelfieAttempts()
+                
+                val selfieDir = File(context.filesDir, "intruder_selfies")
+                hasSelfies = selfieDir.exists() && (selfieDir.listFiles()?.isNotEmpty() ?: false)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -243,7 +280,7 @@ fun SettingsScreen(
             item {
                 SectionTitle(text = stringResource(R.string.settings_screen_security_title))
 
-                SettingsCard(index = 0, listSize = 2) {
+                SettingsCard(index = 0, listSize = 3) {
                     SwitchItem(
                         title = stringResource(R.string.settings_screen_auto_unlock_title),
                         summary = stringResource(R.string.settings_screen_auto_unlock_desc),
@@ -256,7 +293,7 @@ fun SettingsScreen(
                     )
                 }
 
-                SettingsCard(index = 1, listSize = 2) {
+                SettingsCard(index = 1, listSize = 3) {
                     SwitchItem(
                         title = stringResource(R.string.settings_screen_biometric_auth_title),
                         summary = stringResource(R.string.settings_screen_biometric_auth_desc),
@@ -266,6 +303,66 @@ fun SettingsScreen(
                         onCheckedChange = {
                             useBiometricAuth = it
                             appLockRepository.setBiometricAuthEnabled(it)
+                        }
+                    )
+                }
+
+                SettingsCard(index = 2, listSize = 3) {
+                    ClickableItem(
+                        title = "Change Lock",
+                        summary = if (appLockRepository.getLockType() == PreferencesRepository.LOCK_TYPE_PATTERN)
+                            "Update your unlock pattern" else "Update your unlock PIN",
+                        icon = Icons.Default.Lock,
+                        onClick = {
+                            navController.navigate(Screen.ChangePassword.route)
+                        }
+                    )
+                }
+
+                SectionTitle(text = "Intruder Selfie")
+
+                SettingsCard(index = 0, listSize = 3) {
+                    SwitchItem(
+                        title = "Enable Intruder Selfie",
+                        summary = "Capture a photo after failed unlock attempts",
+                        icon = Icons.Default.CameraAlt,
+                        checked = intruderSelfieEnabled,
+                        onCheckedChange = { enabled ->
+                            if (enabled) {
+                                val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                                if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                                    intruderSelfieEnabled = true
+                                    appLockRepository.setIntruderSelfieEnabled(true)
+                                } else {
+                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                }
+                            } else {
+                                intruderSelfieEnabled = false
+                                appLockRepository.setIntruderSelfieEnabled(false)
+                            }
+                        }
+                    )
+                }
+
+                SettingsCard(index = 1, listSize = 3) {
+                    FailedAttemptsSpinnerItem(
+                        selectedAttempts = intruderSelfieAttempts,
+                        enabled = intruderSelfieEnabled,
+                        onAttemptsSelected = { attempts ->
+                            intruderSelfieAttempts = attempts
+                            appLockRepository.setIntruderSelfieAttempts(attempts)
+                        }
+                    )
+                }
+
+                SettingsCard(index = 2, listSize = 3) {
+                    ClickableItem(
+                        title = "Show Intruder Selfies",
+                        summary = "View captured photos of intruders",
+                        icon = Icons.Default.PhotoLibrary,
+                        enabled = hasSelfies,
+                        onClick = {
+                            navController.navigate(Screen.IntruderSelfies.route)
                         }
                     )
                 }
@@ -363,7 +460,7 @@ fun SettingsScreen(
 
                 SectionTitle(text = stringResource(R.string.settings_screen_lock_screen_customization_title))
 
-                SettingsCard(index = 0, listSize = 4) {
+                SettingsCard(index = 0, listSize = 5) {
                     SwitchItem(
                         title = stringResource(R.string.settings_screen_max_brightness_title),
                         summary = stringResource(R.string.settings_screen_max_brightness_desc),
@@ -376,7 +473,7 @@ fun SettingsScreen(
                     )
                 }
 
-                SettingsCard(index = 1, listSize = 4) {
+                SettingsCard(index = 1, listSize = 5) {
                     SwitchItem(
                         title = stringResource(R.string.settings_screen_amoled_mode_title),
                         summary = stringResource(R.string.settings_screen_amoled_mode_desc),
@@ -388,7 +485,20 @@ fun SettingsScreen(
                     )
                 }
 
-                SettingsCard(index = 2, listSize = 4) {
+                SettingsCard(index = 2, listSize = 5) {
+                    SwitchItem(
+                        title = "Use Dynamic Theme",
+                        summary = "Apply dynamic colors from your wallpaper (Android 12+)",
+                        icon = Icons.Default.Palette,
+                        checked = dynamicColorEnabled,
+                        enabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+                        onCheckedChange = {
+                            appLockRepository.setDynamicColorEnabled(it)
+                        }
+                    )
+                }
+
+                SettingsCard(index = 3, listSize = 5) {
                     SwitchItem(
                         title = stringResource(R.string.settings_screen_haptic_feedback_title),
                         summary = stringResource(R.string.settings_screen_haptic_feedback_desc),
@@ -401,7 +511,7 @@ fun SettingsScreen(
                     )
                 }
 
-                SettingsCard(index = 3, listSize = 4) {
+                SettingsCard(index = 4, listSize = 5) {
                     ClickableItem(
                         title = stringResource(R.string.settings_screen_unlock_duration_title),
                         summary = when (unlockTimeDuration) {
@@ -440,7 +550,7 @@ fun SettingsScreen(
 
                 SectionTitle(text = "App Details")
 
-                SettingsCard(index = 0, listSize = 2) {
+                SettingsCard(index = 0, listSize = 3) {
                     ClickableItem(
                         title = "App Version",
                         summary = try {
@@ -456,7 +566,7 @@ fun SettingsScreen(
                     )
                 }
 
-                SettingsCard(index = 1, listSize = 2) {
+                SettingsCard(index = 1, listSize = 3) {
                     SwitchItem(
                         title = stringResource(R.string.settings_screen_logging_title),
                         summary = stringResource(R.string.settings_screen_logging_summary),
@@ -465,6 +575,23 @@ fun SettingsScreen(
                         onCheckedChange = {
                             loggingEnabled = it
                             appLockRepository.setLoggingEnabled(it)
+                        }
+                    )
+                }
+
+                SettingsCard(index = 2, listSize = 3) {
+                    ClickableItem(
+                        title = "Export Logs",
+                        summary = "Save app logs to your Downloads folder",
+                        icon = Icons.Default.Download,
+                        onClick = {
+                            val appName = context.getString(R.string.app_name)
+                            val exportedFile = LogUtils.exportLogsToDownloads(appName)
+                            if (exportedFile != null) {
+                                Toast.makeText(context, "Logs exported: $exportedFile", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, exportLogsError, Toast.LENGTH_SHORT).show()
+                            }
                         }
                     )
                 }
@@ -610,40 +737,105 @@ fun ClickableItem(
     title: String,
     summary: String,
     icon: ImageVector,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = Modifier.clickable(enabled = enabled, onClick = onClick),
         headlineContent = {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             )
         },
         supportingContent = {
             Text(
                 text = summary,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
             )
         },
         leadingContent = {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+                tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
             )
         },
         trailingContent = {
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
             )
         },
         colors = ListItemDefaults.colors(
             containerColor = Color.Transparent
         )
     )
+}
+
+@Composable
+fun FailedAttemptsSpinnerItem(
+    selectedAttempts: Int,
+    enabled: Boolean,
+    onAttemptsSelected: (Int) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val attemptsOptions = listOf(1, 2, 3, 4, 5)
+
+    Box {
+        ListItem(
+            modifier = Modifier.clickable(enabled = enabled) { expanded = true },
+            headlineContent = {
+                Text(
+                    text = "Failed attempts",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                )
+            },
+            supportingContent = {
+                Text(
+                    text = "Take photo after $selectedAttempts failed attempt(s)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                )
+            },
+            leadingContent = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                )
+            },
+            trailingContent = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null,
+                    tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                )
+            },
+            colors = ListItemDefaults.colors(
+                containerColor = Color.Transparent
+            )
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            attemptsOptions.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text("$option attempt(s)") },
+                    onClick = {
+                        onAttemptsSelected(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -693,9 +885,11 @@ fun UnlockTimeDurationDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_screen_unlock_duration_dialog_title)) },
         text = {
+            val durationsScrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(durationsScrollState)
                     .selectableGroup()
             ) {
                 durations.forEach { duration ->

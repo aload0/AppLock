@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -41,6 +43,7 @@ import com.mrhwsn.composelock.Dot
 import com.mrhwsn.composelock.LockCallback
 import com.mrhwsn.composelock.PatternLock
 import dev.pranav.applock.R
+import dev.pranav.applock.core.utils.IntruderSelfieManager
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.ui.icons.Fingerprint
@@ -66,7 +69,7 @@ fun PatternLockScreen(
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.background
     ) {
         var showError by remember { mutableStateOf(false) }
 
@@ -103,6 +106,9 @@ fun PatternLockScreen(
                 if (!isValid) {
                     showError = true
                     errorShakeOffset = 10f
+                    // recordFailedAttempt is already handled in PasswordOverlayActivity's onPatternAttemptCallback
+                } else {
+                    IntruderSelfieManager.resetFailedAttempts()
                 }
             }
         }
@@ -141,19 +147,22 @@ fun PatternLockScreen(
                     }
 
                     if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
                         FilledTonalIconButton(
                             onClick = { onBiometricAuth() },
-                            modifier = Modifier.size(44.dp),
-                            shape = RoundedCornerShape(40),
+                            modifier = Modifier.size(64.dp),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
                         ) {
                             Icon(
                                 imageVector = Fingerprint,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(10.dp),
+                                    .padding(16.dp),
                                 contentDescription = stringResource(R.string.biometric_authentication_cd),
-                                tint = MaterialTheme.colorScheme.surfaceTint
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                     }
@@ -211,27 +220,10 @@ fun PatternLockScreen(
                 }
 
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
-                        FilledTonalIconButton(
-                            onClick = { onBiometricAuth() },
-                            modifier = Modifier.size(44.dp),
-                            shape = RoundedCornerShape(40),
-                        ) {
-                            Icon(
-                                imageVector = Fingerprint,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(10.dp),
-                                contentDescription = stringResource(R.string.biometric_authentication_cd),
-                                tint = MaterialTheme.colorScheme.surfaceTint
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-
                     PatternLock(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -246,6 +238,28 @@ fun PatternLockScreen(
                         animationDuration = 120,
                         callback = lockCallback
                     )
+
+                    if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        FilledTonalIconButton(
+                            onClick = { onBiometricAuth() },
+                            modifier = Modifier.size(72.dp),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Fingerprint,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(18.dp),
+                                contentDescription = stringResource(R.string.biometric_authentication_cd),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
                 }
             }
         }

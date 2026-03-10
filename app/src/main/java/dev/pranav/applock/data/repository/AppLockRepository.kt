@@ -63,11 +63,15 @@ class AppLockRepository(private val context: Context) {
     fun shouldUseMaxBrightness(): Boolean = preferencesRepository.shouldUseMaxBrightness()
     fun setAmoledModeEnabled(enabled: Boolean) = preferencesRepository.setAmoledModeEnabled(enabled)
     fun isAmoledModeEnabled(): Boolean = preferencesRepository.isAmoledModeEnabled()
-    fun amoledModeFlow(): Flow<Boolean> = preferencesRepository.amoledModeFlow()
+    fun amoledModeFlow(): Flow<Boolean> = preferencesRepository.amoledModeFlow
+
+    fun setDynamicColorEnabled(enabled: Boolean) = preferencesRepository.setDynamicColorEnabled(enabled)
+    fun isDynamicColorEnabled(): Boolean = preferencesRepository.isDynamicColorEnabled()
+    fun dynamicColorFlow(): Flow<Boolean> = preferencesRepository.dynamicColorFlow
 
     fun setAppThemeMode(themeMode: AppThemeMode) = preferencesRepository.setAppThemeMode(themeMode)
     fun getAppThemeMode(): AppThemeMode = preferencesRepository.getAppThemeMode()
-    fun appThemeModeFlow(): Flow<AppThemeMode> = preferencesRepository.appThemeModeFlow()
+    fun appThemeModeFlow(): Flow<AppThemeMode> = preferencesRepository.appThemeModeFlow
 
     fun setDisableHaptics(enabled: Boolean) = preferencesRepository.setDisableHaptics(enabled)
     fun shouldDisableHaptics(): Boolean = preferencesRepository.shouldDisableHaptics()
@@ -124,6 +128,11 @@ class AppLockRepository(private val context: Context) {
 
     fun isLoggingEnabled(): Boolean = preferencesRepository.isLoggingEnabled()
     fun setLoggingEnabled(enabled: Boolean) = preferencesRepository.setLoggingEnabled(enabled)
+
+    fun setIntruderSelfieEnabled(enabled: Boolean) = preferencesRepository.setIntruderSelfieEnabled(enabled)
+    fun isIntruderSelfieEnabled(): Boolean = preferencesRepository.isIntruderSelfieEnabled()
+    fun setIntruderSelfieAttempts(attempts: Int) = preferencesRepository.setIntruderSelfieAttempts(attempts)
+    fun getIntruderSelfieAttempts(): Int = preferencesRepository.getIntruderSelfieAttempts()
 
     fun setActiveBackend(backend: BackendImplementation) =
         backendServiceManager.setActiveBackend(backend)

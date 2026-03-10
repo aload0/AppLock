@@ -88,8 +88,6 @@ private val CustomDarkColorScheme = darkColorScheme(
 @Composable
 fun AppLockTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false, // Set to false to prioritize our custom palette
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -99,6 +97,8 @@ fun AppLockTheme(
         .collectAsState(initial = appLockRepository.getAppThemeMode())
     val amoledModeEnabled by appLockRepository.amoledModeFlow()
         .collectAsState(initial = appLockRepository.isAmoledModeEnabled())
+    val dynamicColorEnabled by appLockRepository.dynamicColorFlow()
+        .collectAsState(initial = appLockRepository.isDynamicColorEnabled())
 
     val resolvedDarkTheme = when (themeMode) {
         AppThemeMode.SYSTEM -> darkTheme
@@ -107,12 +107,20 @@ fun AppLockTheme(
     }
 
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !amoledModeEnabled -> {
-            if (resolvedDarkTheme) {
-                dynamicDarkColorScheme(context)
-            } else {
-                dynamicLightColorScheme(context)
-            }
+        dynamicColorEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val base = if (resolvedDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (resolvedDarkTheme && amoledModeEnabled) {
+                base.copy(
+                    background = Color.Black,
+                    surface = Color.Black,
+                    surfaceVariant = Color.Black,
+                    surfaceContainer = Color.Black,
+                    surfaceContainerLow = Color.Black,
+                    surfaceContainerHigh = Color(0xFF121212),
+                    surfaceContainerLowest = Color.Black,
+                    surfaceContainerHighest = Color(0xFF1A1A1A),
+                )
+            } else base
         }
 
         resolvedDarkTheme -> {
@@ -120,10 +128,17 @@ fun AppLockTheme(
                 CustomDarkColorScheme.copy(
                     background = Color.Black,
                     surface = Color.Black,
-                    surfaceVariant = Color(0xFF121212),
-                    surfaceContainer = Color(0xFF0F0F0F),
-                    surfaceContainerLow = Color(0xFF080808),
-                    surfaceContainerHigh = Color(0xFF252525), // Increased contrast for cards
+                    surfaceVariant = Color.Black,
+                    surfaceContainer = Color.Black,
+                    surfaceContainerLow = Color.Black,
+                    surfaceContainerHigh = Color(0xFF121212), // Slightly lighter for cards in amoled
+                    surfaceContainerLowest = Color.Black,
+                    surfaceContainerHighest = Color(0xFF1A1A1A),
+                    onBackground = Color.White,
+                    onSurface = Color.White,
+                    onSurfaceVariant = Color(0xFFE0E0E0),
+                    secondaryContainer = Color(0xFF121212),
+                    onSecondaryContainer = Color.White,
                 )
             } else {
                 CustomDarkColorScheme

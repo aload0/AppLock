@@ -15,11 +15,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import dev.pranav.applock.AppLockApplication
+import dev.pranav.applock.core.utils.IntruderSelfieManager
 import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.antiuninstall.ui.AntiUninstallScreen
 import dev.pranav.applock.features.appintro.ui.AppIntroScreen
 import dev.pranav.applock.features.applist.ui.MainScreen
+import dev.pranav.applock.features.intruderselfie.ui.IntruderSelfieScreen
 import dev.pranav.applock.features.lockscreen.ui.PasswordOverlayScreen
 import dev.pranav.applock.features.lockscreen.ui.PatternLockScreen
 import dev.pranav.applock.features.setpassword.ui.PatternSetPasswordScreen
@@ -30,6 +32,7 @@ import dev.pranav.applock.features.triggerexclusions.ui.TriggerExclusionsScreen
 @Composable
 fun AppNavHost(navController: NavHostController, startDestination: String) {
     val application = LocalContext.current.applicationContext as AppLockApplication
+    val context = LocalContext.current
 
     NavHost(
         navController = navController,
@@ -68,7 +71,7 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         }
 
         composable(Screen.PasswordOverlay.route) {
-            val context = LocalActivity.current as FragmentActivity
+            val activity = LocalActivity.current as FragmentActivity
             val lockType = application.appLockRepository.getLockType()
 
             when (lockType) {
@@ -78,12 +81,15 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                         onPatternAttempt = { pattern ->
                             val isValid = application.appLockRepository.validatePattern(pattern)
                             if (isValid) {
+                                IntruderSelfieManager.resetFailedAttempts()
                                 handleAuthenticationSuccess(navController)
+                            } else {
+                                IntruderSelfieManager.recordFailedAttempt(context)
                             }
                             isValid
                         },
                         onBiometricAuth = {
-                            handleBiometricAuthentication(context, navController)
+                            handleBiometricAuthentication(activity, navController)
                         }
                     )
                 }
@@ -93,10 +99,27 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                         showBiometricButton = application.appLockRepository.isBiometricAuthEnabled(),
                         fromMainActivity = true,
                         onBiometricAuth = {
-                            handleBiometricAuthentication(context, navController)
+                            handleBiometricAuthentication(activity, navController)
                         },
                         onAuthSuccess = {
+                            IntruderSelfieManager.resetFailedAttempts()
                             handleAuthenticationSuccess(navController)
+                        },
+                        onPinAttempt = { pin, isFinal ->
+                            val correctPassword = application.appLockRepository.getPassword() ?: ""
+                            val isValid = pin == correctPassword
+                            if (isValid) {
+                                IntruderSelfieManager.resetFailedAttempts()
+                                handleAuthenticationSuccess(navController)
+                            } else {
+                                // Proper failed attempt count for PIN:
+                                // 1. If it's a "Proceed" button click (isFinal = true), always record.
+                                // 2. If it's an auto-unlock check, only record if length matches.
+                                if (isFinal || (pin.length >= correctPassword.length && correctPassword.isNotEmpty())) {
+                                    IntruderSelfieManager.recordFailedAttempt(context)
+                                }
+                            }
+                            isValid
                         }
                     )
                 }
@@ -113,6 +136,10 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
 
         composable(Screen.AntiUninstall.route) {
             AntiUninstallScreen(navController)
+        }
+
+        composable(Screen.IntruderSelfies.route) {
+            IntruderSelfieScreen(navController)
         }
     }
 }
@@ -135,6 +162,7 @@ private fun handleBiometricAuthentication(
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
                     LogUtils.d(TAG, "Biometric authentication succeeded")
+                    IntruderSelfieManager.resetFailedAttempts()
                     navigateToMain(navController)
                 }
 

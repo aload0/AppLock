@@ -60,6 +60,7 @@ import androidx.lifecycle.lifecycleScope
 import dev.pranav.applock.R
 import dev.pranav.applock.core.broadcast.DeviceAdmin
 import dev.pranav.applock.core.ui.shapes
+import dev.pranav.applock.core.utils.IntruderSelfieManager
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.data.repository.AppLockRepository
@@ -72,6 +73,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executor
+import java.util.concurrent.atomic.AtomicBoolean
 
 class PasswordOverlayActivity : FragmentActivity() {
     private lateinit var executor: Executor
@@ -83,6 +85,8 @@ class PasswordOverlayActivity : FragmentActivity() {
 
     private var isBiometricPromptShowingLocal = false
     private var movedToBackground = false
+    private val isGoingHome = AtomicBoolean(false)
+    
     private var appName by mutableStateOf("")
     private var appIcon by mutableStateOf<Drawable?>(null)
 
@@ -94,17 +98,10 @@ class PasswordOverlayActivity : FragmentActivity() {
                 val reason = intent.getStringExtra("reason")
                 // Handle button presses
                 when (reason) {
-                    "recentapps" -> {
-                        // Recents button pressed - trigger HOME action
-                        Log.d(TAG, "Recents button pressed - triggering HOME action")
+                    "recentapps", "homekey" -> {
+                        // Home or Recents button pressed - trigger HOME action
+                        Log.d(TAG, "System dialog action detected ($reason) - triggering HOME action")
                         goHome()
-                        return
-                    }
-                    "homekey" -> {
-                        // Home button pressed - trigger HOME action
-                        Log.d(TAG, "Home button pressed - triggering HOME action")
-                        goHome()
-                        return
                     }
                 }
             }
@@ -145,13 +142,12 @@ class PasswordOverlayActivity : FragmentActivity() {
     }
 
     private fun goHome() {
-        try {
-            val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-            val adminComponent = ComponentName(this, DeviceAdmin::class.java)
+        if (isGoingHome.getAndSet(true)) return // Prevent multiple calls
 
-            if (appLockRepository.isAntiUninstallEnabled() && dpm.isAdminActive(adminComponent)) {
-                // If device admin is active, we can also lock the device as requested for better security
-                // dpm.lockNow() // Uncomment if immediate lock is preferred over just going home
+        try {
+            // Record that we are leaving the locked app to ensure grace period triggers correctly
+            lockedPackageNameFromIntent?.let {
+                AppLockManager.setRecentlyLeftApp(it)
             }
 
             val intent = Intent(Intent.ACTION_MAIN).apply {
@@ -159,8 +155,12 @@ class PasswordOverlayActivity : FragmentActivity() {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             startActivity(intent)
+            
+            // Finish activity after starting home intent to clear overlay
+            finish()
         } catch (e: Exception) {
             Log.e(TAG, "Error going home: ${e.message}")
+            isGoingHome.set(false)
         }
     }
 
@@ -219,6 +219,7 @@ class PasswordOverlayActivity : FragmentActivity() {
 
         // Immersive mode to hide system UI
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = (
                     android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                             android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
@@ -250,13 +251,22 @@ class PasswordOverlayActivity : FragmentActivity() {
     }
 
     private fun setupUI() {
-        val onPinAttemptCallback = { pin: String ->
-            val isValid = appLockRepository.validatePassword(pin)
+        val onPinAttemptCallback = { pin: String, isFinal: Boolean ->
+            val correctPassword = appLockRepository.getPassword() ?: ""
+            val isValid = pin == correctPassword
+            
             if (isValid) {
+                IntruderSelfieManager.resetFailedAttempts()
                 lockedPackageNameFromIntent?.let { pkgName ->
                     AppLockManager.unlockApp(pkgName)
-
                     finishAfterTransition()
+                }
+            } else {
+                // Proper failed attempt count:
+                // 1. If it's a "Proceed" button click, it's always a failed attempt.
+                // 2. If it's an auto-unlock check, only count if the length matches or exceeds the correct password length.
+                if (isFinal || (pin.length >= correctPassword.length && correctPassword.isNotEmpty())) {
+                    IntruderSelfieManager.recordFailedAttempt(this@PasswordOverlayActivity)
                 }
             }
             isValid
@@ -265,11 +275,14 @@ class PasswordOverlayActivity : FragmentActivity() {
         val onPatternAttemptCallback = { pattern: String ->
             val isValid = appLockRepository.validatePattern(pattern)
             if (isValid) {
+                IntruderSelfieManager.resetFailedAttempts()
                 lockedPackageNameFromIntent?.let { pkgName ->
                     AppLockManager.unlockApp(pkgName)
 
                     finishAfterTransition()
                 }
+            } else {
+                IntruderSelfieManager.recordFailedAttempt(this@PasswordOverlayActivity)
             }
             isValid
         }
@@ -278,7 +291,8 @@ class PasswordOverlayActivity : FragmentActivity() {
             AppLockTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    contentColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentColor = MaterialTheme.colorScheme.onBackground
                 ) { innerPadding ->
                     val lockType = remember { appLockRepository.getLockType() }
                     when (lockType) {
@@ -289,7 +303,8 @@ class PasswordOverlayActivity : FragmentActivity() {
                                 lockedAppName = appName,
                                 lockedAppIcon = appIcon,
                                 triggeringPackageName = triggeringPackageNameFromIntent,
-                                onPatternAttempt = onPatternAttemptCallback
+                                onPatternAttempt = onPatternAttemptCallback,
+                                onBiometricAuth = { triggerBiometricPrompt() }
                             )
                         }
 
@@ -299,7 +314,7 @@ class PasswordOverlayActivity : FragmentActivity() {
                                 showBiometricButton = appLockRepository.isBiometricAuthEnabled(),
                                 fromMainActivity = false,
                                 onBiometricAuth = { triggerBiometricPrompt() },
-                                onAuthSuccess = {},
+                                onAuthSuccess = { IntruderSelfieManager.resetFailedAttempts() },
                                 lockedAppName = appName,
                                 lockedAppIcon = appIcon,
                                 triggeringPackageName = triggeringPackageNameFromIntent,
@@ -336,12 +351,19 @@ class PasswordOverlayActivity : FragmentActivity() {
                 super.onAuthenticationError(errorCode, errString)
                 isBiometricPromptShowingLocal = false
                 AppLockManager.reportBiometricAuthFinished()
-                Log.w(TAG, "Authentication error: $errString ($errorCode)")
+                
+                // Only log unexpected errors, ignore cancellation during navigation
+                if (errorCode != BiometricPrompt.ERROR_CANCELED && 
+                    errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
+                    errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                    Log.w(TAG, "Authentication error: $errString ($errorCode)")
+                }
             }
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
                 isBiometricPromptShowingLocal = false
+                IntruderSelfieManager.resetFailedAttempts()
                 lockedPackageNameFromIntent?.let { pkgName ->
                     AppLockManager.temporarilyUnlockAppWithBiometrics(pkgName)
                 }
@@ -352,6 +374,7 @@ class PasswordOverlayActivity : FragmentActivity() {
     override fun onResume() {
         super.onResume()
         movedToBackground = false
+        isGoingHome.set(false)
         AppLockManager.isLockScreenShown.set(true)
         lifecycleScope.launch {
             applyUserPreferences()
@@ -370,7 +393,7 @@ class PasswordOverlayActivity : FragmentActivity() {
     }
 
     fun triggerBiometricPrompt() {
-        if (appLockRepository.isBiometricAuthEnabled()) {
+        if (appLockRepository.isBiometricAuthEnabled() && !isGoingHome.get()) {
             AppLockManager.reportBiometricAuthStarted()
             isBiometricPromptShowingLocal = true
             try {
@@ -392,7 +415,7 @@ class PasswordOverlayActivity : FragmentActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (!isChangingConfigurations() && !isBiometricPromptShowingLocal && !movedToBackground) {
+        if (!isChangingConfigurations() && !isBiometricPromptShowingLocal && !movedToBackground && !isGoingHome.get()) {
             AppLockManager.isLockScreenShown.set(false)
             AppLockManager.reportBiometricAuthFinished()
             finish()
@@ -439,7 +462,7 @@ fun PasswordOverlayScreen(
     lockedAppName: String? = null,
     lockedAppIcon: Drawable? = null,
     triggeringPackageName: String? = null,
-    onPinAttempt: ((pin: String) -> Boolean)? = null
+    onPinAttempt: ((pin: String, isFinal: Boolean) -> Boolean)? = null
 ) {
     val appLockRepository = LocalContext.current.appLockRepository()
     val windowInfo = LocalWindowInfo.current
@@ -453,7 +476,7 @@ fun PasswordOverlayScreen(
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surfaceContainer
+        color = MaterialTheme.colorScheme.background
     ) {
         val passwordState = remember { mutableStateOf("") }
         var showError by remember { mutableStateOf(false) }
@@ -513,7 +536,7 @@ fun PasswordOverlayScreen(
                             showError = false
 
                             if (appLockRepository.isAutoUnlockEnabled()) {
-                                onPinAttempt?.invoke(passwordState.value)
+                                onPinAttempt?.invoke(passwordState.value, false)
                             }
                         },
                         onPinIncorrect = { showError = true }
@@ -571,7 +594,7 @@ fun PasswordOverlayScreen(
                         showError = false
 
                         if (appLockRepository.isAutoUnlockEnabled()) {
-                            onPinAttempt?.invoke(passwordState.value)
+                            onPinAttempt?.invoke(passwordState.value, false)
                         }
                     },
                     onPinIncorrect = { showError = true }
@@ -705,7 +728,7 @@ fun PasswordIndicators(
     ) {
         LazyRow(
             state = lazyListState,
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(
                 indicatorSpacing,
                 Alignment.CenterHorizontally
@@ -797,7 +820,7 @@ fun KeypadSection(
     fromMainActivity: Boolean = false,
     onBiometricAuth: () -> Unit,
     onAuthSuccess: () -> Unit,
-    onPinAttempt: ((pin: String) -> Boolean)? = null,
+    onPinAttempt: ((pin: String, isFinal: Boolean) -> Boolean)? = null,
     onPasswordChange: () -> Unit,
     onPinIncorrect: () -> Unit
 ) {
@@ -840,10 +863,11 @@ fun KeypadSection(
             horizontalPadding,
             showBiometricButton
         ) {
+            val rows = if (showBiometricButton) 5f else 4f
             if (isLandscape) {
                 val availableLandscapeHeight = screenHeightDp * 0.8f
-                val totalVerticalSpacing = buttonSpacing * 3
-                val heightBasedSize = (availableLandscapeHeight - totalVerticalSpacing) / 4f
+                val totalVerticalSpacing = buttonSpacing * (rows - 1)
+                val heightBasedSize = (availableLandscapeHeight - totalVerticalSpacing) / rows
 
                 val availableWidth = (screenWidthDp * 0.45f)
                 val totalHorizontalSpacing = buttonSpacing * 2
@@ -855,10 +879,9 @@ fun KeypadSection(
                 val totalHorizontalSpacing = buttonSpacing * 2
                 val widthBasedSize = (availableWidth - totalHorizontalSpacing) / 3.5f
 
-                val totalVerticalSpacing = buttonSpacing * 3
-                val biometricAllowance = if (showBiometricButton) 60.dp else 0.dp
+                val totalVerticalSpacing = buttonSpacing * (rows - 1)
                 val heightBasedSize =
-                    (availableHeight - totalVerticalSpacing - biometricAllowance) / 4f
+                    (availableHeight - totalVerticalSpacing) / rows
 
                 minOf(widthBasedSize, heightBasedSize)
             }
@@ -915,22 +938,6 @@ fun KeypadSection(
                 .padding(bottom = 8.dp)
         }
     ) {
-        if (showBiometricButton) {
-            FilledTonalIconButton(
-                onClick = onBiometricAuth,
-                modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(40),
-            ) {
-                Icon(
-                    imageVector = Fingerprint,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(10.dp),
-                    contentDescription = stringResource(R.string.biometric_authentication_cd),
-                    tint = MaterialTheme.colorScheme.surfaceTint
-                )
-            }
-        }
         KeypadRow(
             disableHaptics = disableHaptics,
             keys = listOf("1", "2", "3"),
@@ -960,6 +967,26 @@ fun KeypadSection(
             buttonSize = buttonSize,
             buttonSpacing = buttonSpacing
         )
+        
+        if (showBiometricButton) {
+            FilledTonalIconButton(
+                onClick = onBiometricAuth,
+                modifier = Modifier.size(buttonSize),
+                shape = CircleShape,
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Icon(
+                    imageVector = Fingerprint,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(buttonSize * 0.25f),
+                    contentDescription = stringResource(R.string.biometric_authentication_cd),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
     }
 }
 
@@ -978,7 +1005,7 @@ private fun handleKeypadSpecialButtonLogic(
     minLength: Int,
     fromMainActivity: Boolean,
     onAuthSuccess: () -> Unit,
-    onPinAttempt: ((pin: String) -> Boolean)?,
+    onPinAttempt: ((pin: String, isFinal: Boolean) -> Boolean)?,
     context: Context,
     onPasswordChange: () -> Unit,
     onPinIncorrect: () -> Unit
@@ -1004,9 +1031,12 @@ private fun handleKeypadSpecialButtonLogic(
             }
             if (passwordState.value.length >= minLength) {
                 if (fromMainActivity) {
-                    if (appLockRepository.validatePassword(passwordState.value)) {
+                    val correctPassword = appLockRepository.getPassword() ?: ""
+                    if (passwordState.value == correctPassword) {
+                        IntruderSelfieManager.resetFailedAttempts()
                         onAuthSuccess()
                     } else {
+                        IntruderSelfieManager.recordFailedAttempt(context)
                         passwordState.value = ""
                         if (!appLockRepository.shouldDisableHaptics()) {
                             vibrate(context, 100)
@@ -1015,7 +1045,7 @@ private fun handleKeypadSpecialButtonLogic(
                     }
                 } else {
                     onPinAttempt?.let { attempt ->
-                        val pinWasCorrectAndProcessed = attempt(passwordState.value)
+                        val pinWasCorrectAndProcessed = attempt(passwordState.value, true)
                         if (!pinWasCorrectAndProcessed) {
                             passwordState.value = ""
                             if (!appLockRepository.shouldDisableHaptics()) {

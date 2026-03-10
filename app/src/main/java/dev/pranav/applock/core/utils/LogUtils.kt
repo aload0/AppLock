@@ -1,14 +1,20 @@
 package dev.pranav.applock.core.utils
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.FileProvider
 import java.io.File
+import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.Date
+import java.util.Locale
 import kotlin.concurrent.thread
 
 @SuppressLint("StaticFieldLeak")
@@ -85,6 +91,55 @@ object LogUtils {
         } catch (e: Exception) {
             Log.e(TAG, "Error exporting logs", e)
             return null
+        }
+    }
+
+    /**
+     * Export logs to the default Downloads directory in a subfolder with the app name.
+     * The filename format is "Logs+Time of export(hhmmss)+app name".
+     */
+    fun exportLogsToDownloads(appName: String): String? {
+        val timeStamp = SimpleDateFormat("HHmmss", Locale.getDefault()).format(Date())
+        val fileName = "Logs+${timeStamp}+$appName.txt"
+
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = context.contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/" + appName)
+                }
+
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                uri?.let {
+                    resolver.openOutputStream(it)?.use { outputStream ->
+                        val process = Runtime.getRuntime().exec("logcat -d")
+                        process.inputStream.use { inputStream ->
+                            inputStream.copyTo(outputStream)
+                        }
+                    }
+                    "${Environment.DIRECTORY_DOWNLOADS}/$appName/$fileName"
+                }
+            } else {
+                // Fallback for older Android versions
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val appDir = File(downloadsDir, appName)
+                if (!appDir.exists()) {
+                    appDir.mkdirs()
+                }
+                val targetFile = File(appDir, fileName)
+                targetFile.outputStream().use { outputStream ->
+                    val process = Runtime.getRuntime().exec("logcat -d")
+                    process.inputStream.use { inputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                "${Environment.DIRECTORY_DOWNLOADS}/$appName/$fileName"
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error exporting logs to downloads", e)
+            null
         }
     }
 

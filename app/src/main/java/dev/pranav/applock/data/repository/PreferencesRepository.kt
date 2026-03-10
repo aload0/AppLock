@@ -3,10 +3,9 @@ package dev.pranav.applock.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Repository for managing application preferences and settings.
@@ -72,26 +71,29 @@ class PreferencesRepository(context: Context) {
 
     fun setAmoledModeEnabled(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_AMOLED_MODE_ENABLED, enabled) }
+        _amoledModeFlow.value = enabled
     }
 
     fun isAmoledModeEnabled(): Boolean {
         return settingsPrefs.getBoolean(KEY_AMOLED_MODE_ENABLED, false)
     }
 
-    fun amoledModeFlow(): Flow<Boolean> = callbackFlow {
-        val listener = object : SharedPreferences.OnSharedPreferenceChangeListener {
-            override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {
-                if (key == KEY_AMOLED_MODE_ENABLED) {
-                    trySend(isAmoledModeEnabled())
-                }
-            }
-        }
-        settingsPrefs.registerOnSharedPreferenceChangeListener(listener)
-        awaitClose { settingsPrefs.unregisterOnSharedPreferenceChangeListener(listener) }
-    }.onStart { emit(isAmoledModeEnabled()) }
+    val amoledModeFlow: Flow<Boolean> = _amoledModeFlow.asStateFlow()
+
+    fun setDynamicColorEnabled(enabled: Boolean) {
+        settingsPrefs.edit { putBoolean(KEY_DYNAMIC_COLOR, enabled) }
+        _dynamicColorFlow.value = enabled
+    }
+
+    fun isDynamicColorEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_DYNAMIC_COLOR, false)
+    }
+
+    val dynamicColorFlow: Flow<Boolean> = _dynamicColorFlow.asStateFlow()
 
     fun setAppThemeMode(themeMode: AppThemeMode) {
         settingsPrefs.edit { putString(KEY_APP_THEME_MODE, themeMode.name) }
+        _appThemeModeFlow.value = themeMode
     }
 
     fun getAppThemeMode(): AppThemeMode {
@@ -103,17 +105,7 @@ class PreferencesRepository(context: Context) {
         }
     }
 
-    fun appThemeModeFlow(): Flow<AppThemeMode> = callbackFlow {
-        val listener = object : SharedPreferences.OnSharedPreferenceChangeListener {
-            override fun onSharedPreferenceChanged(prefs: SharedPreferences?, key: String?) {
-                if (key == KEY_APP_THEME_MODE) {
-                    trySend(getAppThemeMode())
-                }
-            }
-        }
-        settingsPrefs.registerOnSharedPreferenceChangeListener(listener)
-        awaitClose { settingsPrefs.unregisterOnSharedPreferenceChangeListener(listener) }
-    }.onStart { emit(getAppThemeMode()) }
+    val appThemeModeFlow: Flow<AppThemeMode> = _appThemeModeFlow.asStateFlow()
 
     fun setDisableHaptics(enabled: Boolean) {
         settingsPrefs.edit { putBoolean(KEY_DISABLE_HAPTICS, enabled) }
@@ -235,6 +227,22 @@ class PreferencesRepository(context: Context) {
         settingsPrefs.edit { putBoolean(KEY_LOGGING_ENABLED, enabled) }
     }
 
+    fun setIntruderSelfieEnabled(enabled: Boolean) {
+        settingsPrefs.edit { putBoolean(KEY_INTRUDER_SELFIE_ENABLED, enabled) }
+    }
+
+    fun isIntruderSelfieEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_INTRUDER_SELFIE_ENABLED, false)
+    }
+
+    fun setIntruderSelfieAttempts(attempts: Int) {
+        settingsPrefs.edit { putInt(KEY_INTRUDER_SELFIE_ATTEMPTS, attempts) }
+    }
+
+    fun getIntruderSelfieAttempts(): Int {
+        return settingsPrefs.getInt(KEY_INTRUDER_SELFIE_ATTEMPTS, 3)
+    }
+
     companion object {
         private const val PREFS_NAME_APP_LOCK = "app_lock_prefs"
         private const val PREFS_NAME_SETTINGS = "app_lock_settings"
@@ -245,6 +253,7 @@ class PreferencesRepository(context: Context) {
         private const val KEY_DISABLE_HAPTICS = "disable_haptics"
         private const val KEY_USE_MAX_BRIGHTNESS = "use_max_brightness"
         private const val KEY_AMOLED_MODE_ENABLED = "amoled_mode_enabled"
+        private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_APP_THEME_MODE = "app_theme_mode"
         private const val KEY_ANTI_UNINSTALL = "anti_uninstall"
         private const val KEY_ANTI_UNINSTALL_ADMIN_SETTINGS = "anti_uninstall_admin_settings"
@@ -261,12 +270,31 @@ class PreferencesRepository(context: Context) {
         private const val KEY_AUTO_UNLOCK = "auto_unlock"
         private const val KEY_SHOW_SYSTEM_APPS = "show_system_apps"
         private const val KEY_LOCK_TYPE = "lock_type"
+        private const val KEY_INTRUDER_SELFIE_ENABLED = "intruder_selfie_enabled"
+        private const val KEY_INTRUDER_SELFIE_ATTEMPTS = "intruder_selfie_attempts"
 
         private const val DEFAULT_PROTECT_ENABLED = true
         private const val DEFAULT_UNLOCK_DURATION = 0
 
         const val LOCK_TYPE_PIN = "pin"
         const val LOCK_TYPE_PATTERN = "pattern"
+
+        // Static flows to ensure all repository instances share the same state
+        private val _amoledModeFlow = MutableStateFlow(false)
+        private val _dynamicColorFlow = MutableStateFlow(false)
+        private val _appThemeModeFlow = MutableStateFlow(AppThemeMode.SYSTEM)
+
+        // Initialize static flows with actual values on first creation
+        private var initialized = false
+    }
+
+    init {
+        if (!initialized) {
+            _amoledModeFlow.value = isAmoledModeEnabled()
+            _dynamicColorFlow.value = isDynamicColorEnabled()
+            _appThemeModeFlow.value = getAppThemeMode()
+            initialized = true
+        }
     }
 }
 
