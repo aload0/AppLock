@@ -36,6 +36,19 @@ class PreferencesRepository(context: Context) {
         appLockPrefs.edit(commit = true) { putString(KEY_PATTERN, pattern) }
     }
 
+    fun setRecoveryKey(recoveryKey: String) {
+        appLockPrefs.edit(commit = true) { putString(KEY_RECOVERY_KEY, recoveryKey) }
+    }
+
+    fun getRecoveryKey(): String? {
+        return appLockPrefs.getString(KEY_RECOVERY_KEY, null)
+    }
+
+    fun validateRecoveryKey(inputRecoveryKey: String): Boolean {
+        val storedRecoveryKey = getRecoveryKey()
+        return storedRecoveryKey != null && inputRecoveryKey == storedRecoveryKey
+    }
+
     fun getPattern(): String? {
         return appLockPrefs.getString(KEY_PATTERN, null)
     }
@@ -163,6 +176,14 @@ class PreferencesRepository(context: Context) {
         return settingsPrefs.getBoolean(KEY_ANTI_UNINSTALL_OVERLAY, false)
     }
 
+    fun setPreventAllAppUninstallEnabled(enabled: Boolean) {
+        settingsPrefs.edit(commit = true) { putBoolean(KEY_PREVENT_ALL_APP_UNINSTALL, enabled) }
+    }
+
+    fun isPreventAllAppUninstallEnabled(): Boolean {
+        return settingsPrefs.getBoolean(KEY_PREVENT_ALL_APP_UNINSTALL, false)
+    }
+
     fun setProtectEnabled(enabled: Boolean) {
         settingsPrefs.edit(commit = true) { putBoolean(KEY_APPLOCK_ENABLED, enabled) }
     }
@@ -249,6 +270,7 @@ class PreferencesRepository(context: Context) {
 
         private const val KEY_PASSWORD = "password"
         private const val KEY_PATTERN = "pattern"
+        private const val KEY_RECOVERY_KEY = "recovery_key"
         private const val KEY_BIOMETRIC_AUTH_ENABLED = "use_biometric_auth"
         private const val KEY_DISABLE_HAPTICS = "disable_haptics"
         private const val KEY_USE_MAX_BRIGHTNESS = "use_max_brightness"
@@ -260,6 +282,7 @@ class PreferencesRepository(context: Context) {
         private const val KEY_ANTI_UNINSTALL_USAGE_STATS = "anti_uninstall_usage_stats"
         private const val KEY_ANTI_UNINSTALL_ACCESSIBILITY = "anti_uninstall_accessibility"
         private const val KEY_ANTI_UNINSTALL_OVERLAY = "anti_uninstall_overlay"
+        private const val KEY_PREVENT_ALL_APP_UNINSTALL = "prevent_all_app_uninstall"
         private const val KEY_UNLOCK_TIME_DURATION = "unlock_time_duration"
         private const val KEY_BACKEND_IMPLEMENTATION = "backend_implementation"
         private const val KEY_COMMUNITY_LINK_SHOWN = "community_link_shown"
@@ -278,6 +301,7 @@ class PreferencesRepository(context: Context) {
 
         const val LOCK_TYPE_PIN = "pin"
         const val LOCK_TYPE_PATTERN = "pattern"
+        const val LOCK_TYPE_PASSWORD = "password"
 
         // Static flows to ensure all repository instances share the same state
         private val _amoledModeFlow = MutableStateFlow(false)

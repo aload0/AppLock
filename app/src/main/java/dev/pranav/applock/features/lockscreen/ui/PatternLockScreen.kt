@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,7 +58,8 @@ fun PatternLockScreen(
     lockedAppIcon: Drawable? = null,
     triggeringPackageName: String? = null,
     onPatternAttempt: ((pattern: String) -> Boolean)? = null,
-    onBiometricAuth: (() -> Unit)? = null
+    onBiometricAuth: (() -> Unit)? = null,
+    onForgotPasscodeReset: (() -> Unit)? = null
 ) {
     val appLockRepository = LocalContext.current.appLockRepository()
     val context = LocalContext.current
@@ -145,6 +147,8 @@ fun PatternLockScreen(
                             textAlign = TextAlign.Center
                         )
                     }
+
+                    TextButton(onClick = { onForgotPasscodeReset?.invoke() }) { Text("Forgot passcode?") }
 
                     if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
                         Spacer(modifier = Modifier.height(24.dp))
@@ -238,6 +242,8 @@ fun PatternLockScreen(
                         animationDuration = 120,
                         callback = lockCallback
                     )
+
+                    TextButton(onClick = { onForgotPasscodeReset?.invoke() }) { Text("Forgot passcode?") }
 
                     if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
                         Spacer(modifier = Modifier.height(32.dp))

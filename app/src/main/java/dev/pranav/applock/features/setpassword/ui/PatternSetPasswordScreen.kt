@@ -44,6 +44,7 @@ import com.mrhwsn.composelock.PatternLock
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.R
 import dev.pranav.applock.core.navigation.Screen
+import dev.pranav.applock.core.utils.RecoveryKeyManager
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.data.repository.PreferencesRepository
 
@@ -61,6 +62,8 @@ fun PatternSetPasswordScreen(
     var showMismatchError by remember { mutableStateOf(false) }
     var showMinLengthError by remember { mutableStateOf(false) }
     var showInvalidOldPasswordError by remember { mutableStateOf(false) }
+    var showRecoveryDialog by remember { mutableStateOf(false) }
+    var generatedRecoveryKey by remember { mutableStateOf("") }
 
     val minLength = 4
     val context = LocalContext.current
@@ -162,18 +165,30 @@ fun PatternSetPasswordScreen(
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(Screen.SetPassword.route) { inclusive = true }
-                        if (isFirstTimeSetup) {
-                            popUpTo(Screen.AppIntro.route) { inclusive = true }
-                        }
-                    }
+                    generatedRecoveryKey = RecoveryKeyManager.generateRecoveryKey()
+                    appLockRepository?.setRecoveryKey(generatedRecoveryKey)
+                    showRecoveryDialog = true
                 } else {
                     showMismatchError = true
                     confirmPatternState = ""
                 }
             }
         }
+    }
+
+    if (showRecoveryDialog) {
+        RecoveryKeyGeneratedDialog(
+            recoveryKey = generatedRecoveryKey,
+            onDismiss = {
+                showRecoveryDialog = false
+                navController.navigate(Screen.Main.route) {
+                    popUpTo(Screen.SetPasswordPattern.route) { inclusive = true }
+                    if (isFirstTimeSetup) {
+                        popUpTo(Screen.AppIntro.route) { inclusive = true }
+                    }
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -268,7 +283,14 @@ fun PatternSetPasswordScreen(
 
                     if (isFirstTimeSetup && !isVerifyOldPasswordMode && !isConfirmationMode) {
                         TextButton(onClick = { switchToPinMethod() }) {
-                            Text("Use PIN Instead")
+                            Text("Use PIN")
+                        }
+                        TextButton(onClick = {
+                            navController.navigate(Screen.SetPasswordText.route) {
+                                popUpTo(Screen.SetPasswordPattern.route) { inclusive = true }
+                            }
+                        }) {
+                            Text("Use Password")
                         }
                     }
 
@@ -449,7 +471,12 @@ fun PatternSetPasswordScreen(
 
                     if (!isVerifyOldPasswordMode && !isConfirmationMode) {
                         TextButton(onClick = { switchToPinMethod() }) {
-                            Text("Use PIN Instead")
+                            Text("Use PIN")
+                        }
+                        TextButton(onClick = {
+                            navController.navigate(Screen.SetPasswordText.route)
+                        }) {
+                            Text("Use Password")
                         }
                     }
 

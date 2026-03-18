@@ -51,6 +51,11 @@ class AppLockRepository(private val context: Context) {
     fun validatePattern(inputPattern: String): Boolean =
         preferencesRepository.validatePattern(inputPattern)
 
+    fun setRecoveryKey(recoveryKey: String) = preferencesRepository.setRecoveryKey(recoveryKey)
+    fun getRecoveryKey(): String? = preferencesRepository.getRecoveryKey()
+    fun validateRecoveryKey(inputRecoveryKey: String): Boolean =
+        preferencesRepository.validateRecoveryKey(inputRecoveryKey)
+
     fun setLockType(lockType: String) = preferencesRepository.setLockType(lockType)
     fun getLockType(): String = preferencesRepository.getLockType()
 
@@ -106,6 +111,12 @@ class AppLockRepository(private val context: Context) {
 
     fun isAntiUninstallOverlayEnabled(): Boolean =
         preferencesRepository.isAntiUninstallOverlayEnabled()
+
+    fun setPreventAllAppUninstallEnabled(enabled: Boolean) =
+        preferencesRepository.setPreventAllAppUninstallEnabled(enabled)
+
+    fun isPreventAllAppUninstallEnabled(): Boolean =
+        preferencesRepository.isPreventAllAppUninstallEnabled()
 
     fun setProtectEnabled(enabled: Boolean) = preferencesRepository.setProtectEnabled(enabled)
     fun isProtectEnabled(): Boolean = preferencesRepository.isProtectEnabled()
