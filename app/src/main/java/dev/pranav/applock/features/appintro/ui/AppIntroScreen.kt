@@ -193,6 +193,7 @@ fun AppIntroScreen(navController: NavController) {
                 NotificationManagerCompat.from(context).areNotificationsEnabled()
         }
         accessibilityServiceEnabled = context.isAccessibilityServiceEnabled()
+        usageStatsPermissionGranted = context.hasUsagePermission()
     }
 
     val onFinishCallback = {
@@ -355,55 +356,55 @@ fun AppIntroScreen(navController: NavController) {
         onNext = { true }
     )
 
-    val methodSpecificPages = when (selectedMethod) {
-        AppUsageMethod.ACCESSIBILITY -> listOf(
-            IntroPage(
-                title = stringResource(R.string.accessibility_service_title),
-                description = stringResource(R.string.app_intro_accessibility_desc),
-                icon = Accessibility,
-                backgroundColor = Color(0xFFF1550E),
-                contentColor = Color.White,
-                onNext = {
-                    accessibilityServiceEnabled = context.isAccessibilityServiceEnabled()
-                    if (!accessibilityServiceEnabled) {
-                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(intent)
-                        false
-                    } else {
-                        context.appLockRepository()
-                            .setBackendImplementation(BackendImplementation.ACCESSIBILITY)
-                        true
-                    }
+    val mandatoryPermissionPages = listOf(
+        IntroPage(
+            title = stringResource(R.string.accessibility_service_title),
+            description = stringResource(R.string.app_intro_accessibility_desc),
+            icon = Accessibility,
+            backgroundColor = Color(0xFFF1550E),
+            contentColor = Color.White,
+            onNext = {
+                accessibilityServiceEnabled = context.isAccessibilityServiceEnabled()
+                if (!accessibilityServiceEnabled) {
+                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                    false
+                } else {
+                    true
                 }
-            )
+            }
+        ),
+        IntroPage(
+            title = stringResource(R.string.app_intro_usage_stats_title),
+            description = stringResource(R.string.app_intro_usage_stats_desc),
+            icon = Icons.Default.QueryStats,
+            backgroundColor = Color(0xFFB453A4),
+            contentColor = Color.White,
+            onNext = {
+                usageStatsPermissionGranted = context.hasUsagePermission()
+                if (!usageStatsPermissionGranted) {
+                    val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                    false
+                } else {
+                    true
+                }
+            }
         )
+    )
 
-        AppUsageMethod.USAGE_STATS -> listOf(
-            IntroPage(
-                title = stringResource(R.string.app_intro_usage_stats_title),
-                description = stringResource(R.string.app_intro_usage_stats_desc),
-                icon = Icons.Default.QueryStats,
-                backgroundColor = Color(0xFFB453A4),
-                contentColor = Color.White,
-                onNext = {
-                    usageStatsPermissionGranted = context.hasUsagePermission()
-                    if (!usageStatsPermissionGranted) {
-                        val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(intent)
-                        false
-                    } else {
-                        context.appLockRepository()
-                            .setBackendImplementation(BackendImplementation.USAGE_STATS)
-                        context.startService(
-                            Intent(context, ExperimentalAppLockService::class.java)
-                        )
-                        true
-                    }
-                }
-            )
-        )
+    val methodSpecificPages = when (selectedMethod) {
+        AppUsageMethod.ACCESSIBILITY -> {
+            context.appLockRepository().setBackendImplementation(BackendImplementation.ACCESSIBILITY)
+            emptyList()
+        }
+
+        AppUsageMethod.USAGE_STATS -> {
+            context.appLockRepository().setBackendImplementation(BackendImplementation.USAGE_STATS)
+            emptyList()
+        }
 
         AppUsageMethod.SHIZUKU -> listOf(
             IntroPage(
@@ -454,10 +455,12 @@ fun AppIntroScreen(navController: NavController) {
                 notificationPermissionGranted =
                     NotificationManagerCompat.from(context).areNotificationsEnabled()
             }
+            accessibilityServiceEnabled = context.isAccessibilityServiceEnabled()
+            usageStatsPermissionGranted = context.hasUsagePermission()
 
             val methodPermissionGranted = when (selectedMethod) {
-                AppUsageMethod.ACCESSIBILITY -> context.isAccessibilityServiceEnabled()
-                AppUsageMethod.USAGE_STATS -> context.hasUsagePermission()
+                AppUsageMethod.ACCESSIBILITY -> accessibilityServiceEnabled
+                AppUsageMethod.USAGE_STATS -> usageStatsPermissionGranted
                 AppUsageMethod.SHIZUKU -> {
                     if (Shizuku.isPreV11()) {
                         checkSelfPermission(
@@ -470,12 +473,11 @@ fun AppIntroScreen(navController: NavController) {
                 }
             }
 
-            // Only require all permissions if accessibility is selected
-            val allPermissionsGranted = if (selectedMethod == AppUsageMethod.ACCESSIBILITY) {
-                overlayPermissionGranted && notificationPermissionGranted && methodPermissionGranted
-            } else {
-                overlayPermissionGranted && notificationPermissionGranted && methodPermissionGranted
-            }
+            val allPermissionsGranted = overlayPermissionGranted && 
+                    notificationPermissionGranted && 
+                    accessibilityServiceEnabled && 
+                    usageStatsPermissionGranted && 
+                    methodPermissionGranted
 
             if (!allPermissionsGranted) {
                 Toast.makeText(
@@ -483,13 +485,18 @@ fun AppIntroScreen(navController: NavController) {
                     context.getString(R.string.all_permissions_required),
                     Toast.LENGTH_SHORT
                 ).show()
+            } else {
+                // Ensure correct service is started if not Accessibility
+                if (selectedMethod == AppUsageMethod.USAGE_STATS) {
+                    context.startService(Intent(context, ExperimentalAppLockService::class.java))
+                }
             }
             allPermissionsGranted
         }
     )
 
     val allPages =
-        basicPages + methodSelectionPage + methodSpecificPages + finalPage
+        basicPages + methodSelectionPage + mandatoryPermissionPages + methodSpecificPages + finalPage
 
     AppIntro(
         pages = allPages,

@@ -14,6 +14,10 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.front" android:required="false" />
 
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -27,7 +31,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
 
-    <uses-permission android:name="android.permission.SET_ACTIVITY_WATCHER" />
+    <uses-permission android:name="android.permission.SET_ACTIVITY_WATCHER"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:name=".AppLockApplication"
@@ -46,7 +51,9 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppLock">
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AppLock"
+            tools:ignore="RedundantLabel">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -58,13 +65,17 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:excludeFromRecents="true"
             android:exported="false"
+            android:label="@string/app_name"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.Material.NoActionBar.TranslucentDecor" />
+            android:theme="@android:style/Theme.Material.NoActionBar.TranslucentDecor"
+            tools:ignore="RedundantLabel" />
 
         <activity
             android:name=".features.admin.AdminDisableActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppLock" />
+            android:label="@string/app_name"
+            android:theme="@style/Theme.AppLock"
+            tools:ignore="RedundantLabel" />
 
         <service
             android:name=".services.ShizukuAppLockService"
@@ -85,7 +96,7 @@
         <service
             android:name=".services.AppLockAccessibilityService"
             android:exported="false"
-            android:foregroundServiceType="specialUse"
+            android:foregroundServiceType="specialUse|systemExempted"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             tools:ignore="AccessibilityPolicy">
@@ -104,6 +115,7 @@
             android:name=".core.broadcast.DeviceAdmin"
             android:description="@string/device_admin_description"
             android:exported="false"
+            android:label="@string/app_name"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />

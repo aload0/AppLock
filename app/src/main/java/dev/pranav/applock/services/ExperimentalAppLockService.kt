@@ -42,6 +42,11 @@ class ExperimentalAppLockService : Service() {
     private var timer: Timer? = null
     private var previousForegroundPackage = ""
 
+    companion object {
+        @Volatile
+        var isServiceRunning = false
+    }
+
     private val screenStateReceiver = object: android.content.BroadcastReceiver() {
         override fun onReceive(context: android.content.Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) {
@@ -64,6 +69,7 @@ class ExperimentalAppLockService : Service() {
             return START_NOT_STICKY
         }
 
+        isServiceRunning = true
         AppLockManager.resetRestartAttempts(TAG)
         appLockRepository.setActiveBackend(BackendImplementation.USAGE_STATS)
         AppLockManager.stopAllOtherServices(this, this::class.java)
@@ -82,6 +88,7 @@ class ExperimentalAppLockService : Service() {
     }
 
     override fun onDestroy() {
+        isServiceRunning = false
         timer?.cancel()
         LogUtils.d(TAG, "Service destroyed. Checking for fallback.")
 
@@ -262,7 +269,7 @@ class ExperimentalAppLockService : Service() {
     private fun createNotificationChannel() {
         val serviceChannel = NotificationChannel(
             CHANNEL_ID,
-            "AppLock Service (Usage Stats)",
+            "APP Lock by AP Service (Usage Stats)",
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(serviceChannel)
@@ -270,7 +277,7 @@ class ExperimentalAppLockService : Service() {
 
     private fun createNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("App Lock")
+            .setContentTitle("APP Lock by AP")
             .setContentText("Protecting your apps")
             .setSmallIcon(R.drawable.baseline_shield_24)
             .setPriority(NotificationCompat.PRIORITY_MIN)

@@ -43,6 +43,7 @@ import androidx.navigation.NavController
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.R
 import dev.pranav.applock.core.navigation.Screen
+import dev.pranav.applock.core.utils.RecoveryKeyManager
 import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.lockscreen.ui.KeypadRow
 import dev.pranav.applock.features.lockscreen.ui.PasswordIndicators
@@ -61,11 +62,10 @@ fun SetPasswordScreen(
     var confirmPasswordState by remember { mutableStateOf("") }
     var isConfirmationMode by remember { mutableStateOf(false) }
 
-    var isVerifyOldPasswordMode by remember { mutableStateOf(!isFirstTimeSetup) }
-
     var showMismatchError by remember { mutableStateOf(false) }
     var showLengthError by remember { mutableStateOf(false) }
-    var showInvalidOldPasswordError by remember { mutableStateOf(false) }
+    var showRecoveryDialog by remember { mutableStateOf(false) }
+    var generatedRecoveryKey by remember { mutableStateOf("") }
     val minLength = 4
 
     val context = LocalContext.current
@@ -131,31 +131,19 @@ fun SetPasswordScreen(
         }
     }
 
-    val fragmentActivity = LocalActivity.current as? androidx.fragment.app.FragmentActivity
-
-    fun launchDeviceCredentialAuth() {
-        if (fragmentActivity == null) return
-        val executor = ContextCompat.getMainExecutor(context)
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(context.getString(R.string.authenticate_to_reset_pin_title))
-            .setSubtitle(context.getString(R.string.use_device_pin_pattern_password_subtitle))
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            )
-            .build()
-        val biometricPrompt = BiometricPrompt(
-            fragmentActivity, executor,
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    super.onAuthenticationSucceeded(result)
-                    isVerifyOldPasswordMode = false
-                    passwordState = ""
-                    confirmPasswordState = ""
-                    showInvalidOldPasswordError = false
+    if (showRecoveryDialog) {
+        RecoveryKeyGeneratedDialog(
+            recoveryKey = generatedRecoveryKey,
+            onDismiss = {
+                showRecoveryDialog = false
+                navController.navigate(Screen.Main.route) {
+                    popUpTo(Screen.SetPassword.route) { inclusive = true }
+                    if (isFirstTimeSetup) {
+                        popUpTo(Screen.AppIntro.route) { inclusive = true }
+                    }
                 }
-
-            })
-        biometricPrompt.authenticate(promptInfo)
+            }
+        )
     }
 
     Scaffold(
@@ -166,7 +154,6 @@ fun SetPasswordScreen(
                     title = {
                         Text(
                             text = when {
-                                isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_title)
                                 isConfirmationMode -> stringResource(R.string.confirm_pin_title)
                                 else -> stringResource(R.string.set_new_pin_title)
                             },
@@ -199,7 +186,6 @@ fun SetPasswordScreen(
                 ) {
                     Text(
                         text = when {
-                            isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_label)
                             isConfirmationMode -> stringResource(R.string.confirm_new_pin_label)
                             else -> stringResource(R.string.create_new_pin_label)
                         },
@@ -225,17 +211,8 @@ fun SetPasswordScreen(
                             modifier = Modifier.padding(8.dp)
                         )
                     }
-                    if (showInvalidOldPasswordError) {
-                        Text(
-                            text = stringResource(R.string.incorrect_pin_try_again),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
 
                     val currentPassword = when {
-                        isVerifyOldPasswordMode -> passwordState
                         isConfirmationMode -> confirmPasswordState
                         else -> passwordState
                     }
@@ -248,7 +225,6 @@ fun SetPasswordScreen(
 
                     Text(
                         text = when {
-                            isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_label)
                             isConfirmationMode -> stringResource(R.string.re_enter_new_pin_confirm_label)
                             else -> stringResource(R.string.tooltip_create_pin_min_length)
                         },
@@ -257,41 +233,18 @@ fun SetPasswordScreen(
                         textAlign = TextAlign.Center
                     )
 
-                    if (isVerifyOldPasswordMode) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        TextButton(onClick = { launchDeviceCredentialAuth() }) {
-                            Text(stringResource(R.string.reset_using_device_password_button))
-                        }
-                    }
-
-                    if (isVerifyOldPasswordMode || isConfirmationMode) {
+                    if (isConfirmationMode) {
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(
                             onClick = {
-                                if (isVerifyOldPasswordMode) {
-                                    if (navController.previousBackStackEntry != null) {
-                                        navController.popBackStack()
-                                    } else {
-                                        activity?.finish()
-                                    }
-                                } else {
-                                    isConfirmationMode = false
-                                    if (!isFirstTimeSetup) {
-                                        isVerifyOldPasswordMode = true
-                                    }
-                                }
+                                isConfirmationMode = false
                                 passwordState = ""
                                 confirmPasswordState = ""
                                 showMismatchError = false
                                 showLengthError = false
-                                showInvalidOldPasswordError = false
                             }
                         ) {
-                            Text(
-                                if (isVerifyOldPasswordMode) stringResource(R.string.cancel_button) else stringResource(
-                                    R.string.start_over_button
-                                )
-                            )
+                            Text(stringResource(R.string.start_over_button))
                         }
                     }
                 }
@@ -303,12 +256,10 @@ fun SetPasswordScreen(
                 ) {
                     val onKeyClick: (String) -> Unit = { key ->
                         val currentActivePassword = when {
-                            isVerifyOldPasswordMode -> passwordState
                             isConfirmationMode -> confirmPasswordState
                             else -> passwordState
                         }
                         val updatePassword: (String) -> Unit = when {
-                            isVerifyOldPasswordMode -> { newPass -> passwordState = newPass }
                             isConfirmationMode -> { newPass -> confirmPasswordState = newPass }
                             else -> { newPass -> passwordState = newPass }
                         }
@@ -324,23 +275,11 @@ fun SetPasswordScreen(
                                 }
                                 showMismatchError = false
                                 showLengthError = false
-                                showInvalidOldPasswordError = false
                             }
 
                             "proceed" -> {
                                 if (currentActivePassword.length >= minLength) {
                                     when {
-                                        isVerifyOldPasswordMode -> {
-                                            if (appLockRepository!!.validatePassword(passwordState)) {
-                                                isVerifyOldPasswordMode = false
-                                                passwordState = ""
-                                                showInvalidOldPasswordError = false
-                                            } else {
-                                                showInvalidOldPasswordError = true
-                                                passwordState = ""
-                                            }
-                                        }
-
                                         !isConfirmationMode -> {
                                             isConfirmationMode = true
                                             showLengthError = false
@@ -349,22 +288,15 @@ fun SetPasswordScreen(
                                         else -> {
                                             if (passwordState == confirmPasswordState) {
                                                 appLockRepository?.setPassword(passwordState)
+                                                appLockRepository?.setLockType(PreferencesRepository.LOCK_TYPE_PIN)
+                                                generatedRecoveryKey = RecoveryKeyManager.generateRecoveryKey()
+                                                appLockRepository?.setRecoveryKey(generatedRecoveryKey)
                                                 Toast.makeText(
                                                     context,
                                                     context.getString(R.string.password_set_successfully_toast),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-
-                                                navController.navigate(Screen.Main.route) {
-                                                    popUpTo(Screen.SetPassword.route) {
-                                                        inclusive = true
-                                                    }
-                                                    if (isFirstTimeSetup) {
-                                                        popUpTo(Screen.AppIntro.route) {
-                                                            inclusive = true
-                                                        }
-                                                    }
-                                                }
+                                                showRecoveryDialog = true
                                             } else {
                                                 showMismatchError = true
                                                 confirmPasswordState = ""
@@ -408,7 +340,7 @@ fun SetPasswordScreen(
                         icons = listOf(
                             Backspace,
                             null,
-                            if (isConfirmationMode || isVerifyOldPasswordMode) Icons.Default.Check else Icons.AutoMirrored.Rounded.KeyboardArrowRight
+                            if (isConfirmationMode) Icons.Default.Check else Icons.AutoMirrored.Rounded.KeyboardArrowRight
                         ),
                         onKeyClick = onKeyClick,
                         buttonSize = buttonSize,
@@ -433,7 +365,6 @@ fun SetPasswordScreen(
                 ) {
                     Text(
                         text = when {
-                            isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_label)
                             isConfirmationMode -> stringResource(R.string.confirm_new_pin_label)
                             else -> stringResource(R.string.create_new_pin_label)
                         },
@@ -458,17 +389,8 @@ fun SetPasswordScreen(
                         modifier = Modifier.padding(8.dp)
                     )
                 }
-                if (showInvalidOldPasswordError) {
-                    Text(
-                        text = stringResource(R.string.incorrect_pin_try_again),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
 
                 val currentPassword = when {
-                    isVerifyOldPasswordMode -> passwordState
                     isConfirmationMode -> confirmPasswordState
                     else -> passwordState
                 }
@@ -479,7 +401,6 @@ fun SetPasswordScreen(
 
                 Text(
                     text = when {
-                        isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_label)
                         isConfirmationMode -> stringResource(R.string.re_enter_new_pin_confirm_label)
                         else -> stringResource(R.string.tooltip_create_pin_min_length)
                     },
@@ -490,40 +411,18 @@ fun SetPasswordScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                if (isVerifyOldPasswordMode) {
-                    TextButton(onClick = { launchDeviceCredentialAuth() }) {
-                        Text(stringResource(R.string.reset_using_device_password_button))
-                    }
-                }
-
-                if (isVerifyOldPasswordMode || isConfirmationMode) {
+                if (isConfirmationMode) {
                     TextButton(
                         onClick = {
-                            if (isVerifyOldPasswordMode) {
-                                if (navController.previousBackStackEntry != null) {
-                                    navController.popBackStack()
-                                } else {
-                                    activity?.finish()
-                                }
-                            } else {
-                                isConfirmationMode = false
-                                if (!isFirstTimeSetup) {
-                                    isVerifyOldPasswordMode = true
-                                }
-                            }
+                            isConfirmationMode = false
                             passwordState = ""
                             confirmPasswordState = ""
                             showMismatchError = false
                             showLengthError = false
-                            showInvalidOldPasswordError = false
                         },
                         modifier = Modifier.padding(bottom = 16.dp)
                     ) {
-                        Text(
-                            if (isVerifyOldPasswordMode) stringResource(R.string.cancel_button) else stringResource(
-                                R.string.start_over_button
-                            )
-                        )
+                        Text(stringResource(R.string.start_over_button))
                     }
                 }
 
@@ -533,9 +432,15 @@ fun SetPasswordScreen(
                     },
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
-                    Text(
-                        stringResource(R.string.use_pattern_button)
-                    )
+                    Text(stringResource(R.string.use_pattern_button))
+                }
+                TextButton(
+                    onClick = {
+                        navController.navigate(Screen.SetPasswordText.route)
+                    },
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Text("Use Password")
                 }
 
                 Column(
@@ -545,12 +450,10 @@ fun SetPasswordScreen(
                 ) {
                     val onKeyClick: (String) -> Unit = { key ->
                         val currentActivePassword = when {
-                            isVerifyOldPasswordMode -> passwordState
                             isConfirmationMode -> confirmPasswordState
                             else -> passwordState
                         }
                         val updatePassword: (String) -> Unit = when {
-                            isVerifyOldPasswordMode -> { newPass -> passwordState = newPass }
                             isConfirmationMode -> { newPass -> confirmPasswordState = newPass }
                             else -> { newPass -> passwordState = newPass }
                         }
@@ -566,23 +469,11 @@ fun SetPasswordScreen(
                                 }
                                 showMismatchError = false
                                 showLengthError = false
-                                showInvalidOldPasswordError = false
                             }
 
                             "proceed" -> {
                                 if (currentActivePassword.length >= minLength) {
                                     when {
-                                        isVerifyOldPasswordMode -> {
-                                            if (appLockRepository!!.validatePassword(passwordState)) {
-                                                isVerifyOldPasswordMode = false
-                                                passwordState = ""
-                                                showInvalidOldPasswordError = false
-                                            } else {
-                                                showInvalidOldPasswordError = true
-                                                passwordState = ""
-                                            }
-                                        }
-
                                         !isConfirmationMode -> {
                                             isConfirmationMode = true
                                             showLengthError = false
@@ -592,22 +483,14 @@ fun SetPasswordScreen(
                                             if (passwordState == confirmPasswordState) {
                                                 appLockRepository?.setLockType(PreferencesRepository.LOCK_TYPE_PIN)
                                                 appLockRepository?.setPassword(passwordState)
+                                                generatedRecoveryKey = RecoveryKeyManager.generateRecoveryKey()
+                                                appLockRepository?.setRecoveryKey(generatedRecoveryKey)
                                                 Toast.makeText(
                                                     context,
                                                     context.getString(R.string.password_set_successfully_toast),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-
-                                                navController.navigate(Screen.Main.route) {
-                                                    popUpTo(Screen.SetPassword.route) {
-                                                        inclusive = true
-                                                    }
-                                                    if (isFirstTimeSetup) {
-                                                        popUpTo(Screen.AppIntro.route) {
-                                                            inclusive = true
-                                                        }
-                                                    }
-                                                }
+                                                showRecoveryDialog = true
                                             } else {
                                                 showMismatchError = true
                                                 confirmPasswordState = ""
@@ -651,7 +534,7 @@ fun SetPasswordScreen(
                         icons = listOf(
                             Backspace,
                             null,
-                            if (isConfirmationMode || isVerifyOldPasswordMode) Icons.Default.Check else Icons.AutoMirrored.Rounded.KeyboardArrowRight
+                            if (isConfirmationMode) Icons.Default.Check else Icons.AutoMirrored.Rounded.KeyboardArrowRight
                         ),
                         onKeyClick = onKeyClick,
                         buttonSize = buttonSize,

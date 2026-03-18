@@ -73,6 +73,8 @@ class AdminDisableActivity : ComponentActivity() {
                                         R.string.password_verified_admin,
                                         Toast.LENGTH_SHORT
                                     ).show()
+                                    
+                                    devicePolicyManager.removeActiveAdmin(deviceAdminComponentName)
                                     appLockRepository.setAntiUninstallEnabled(false)
                                     finish()
                                 },
@@ -111,6 +113,8 @@ class AdminDisableActivity : ComponentActivity() {
                                         R.string.password_verified_admin,
                                         Toast.LENGTH_SHORT
                                     ).show()
+
+                                    devicePolicyManager.removeActiveAdmin(deviceAdminComponentName)
                                     appLockRepository.setAntiUninstallEnabled(false)
                                     finish()
                                 },
@@ -196,7 +200,7 @@ fun AdminDisableScreen(
                 fromMainActivity = false,
                 onBiometricAuth = {},
                 onAuthSuccess = {},
-                onPinAttempt = { pin ->
+                onPinAttempt = { pin, _ ->
                     val isValid = validatePassword(pin)
                     if (isValid) {
                         onPasswordVerified()

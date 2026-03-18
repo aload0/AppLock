@@ -3,7 +3,14 @@ package dev.pranav.applock
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.fragment.app.FragmentActivity
+import dev.pranav.applock.core.utils.BiometricStatus
+import dev.pranav.applock.core.utils.getBiometricStatus
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.compose.rememberNavController
@@ -22,18 +29,25 @@ class MainActivity : FragmentActivity() {
 
         navigationManager = NavigationManager(this)
 
+        val biometricStatus = getBiometricStatus(this)
         setContent {
             AppLockTheme {
-                val navController = rememberNavController()
-                val startDestination = navigationManager.determineStartDestination()
+                if (biometricStatus is BiometricStatus.Unavailable) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(biometricStatus.message)
+                    }
+                } else {
+                    val navController = rememberNavController()
+                    val startDestination = navigationManager.determineStartDestination()
 
-                AppNavHost(
-                    navController = navController,
-                    startDestination = startDestination
-                )
+                    AppNavHost(
+                        navController = navController,
+                        startDestination = startDestination
+                    )
 
-                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-                    handleOnResume(navController)
+                    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                        handleOnResume(navController)
+                    }
                 }
             }
         }
@@ -46,7 +60,7 @@ class MainActivity : FragmentActivity() {
             return
         }
 
-        if (currentRoute != Screen.PasswordOverlay.route && currentRoute != Screen.SetPassword.route && currentRoute != Screen.SetPasswordPattern.route) {
+        if (currentRoute != Screen.PasswordOverlay.route && currentRoute != Screen.SetPassword.route && currentRoute != Screen.SetPasswordPattern.route && currentRoute != Screen.SetPasswordText.route) {
             navController.navigate(Screen.PasswordOverlay.route)
         }
     }

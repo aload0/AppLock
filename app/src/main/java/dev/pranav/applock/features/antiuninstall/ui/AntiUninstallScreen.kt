@@ -357,11 +357,40 @@ private fun SearchTopBar(
 
 @Composable
 private fun AppProtectionItem(app: AppInfo, isProtected: Boolean, onToggle: () -> Unit) {
+    var showConfirmation by remember { mutableStateOf(false) }
+
+    if (showConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showConfirmation = false },
+            title = { Text("Remove Protection?") },
+            text = { Text("Are you sure you want to remove anti-uninstall protection from ${app.name}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showConfirmation = false
+                    onToggle()
+                }) {
+                    Text("Remove", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .clickable { onToggle() },
+            .clickable {
+                if (isProtected) {
+                    showConfirmation = true
+                } else {
+                    onToggle()
+                }
+            },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -393,18 +422,50 @@ private fun AppProtectionItem(app: AppInfo, isProtected: Boolean, onToggle: () -
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Switch(checked = isProtected, onCheckedChange = { onToggle() })
+            Switch(
+                checked = isProtected,
+                onCheckedChange = {
+                    if (isProtected) {
+                        showConfirmation = true
+                    } else {
+                        onToggle()
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
 private fun ManualPackageItem(packageName: String, onToggle: () -> Unit) {
+    var showConfirmation by remember { mutableStateOf(false) }
+
+    if (showConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showConfirmation = false },
+            title = { Text("Remove Protection?") },
+            text = { Text("Are you sure you want to remove anti-uninstall protection from $packageName?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showConfirmation = false
+                    onToggle()
+                }) {
+                    Text("Remove", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .clickable { onToggle() },
+            .clickable { showConfirmation = true },
         color = MaterialTheme.colorScheme.surfaceContainer,
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -437,7 +498,7 @@ private fun ManualPackageItem(packageName: String, onToggle: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Switch(checked = true, onCheckedChange = { onToggle() })
+            Switch(checked = true, onCheckedChange = { showConfirmation = true })
         }
     }
 }

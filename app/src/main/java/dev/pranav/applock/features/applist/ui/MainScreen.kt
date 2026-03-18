@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -147,7 +148,7 @@ fun MainScreen(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             MediumFlexibleTopAppBar(
                 title = {
@@ -228,7 +229,7 @@ fun MainScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -401,8 +402,8 @@ private fun ProtectedAppsDashboard(
     } else {
         LazyColumn(
             modifier = modifier,
-            contentPadding = PaddingValues(bottom = 88.dp, top = 8.dp), // Extra padding for FAB
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            contentPadding = PaddingValues(bottom = 88.dp, top = 8.dp, start = 16.dp, end = 16.dp), // Extra padding for FAB and sides
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(lockedApps, key = { it.packageName }) { appInfo ->
                 ProtectedAppItem(
@@ -438,7 +439,7 @@ private fun EmptyDashboardState(modifier: Modifier = Modifier) {
             text = "Tap the + button to selectively secure your apps.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 32.dp)
         )
     }
@@ -568,6 +569,7 @@ private fun ProtectedAppItem(
 
     var appName by remember(appInfo) { mutableStateOf<String?>(null) }
     var icon by remember(appInfo) { mutableStateOf<ImageBitmap?>(null) }
+    var showConfirmation by remember { mutableStateOf(false) }
 
     LaunchedEffect(appInfo) {
         withContext(Dispatchers.IO) {
@@ -576,64 +578,89 @@ private fun ProtectedAppItem(
         }
     }
 
-    ListItem(
-        headlineContent = {
-            if (appName != null) {
+    if (showConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showConfirmation = false },
+            title = { Text("Remove Protection?") },
+            text = { Text("Are you sure you want to remove protection from ${appName ?: "this app"}?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showConfirmation = false
+                    onUnlock()
+                }) {
+                    Text("Remove", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp)),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        ListItem(
+            headlineContent = {
+                if (appName != null) {
+                    Text(
+                        text = appName!!,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            },
+            supportingContent = {
                 Text(
-                    text = appName!!,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    text = "Protected",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
-        },
-        supportingContent = {
-            Text(
-                text = "Protected",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        leadingContent = {
-            Surface(
-                modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+            },
+            leadingContent = {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh
                 ) {
-                    if (icon != null) {
-                        Image(
-                            bitmap = icon!!,
-                            contentDescription = appName,
-                            modifier = Modifier.size(32.dp)
-                        )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (icon != null) {
+                            Image(
+                                bitmap = icon!!,
+                                contentDescription = appName,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
-            }
-        },
-        trailingContent = {
-            IconButton(onClick = onUnlock) {
-                Icon(
-                    imageVector = Icons.Outlined.LockOpen,
-                    contentDescription = "Unlock ${appName ?: "app"}",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        },
-        colors = ListItemDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
-    )
+            },
+            trailingContent = {
+                IconButton(onClick = { showConfirmation = true }) {
+                    Icon(
+                        imageVector = Icons.Outlined.LockOpen,
+                        contentDescription = "Unlock ${appName ?: "app"}",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            colors = ListItemDefaults.colors(
+                containerColor = androidx.compose.ui.graphics.Color.Transparent
+            )
+        )
+    }
 }
 
 @Composable
@@ -654,64 +681,72 @@ private fun SelectableAppItem(
         }
     }
 
-    ListItem(
-        headlineContent = {
-            if (appName != null) {
-                Text(
-                    text = appName!!,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        },
-        supportingContent = {
-            Text(
-                text = appInfo.packageName,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        leadingContent = {
-            Surface(
-                modifier = Modifier.size(42.dp),
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (icon != null) {
-                        Image(
-                            bitmap = icon!!,
-                            contentDescription = appName,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    } else {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp
-                        )
-                    }
-                }
-            }
-        },
-        trailingContent = {
-            Checkbox(
-                checked = isSelected,
-                onCheckedChange = null
-            )
-        },
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
-    )
+            .clickable(onClick = onClick),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        ListItem(
+            headlineContent = {
+                if (appName != null) {
+                    Text(
+                        text = appName!!,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            },
+            supportingContent = {
+                Text(
+                    text = appInfo.packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
+            leadingContent = {
+                Surface(
+                    modifier = Modifier.size(42.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (icon != null) {
+                            Image(
+                                bitmap = icon!!,
+                                contentDescription = appName,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        } else {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                }
+            },
+            trailingContent = {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = null
+                )
+            },
+            colors = ListItemDefaults.colors(
+                containerColor = androidx.compose.ui.graphics.Color.Transparent
+            )
+        )
+    }
 }
 
 @Composable

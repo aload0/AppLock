@@ -2,6 +2,7 @@ package dev.pranav.applock.data.repository
 
 import android.content.Context
 import dev.pranav.applock.data.manager.BackendServiceManager
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Main repository that coordinates between different specialized repositories and managers.
@@ -50,6 +51,11 @@ class AppLockRepository(private val context: Context) {
     fun validatePattern(inputPattern: String): Boolean =
         preferencesRepository.validatePattern(inputPattern)
 
+    fun setRecoveryKey(recoveryKey: String) = preferencesRepository.setRecoveryKey(recoveryKey)
+    fun getRecoveryKey(): String? = preferencesRepository.getRecoveryKey()
+    fun validateRecoveryKey(inputRecoveryKey: String): Boolean =
+        preferencesRepository.validateRecoveryKey(inputRecoveryKey)
+
     fun setLockType(lockType: String) = preferencesRepository.setLockType(lockType)
     fun getLockType(): String = preferencesRepository.getLockType()
 
@@ -60,6 +66,18 @@ class AppLockRepository(private val context: Context) {
 
     fun setUseMaxBrightness(enabled: Boolean) = preferencesRepository.setUseMaxBrightness(enabled)
     fun shouldUseMaxBrightness(): Boolean = preferencesRepository.shouldUseMaxBrightness()
+    fun setAmoledModeEnabled(enabled: Boolean) = preferencesRepository.setAmoledModeEnabled(enabled)
+    fun isAmoledModeEnabled(): Boolean = preferencesRepository.isAmoledModeEnabled()
+    fun amoledModeFlow(): Flow<Boolean> = preferencesRepository.amoledModeFlow
+
+    fun setDynamicColorEnabled(enabled: Boolean) = preferencesRepository.setDynamicColorEnabled(enabled)
+    fun isDynamicColorEnabled(): Boolean = preferencesRepository.isDynamicColorEnabled()
+    fun dynamicColorFlow(): Flow<Boolean> = preferencesRepository.dynamicColorFlow
+
+    fun setAppThemeMode(themeMode: AppThemeMode) = preferencesRepository.setAppThemeMode(themeMode)
+    fun getAppThemeMode(): AppThemeMode = preferencesRepository.getAppThemeMode()
+    fun appThemeModeFlow(): Flow<AppThemeMode> = preferencesRepository.appThemeModeFlow
+
     fun setDisableHaptics(enabled: Boolean) = preferencesRepository.setDisableHaptics(enabled)
     fun shouldDisableHaptics(): Boolean = preferencesRepository.shouldDisableHaptics()
     fun setShowSystemApps(enabled: Boolean) = preferencesRepository.setShowSystemApps(enabled)
@@ -69,6 +87,37 @@ class AppLockRepository(private val context: Context) {
         preferencesRepository.setAntiUninstallEnabled(enabled)
 
     fun isAntiUninstallEnabled(): Boolean = preferencesRepository.isAntiUninstallEnabled()
+
+    fun setAntiUninstallAdminSettingsEnabled(enabled: Boolean) =
+        preferencesRepository.setAntiUninstallAdminSettingsEnabled(enabled)
+
+    fun isAntiUninstallAdminSettingsEnabled(): Boolean =
+        preferencesRepository.isAntiUninstallAdminSettingsEnabled()
+
+    fun setAntiUninstallUsageStatsEnabled(enabled: Boolean) =
+        preferencesRepository.setAntiUninstallUsageStatsEnabled(enabled)
+
+    fun isAntiUninstallUsageStatsEnabled(): Boolean =
+        preferencesRepository.isAntiUninstallUsageStatsEnabled()
+
+    fun setAntiUninstallAccessibilityEnabled(enabled: Boolean) =
+        preferencesRepository.setAntiUninstallAccessibilityEnabled(enabled)
+
+    fun isAntiUninstallAccessibilityEnabled(): Boolean =
+        preferencesRepository.isAntiUninstallAccessibilityEnabled()
+
+    fun setAntiUninstallOverlayEnabled(enabled: Boolean) =
+        preferencesRepository.setAntiUninstallOverlayEnabled(enabled)
+
+    fun isAntiUninstallOverlayEnabled(): Boolean =
+        preferencesRepository.isAntiUninstallOverlayEnabled()
+
+    fun setPreventAllAppUninstallEnabled(enabled: Boolean) =
+        preferencesRepository.setPreventAllAppUninstallEnabled(enabled)
+
+    fun isPreventAllAppUninstallEnabled(): Boolean =
+        preferencesRepository.isPreventAllAppUninstallEnabled()
+
     fun setProtectEnabled(enabled: Boolean) = preferencesRepository.setProtectEnabled(enabled)
     fun isProtectEnabled(): Boolean = preferencesRepository.isProtectEnabled()
 
@@ -90,6 +139,11 @@ class AppLockRepository(private val context: Context) {
 
     fun isLoggingEnabled(): Boolean = preferencesRepository.isLoggingEnabled()
     fun setLoggingEnabled(enabled: Boolean) = preferencesRepository.setLoggingEnabled(enabled)
+
+    fun setIntruderSelfieEnabled(enabled: Boolean) = preferencesRepository.setIntruderSelfieEnabled(enabled)
+    fun isIntruderSelfieEnabled(): Boolean = preferencesRepository.isIntruderSelfieEnabled()
+    fun setIntruderSelfieAttempts(attempts: Int) = preferencesRepository.setIntruderSelfieAttempts(attempts)
+    fun getIntruderSelfieAttempts(): Int = preferencesRepository.getIntruderSelfieAttempts()
 
     fun setActiveBackend(backend: BackendImplementation) =
         backendServiceManager.setActiveBackend(backend)

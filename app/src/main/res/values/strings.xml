@@ -1,31 +1,31 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name">App Lock</string>
+    <string name="app_name">APP Lock by AP</string>
 
     <string name="device_admin_description">Prevents unauthorized people from uninstalling the app.</string>
-    <string name="accessibility_service_description">Allows App Lock to detect when protected apps are opened and show password verification.</string>
+    <string name="accessibility_service_description">Allows APP Lock by AP to detect when protected apps are opened and show password verification.</string>
 
     <string name="unlock_to_disable_admin">Enter your password to disable admin permission.</string>
     <string name="incorrect_pin_try_again">Incorrect PIN. Please try again.</string>
     <string name="password_verified_admin">Password verified, you can now disable admin permission</string>
     <string name="choose_app_detection">Choose App Detection Method</string>
-    <string name="app_detection_desc">Select how you want AppLock to detect when protected apps are launched.</string>
+    <string name="app_detection_desc">Select how you want APP Lock by AP to detect when protected apps are launched.</string>
     <string name="notif_perm">Notification Permission</string>
-    <string name="notif_perm_desc">AppLock needs permission to show notifications to keep you informed and keep running in background properly. Tap \'Next\' to grant permission.</string>
+    <string name="notif_perm_desc">APP Lock by AP needs permission to show notifications to keep you informed and keep running in background properly. Tap \'Next\' to grant permission.</string>
     <string name="notif_perm_granted">Notification permission is automatically granted on your Android version.</string>
-    <string name="welc_applock">Welcome to AppLock</string>
-    <string name="welcome_desc">Protect your apps and privacy with AppLock. We\'ll guide you through a quick setup.</string>
+    <string name="welc_applock">Welcome to APP Lock by AP</string>
+    <string name="welcome_desc">Protect your apps and privacy with APP Lock by AP. We\'ll guide you through a quick setup.</string>
     <string name="secure_apps">Secure Your Apps</string>
     <string name="secure_apps_desc">Keep your private apps protected with advanced locking mechanisms</string>
     <string name="display_over_apps">Display Over Other Apps</string>
-    <string name="display_over_apps_desc">AppLock needs permission to display over other apps to show the lock screen. Tap \'Next\' and enable the permission.</string>
+    <string name="display_over_apps_desc">APP Lock by AP needs permission to display over other apps to show the lock screen. Tap \'Next\' and enable the permission.</string>
 
     <!-- AppIntroScreen -->
-    <string name="notification_permission_required_desc">Notification permission is required for AppLock to function properly.</string>
+    <string name="notification_permission_required_desc">Notification permission is required for APP Lock by AP to function properly.</string>
     <string name="shizuku_permission_granted">Shizuku permission granted</string>
     <string name="shizuku_permission_required_desc">Shizuku permission is required for advanced features.</string>
-    <string name="allow_display_over_other_apps">Please allow AppLock to display over other apps.</string>
+    <string name="allow_display_over_other_apps">Please allow APP Lock by AP to display over other apps.</string>
     <string name="disable_battery_optimization_title">Disable Battery Optimization</string>
-    <string name="disable_battery_optimization_desc">To ensure AppLock runs reliably in the background, please disable battery optimizations for the app. Tap \'Next\' to open settings.</string>
+    <string name="disable_battery_optimization_desc">To ensure APP Lock by AP runs reliably in the background, please disable battery optimizations for the app. Tap \'Next\' to open settings.</string>
     <string name="accessibility_service_title">Accessibility Service</string>
     <string name="accessibility_service_card_desc">Standard method that works on most devices. Requires accessibility permission. May have slight delays on some OEMs.</string>
     <string name="usage_stats_title">Usage Stats</string>
@@ -34,9 +34,9 @@
     <string name="shizuku_service_card_desc">Advanced method with better performance and superior experience. Requires Shizuku app installed and enabled via ADB.</string>
     <string name="can_change_later_in_settings">You can change this later in settings</string>
     <string name="app_intro_accessibility_desc">
-Accessibility service is required for AppLock to function properly.
+Accessibility service is required for APP Lock by AP to function properly.
 
-If you get the message \"Restricted Setting\", please manually go to Settings > Apps > App Lock > Upper Right menu, and press \"Allow restricted settings\".
+If you get the message \"Restricted Setting\", please manually go to Settings > Apps > APP Lock by AP > Upper Right menu, and press \"Allow restricted settings\".
 
 Tap \'Next\' to enable it.
     </string>
@@ -44,7 +44,7 @@ Tap \'Next\' to enable it.
     <string name="app_intro_usage_stats_desc">
 This permission is required to detect when locked apps are launched.
 
-If you get the message \"Restricted Setting\", please manually go to Settings > Apps > App Lock > Upper Right menu, and press \"Allow restricted settings\".
+If you get the message \"Restricted Setting\", please manually go to Settings > Apps > APP Lock by AP > Upper Right menu, and press \"Allow restricted settings\".
 
 Tap \'Next\' to enable it.</string>
     <string name="app_intro_shizuku_desc">
@@ -53,7 +53,7 @@ Shizuku provides advanced features like locking system apps and more.
 Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant permission.
     </string>
     <string name="app_intro_complete_privacy_title">Complete Privacy</string>
-    <string name="app_intro_complete_privacy_desc">Your data never leaves your device. AppLock protects your privacy at all times.</string>
+    <string name="app_intro_complete_privacy_desc">Your data never leaves your device. APP Lock by AP protects your privacy at all times.</string>
     <string name="all_permissions_required">All permissions are required to proceed.</string>
     <string name="next_button">Next</string>
     <string name="get_started_button">Get Started</string>
@@ -98,7 +98,7 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="main_screen_overlay_permission_dialog_text">Please grant the app permission to draw overlays in settings. This is required to allow app to show lock screen.</string>
     <string name="main_screen_overlay_permission_open_settings_button">Open Settings</string>
     <string name="main_screen_shizuku_manual_permission_toast">Please grant Shizuku permission manually</string>
-    <string name="main_screen_device_admin_explanation">App Lock requires Device Admin permission to prevent uninstallation. It will not affect your device\'s functionality.</string>
+    <string name="main_screen_device_admin_explanation">APP Lock by AP requires Device Admin permission to prevent uninstallation. It will not affect your device\'s functionality.</string>
     <string name="main_screen_join_community_dialog_title">Join the Community</string>
     <string name="main_screen_join_community_dialog_text">Join our discord community for updates and support.</string>
     <string name="main_screen_join_community_join_discord_button">Join Discord</string>
@@ -112,25 +112,39 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="main_screen_search_cd">Search</string>
     <string name="main_screen_empty_search_title">No apps found</string>
     <string name="main_screen_empty_search_subtitle">Try adjusting your search</string>
+    <string name="main_screen_protection_dialog_title">App Protection</string>
+    <string name="main_screen_protection_dialog_on_text">Are you sure you want to turn ON app protection?</string>
+    <string name="main_screen_protection_dialog_off_text">Are you sure you want to turn OFF app protection?</string>
 
     <!-- SettingsScreen -->
     <string name="settings_screen_title">Settings</string>
     <string name="settings_screen_back_cd">Back</string>
     <string name="settings_screen_support_development_dialog_title">Support Development</string>
-    <string name="support_development_text">Hi, I\'m Pranav, the developer of App Lock. I\'m a student developer passionate about creating useful apps. If you find it helpful, please consider supporting its development with a small donation. Any amount is greatly appreciated and helps me continue to improve the app and work on new features. Thank you for your support!</string>
+    <string name="support_development_text">Hi, I\'m Pranav, the developer of APP Lock by AP. I\'m a student developer passionate about creating useful apps. If you find it helpful, please consider supporting its development with a small donation. Any amount is greatly appreciated and helps me continue to improve the app and work on new features. Thank you for your support!</string>
     <string name="settings_screen_support_development_donate_button">Donate</string>
     <string name="settings_screen_permission_required_dialog_title">Permission Required</string>
-    <string name="settings_screen_permission_required_dialog_text">To enable Anti-Uninstall, App Lock requires two permissions: Device Administrator and Accessibility Service. These are necessary to prevent unauthorized uninstallation and ensure robust protection. Would you like to proceed with granting these permissions?</string>
+    <string name="settings_screen_permission_required_dialog_text">To enable Anti-Uninstall, APP Lock by AP requires two permissions: Device Administrator and Accessibility Service. These are necessary to prevent unauthorized uninstallation and ensure robust protection. Would you like to proceed with granting these permissions?</string>
     <string name="settings_screen_permission_required_proceed_button">Proceed</string>
     <string name="settings_screen_device_admin_dialog_title">Device Administrator Permission</string>
-    <string name="settings_screen_device_admin_dialog_text">App Lock needs Device Administrator permission to prevent unauthorized uninstallation. Please grant this permission in the next screen. This will not affect your device\'s normal functionality.</string>
+    <string name="settings_screen_device_admin_dialog_text">APP Lock by AP needs Device Administrator permission to prevent unauthorized uninstallation. Please grant this permission in the next screen. This will not affect your device\'s normal functionality.</string>
     <string name="settings_screen_device_admin_grant_button">Grant Permission</string>
     <string name="settings_screen_accessibility_dialog_title">Accessibility Service Permission</string>
-    <string name="settings_screen_accessibility_dialog_text">App Lock also needs Accessibility Service permission to monitor app uninstallation attempts and re-activate Device Administrator if disabled. This ensures the Anti-Uninstall feature remains effective. Please enable the Accessibility Service for App Lock in the settings.</string>
+    <string name="settings_screen_accessibility_dialog_text">APP Lock by AP also needs Accessibility Service permission to monitor app uninstallation attempts and re-activate Device Administrator if disabled. This ensures the Anti-Uninstall feature remains effective. Please enable the Accessibility Service for APP Lock by AP in the settings.</string>
     <string name="settings_screen_accessibility_open_settings_button">Open Settings</string>
+    <string name="settings_screen_app_theme_title">App Theme</string>
+    <string name="settings_screen_theme_mode_system">System</string>
+    <string name="settings_screen_theme_mode_light">Light</string>
+    <string name="settings_screen_theme_mode_dark">Dark</string>
+    <string name="settings_screen_developer_info_title">Developer Info</string>
+    <string name="settings_screen_developer_name_ap">Developer Name: AP</string>
+    <string name="settings_screen_developer_email_ap">Email: ap0803apap@gmail.com</string>
+    <string name="settings_screen_source_code">Source Code</string>
+    <string name="settings_screen_report_issue">Report Issue</string>
     <string name="settings_screen_lock_screen_customization_title">Lock Screen Customization</string>
     <string name="settings_screen_max_brightness_title">Maximum Brightness</string>
     <string name="settings_screen_max_brightness_desc">Display lock screen at maximum brightness for clarity</string>
+    <string name="settings_screen_amoled_mode_title">AMOLED Mode</string>
+    <string name="settings_screen_amoled_mode_desc">When off (default), dynamic colors are used in lock screen customization. When on, dark mode primary color becomes AMOLED black across the app.</string>
     <string name="settings_screen_biometric_auth_title">Biometric Authentication</string>
     <string name="settings_screen_biometric_auth_desc">Use fingerprint or face unlock if available</string>
     <string name="settings_screen_biometric_auth_unavailable">Biometric authentication is not available on this device.</string>
@@ -152,11 +166,11 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="settings_screen_change_pin_title">Change PIN</string>
     <string name="settings_screen_change_pin_desc">Update your current PIN</string>
     <string name="settings_screen_anti_uninstall_title">Anti-Uninstall Protection</string>
-    <string name="settings_screen_anti_uninstall_desc">Prevent unauthorized uninstallation of App Lock</string>
+    <string name="settings_screen_anti_uninstall_desc">Prevent unauthorized uninstallation of APP Lock by AP</string>
     <string name="settings_screen_haptic_feedback_title">Haptic Feedback</string>
     <string name="settings_screen_haptic_feedback_desc">Disable haptic feedback on key presses</string>
     <string name="settings_screen_backend_implementation_title">Backend Implementation</string>
-    <string name="settings_screen_backend_implementation_desc">Select the method AppLock uses to detect foreground apps</string>
+    <string name="settings_screen_backend_implementation_desc">Select the method APP Lock by AP uses to detect foreground apps</string>
     <string name="settings_screen_backend_implementation_accessibility_title">Accessibility Service</string>
     <string name="settings_screen_backend_implementation_accessibility_desc">Standard method, may have slight delays on some OEMs.</string>
     <string name="settings_screen_backend_implementation_usage_stats_title">Usage Stats</string>
@@ -173,6 +187,10 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="settings_screen_source_code_desc">View the source code on GitHub</string>
     <string name="settings_screen_support_development_title">Support Development</string>
     <string name="settings_screen_support_development_desc">Help support the development of this app</string>
+
+    <string name="settings_screen_logging_title">App Logging</string>
+    <string name="settings_screen_logging_summary">Enable internal logging for debugging purposes</string>
+    <string name="settings_screen_links_section">Links &amp; Social</string>
 
     <!-- AppLockUtils.kt -->
     <string name="utils_battery_ignore_toast">Please allow our app to ignore battery optimizations.</string>
@@ -205,7 +223,7 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
 
     <!-- AccessibilityServiceGuideDialog.kt -->
     <string name="accessibility_guide_dialog_title">Enable Accessibility Service</string>
-    <string name="accessibility_guide_dialog_text_1">App Lock needs accessibility permission to detect when protected apps are launched.</string>
+    <string name="accessibility_guide_dialog_text_1">APP Lock by AP needs accessibility permission to detect when protected apps are launched.</string>
     <string name="accessibility_guide_dialog_text_2">Please follow these steps:</string>
     <string name="accessibility_guide_dialog_text_3">
 1. Tap \'Open Settings\' below\n
@@ -234,20 +252,20 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="settings_screen_unlock_duration_dialog_option_minute">%1$d minute</string>
     <string name="settings_screen_unlock_duration_dialog_option_hour">1 hour</string>
     <string name="settings_screen_permission_required_dialog_text_1">To enable Anti-Uninstall
-        protection, App Lock needs two permissions:
+        protection, APP Lock by AP needs two permissions:
     </string>
     <string name="settings_screen_permission_required_dialog_text_2">1. Device Administrator -
         Prevents uninstallation\n2. Accessibility Service - Monitors app usage\n\nThese permissions
         help protect the app from being removed without your knowledge.
     </string>
-    <string name="settings_screen_device_admin_dialog_text_1">App Lock needs Device Administrator
+    <string name="settings_screen_device_admin_dialog_text_1">APP Lock by AP needs Device Administrator
         permission to prevent uninstallation.
     </string>
     <string name="settings_screen_device_admin_dialog_text_2">This permission allows the app to:\n•
         Prevent itself from being uninstalled\n• Protect your app lock settings\n\nIt will not
         affect your device\'s normal functionality.
     </string>
-    <string name="settings_screen_accessibility_dialog_text_1">App Lock needs Accessibility Service permission to monitor app usage.
+    <string name="settings_screen_accessibility_dialog_text_1">APP Lock by AP needs Accessibility Service permission to monitor app usage.
     </string>
     <string name="settings_screen_accessibility_dialog_text_2">This permission allows the app to:\n•
         Detect when apps are opened\n• Show lock screen when needed\n• Provide seamless app
@@ -285,7 +303,7 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="permission_warning_shizuku_title">Shizuku Permission</string>
     <string name="permission_warning_shizuku_desc">Securely detects when protected apps are launched.</string>
     <string name="permission_warning_device_admin_title">Device Admin</string>
-    <string name="permission_warning_device_admin_desc">Prevents AppLock from being uninstalled.</string>
+    <string name="permission_warning_device_admin_desc">Prevents APP Lock by AP from being uninstalled.</string>
     <string name="permission_warning_title_suffix"> Required</string>
 
     <string name="join_community">Join Community</string>
@@ -294,12 +312,12 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="maybe_later">Maybe Later</string>
 
     <string name="donate">Donate</string>
-    <string name="donate_subtitle">Keep AppLock free and ad-free forever</string>
+    <string name="donate_subtitle">Keep APP Lock by AP free and ad-free forever</string>
     <string name="donate_dialog_title">Support Development</string>
     <string name="donate_dialog_message">
-        Hi, I’m Pranav. I’m a student developer building AppLock in my spare time to keep it private and ad-free for everyone.
+        Hi, I’m Pranav. I’m a student developer building APP Lock by AP in my spare time to keep it private and ad-free for everyone.
         Juggling this project with my studies is a challenge, but your support makes it possible.
-        If AppLock has helped you, please consider a small donation—any amount means the world to me and keeps this project alive.
+        If APP Lock by AP has helped you, please consider a small donation—any amount means the world to me and keeps this project alive.
         Thank you for believing in my work!
     </string>
 </resources>

@@ -1,5 +1,6 @@
 package dev.pranav.applock.features.lockscreen.ui
 
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -15,13 +16,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +44,7 @@ import com.mrhwsn.composelock.Dot
 import com.mrhwsn.composelock.LockCallback
 import com.mrhwsn.composelock.PatternLock
 import dev.pranav.applock.R
+import dev.pranav.applock.core.utils.IntruderSelfieManager
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.ui.icons.Fingerprint
@@ -50,9 +55,11 @@ fun PatternLockScreen(
     modifier: Modifier = Modifier,
     fromMainActivity: Boolean = false,
     lockedAppName: String? = null,
+    lockedAppIcon: Drawable? = null,
     triggeringPackageName: String? = null,
     onPatternAttempt: ((pattern: String) -> Boolean)? = null,
-    onBiometricAuth: (() -> Unit)? = null
+    onBiometricAuth: (() -> Unit)? = null,
+    onForgotPasscodeReset: (() -> Unit)? = null
 ) {
     val appLockRepository = LocalContext.current.appLockRepository()
     val context = LocalContext.current
@@ -64,7 +71,7 @@ fun PatternLockScreen(
 
     Surface(
         modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.background
     ) {
         var showError by remember { mutableStateOf(false) }
 
@@ -101,6 +108,9 @@ fun PatternLockScreen(
                 if (!isValid) {
                     showError = true
                     errorShakeOffset = 10f
+                    // recordFailedAttempt is already handled in PasswordOverlayActivity's onPatternAttemptCallback
+                } else {
+                    IntruderSelfieManager.resetFailedAttempts()
                 }
             }
         }
@@ -119,55 +129,44 @@ fun PatternLockScreen(
                         .weight(1f)
                         .fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    AppHeader(
+                        fromMainActivity = fromMainActivity,
+                        lockedAppName = lockedAppName,
+                        lockedAppIcon = lockedAppIcon,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    if (showError) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                                "Continue to $lockedAppName"
-                            else
-                                stringResource(R.string.enter_pattern_to_continue),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            text = stringResource(R.string.incorrect_pattern_try_again),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
-//
-//                        if (!fromMainActivity && !triggeringPackageName.isNullOrEmpty()) {
-//                            Spacer(modifier = Modifier.height(8.dp))
-//                            Text(
-//                                text = triggeringPackageName,
-//                                style = MaterialTheme.typography.bodySmall,
-//                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                                textAlign = TextAlign.Center
-//                            )
-//                        }
-
-                        if (showError) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.incorrect_pattern_try_again),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                textAlign = TextAlign.Center
-                            )
-                        }
                     }
 
+                    TextButton(onClick = { onForgotPasscodeReset?.invoke() }) { Text("Forgot passcode?") }
+
                     if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
+                        Spacer(modifier = Modifier.height(24.dp))
                         FilledTonalIconButton(
                             onClick = { onBiometricAuth() },
-                            modifier = Modifier.size(44.dp),
-                            shape = RoundedCornerShape(40),
+                            modifier = Modifier.size(64.dp),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
                         ) {
                             Icon(
                                 imageVector = Fingerprint,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(10.dp),
+                                    .padding(16.dp),
                                 contentDescription = stringResource(R.string.biometric_authentication_cd),
-                                tint = MaterialTheme.colorScheme.surfaceTint
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
                     }
@@ -206,25 +205,12 @@ fun PatternLockScreen(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                            "Continue to $lockedAppName"
-                        else
-                            stringResource(R.string.enter_pattern_to_continue),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
+                    AppHeader(
+                        fromMainActivity = fromMainActivity,
+                        lockedAppName = lockedAppName,
+                        lockedAppIcon = lockedAppIcon,
+                        style = MaterialTheme.typography.headlineSmall
                     )
-
-//                    if (!fromMainActivity && !triggeringPackageName.isNullOrEmpty()) {
-//                        Spacer(modifier = Modifier.height(8.dp))
-//                        Text(
-//                            text = triggeringPackageName,
-//                            style = MaterialTheme.typography.labelLarge,
-//                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                            textAlign = TextAlign.Center
-//                        )
-//                    }
 
                     if (showError) {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -238,27 +224,10 @@ fun PatternLockScreen(
                 }
 
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
-                        FilledTonalIconButton(
-                            onClick = { onBiometricAuth() },
-                            modifier = Modifier.size(44.dp),
-                            shape = RoundedCornerShape(40),
-                        ) {
-                            Icon(
-                                imageVector = Fingerprint,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(10.dp),
-                                contentDescription = stringResource(R.string.biometric_authentication_cd),
-                                tint = MaterialTheme.colorScheme.surfaceTint
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-
                     PatternLock(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -273,6 +242,30 @@ fun PatternLockScreen(
                         animationDuration = 120,
                         callback = lockCallback
                     )
+
+                    TextButton(onClick = { onForgotPasscodeReset?.invoke() }) { Text("Forgot passcode?") }
+
+                    if (appLockRepository.isBiometricAuthEnabled() && onBiometricAuth != null) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        FilledTonalIconButton(
+                            onClick = { onBiometricAuth() },
+                            modifier = Modifier.size(72.dp),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Fingerprint,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(18.dp),
+                                contentDescription = stringResource(R.string.biometric_authentication_cd),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
                 }
             }
         }
