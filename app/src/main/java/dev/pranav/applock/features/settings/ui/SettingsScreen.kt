@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -51,7 +52,9 @@ import androidx.navigation.NavController
 import dev.pranav.applock.R
 import dev.pranav.applock.core.broadcast.DeviceAdmin
 import dev.pranav.applock.core.navigation.Screen
+import dev.pranav.applock.core.utils.BiometricStatus
 import dev.pranav.applock.core.utils.LogUtils
+import dev.pranav.applock.core.utils.getBiometricStatus
 import dev.pranav.applock.core.utils.hasUsagePermission
 import dev.pranav.applock.core.utils.isAccessibilityServiceEnabled
 import dev.pranav.applock.core.utils.openAccessibilitySettings
@@ -137,6 +140,7 @@ fun SettingsScreen(
     var antiUninstallUsageStats by remember { mutableStateOf(appLockRepository.isAntiUninstallUsageStatsEnabled()) }
     var antiUninstallAccessibility by remember { mutableStateOf(appLockRepository.isAntiUninstallAccessibilityEnabled()) }
     var antiUninstallOverlay by remember { mutableStateOf(appLockRepository.isAntiUninstallOverlayEnabled()) }
+    var preventAllAppUninstall by remember { mutableStateOf(appLockRepository.isPreventAllAppUninstallEnabled()) }
 
     var disableHapticFeedback by remember { mutableStateOf(appLockRepository.shouldDisableHaptics()) }
     var loggingEnabled by remember { mutableStateOf(appLockRepository.isLoggingEnabled()) }
@@ -158,6 +162,7 @@ fun SettingsScreen(
                 antiUninstallUsageStats = appLockRepository.isAntiUninstallUsageStatsEnabled()
                 antiUninstallAccessibility = appLockRepository.isAntiUninstallAccessibilityEnabled()
                 antiUninstallOverlay = appLockRepository.isAntiUninstallOverlayEnabled()
+                preventAllAppUninstall = appLockRepository.isPreventAllAppUninstallEnabled()
                 disableHapticFeedback = appLockRepository.shouldDisableHaptics()
                 loggingEnabled = appLockRepository.isLoggingEnabled()
                 intruderSelfieEnabled = appLockRepository.isIntruderSelfieEnabled()
@@ -174,6 +179,44 @@ fun SettingsScreen(
     }
 
     val biometricManager = remember { BiometricManager.from(context) }
+    var isSettingsAuthorized by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        when (val biometricStatus = getBiometricStatus(context)) {
+            BiometricStatus.Available -> {
+                val activity = context as? androidx.fragment.app.FragmentActivity ?: return@LaunchedEffect
+                val executor = ContextCompat.getMainExecutor(context)
+                val prompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        isSettingsAuthorized = true
+                    }
+
+                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                        if (!isSettingsAuthorized) navController.popBackStack()
+                    }
+                })
+                val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle("Settings")
+                    .setSubtitle("Biometric authentication required")
+                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                    .setNegativeButtonText("Cancel")
+                    .build()
+                prompt.authenticate(promptInfo)
+            }
+            is BiometricStatus.Unavailable -> {
+                Toast.makeText(context, biometricStatus.message, Toast.LENGTH_LONG).show()
+                navController.popBackStack()
+            }
+        }
+    }
+
+    if (!isSettingsAuthorized) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Authenticate with biometrics to open Settings")
+        }
+        return
+    }
+
     val isBiometricAvailable = remember {
         biometricManager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_WEAK or
@@ -307,14 +350,30 @@ fun SettingsScreen(
                     )
                 }
 
-                SettingsCard(index = 2, listSize = 3) {
+                SettingsCard(index = 2, listSize = 4) {
                     ClickableItem(
                         title = "Change Lock",
-                        summary = if (appLockRepository.getLockType() == PreferencesRepository.LOCK_TYPE_PATTERN)
-                            "Update your unlock pattern" else "Update your unlock PIN",
+                        summary = when (appLockRepository.getLockType()) {
+                            PreferencesRepository.LOCK_TYPE_PATTERN -> "Update your unlock pattern"
+                            PreferencesRepository.LOCK_TYPE_PASSWORD -> "Update your unlock password"
+                            else -> "Update your unlock PIN"
+                        },
                         icon = Icons.Default.Lock,
                         onClick = {
                             navController.navigate(Screen.ChangePassword.route)
+                        }
+                    )
+                }
+
+                SettingsCard(index = 3, listSize = 4) {
+                    SwitchItem(
+                        title = "Prevent all app uninstall",
+                        summary = "Require protection before any app uninstall attempt",
+                        icon = Icons.Outlined.Security,
+                        checked = preventAllAppUninstall,
+                        onCheckedChange = {
+                            preventAllAppUninstall = it
+                            appLockRepository.setPreventAllAppUninstallEnabled(it)
                         }
                     )
                 }

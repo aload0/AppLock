@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.*
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,6 +70,7 @@ import dev.pranav.applock.services.AppLockManager
 import dev.pranav.applock.ui.icons.Backspace
 import dev.pranav.applock.ui.icons.Fingerprint
 import dev.pranav.applock.ui.theme.AppLockTheme
+import dev.pranav.applock.features.setpassword.ui.RecoveryKeyDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -304,7 +306,24 @@ class PasswordOverlayActivity : FragmentActivity() {
                                 lockedAppIcon = appIcon,
                                 triggeringPackageName = triggeringPackageNameFromIntent,
                                 onPatternAttempt = onPatternAttemptCallback,
-                                onBiometricAuth = { triggerBiometricPrompt() }
+                                onBiometricAuth = { triggerBiometricPrompt() },
+                                onForgotPasscodeReset = { launchResetFlow() }
+                            )
+                        }
+
+                        PreferencesRepository.LOCK_TYPE_PASSWORD -> {
+                            PasswordOverlayScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                showBiometricButton = appLockRepository.isBiometricAuthEnabled(),
+                                fromMainActivity = false,
+                                useTextPassword = true,
+                                onBiometricAuth = { triggerBiometricPrompt() },
+                                onAuthSuccess = { IntruderSelfieManager.resetFailedAttempts() },
+                                lockedAppName = appName,
+                                lockedAppIcon = appIcon,
+                                triggeringPackageName = triggeringPackageNameFromIntent,
+                                onForgotPasscodeReset = { launchResetFlow() },
+                                onPinAttempt = onPinAttemptCallback
                             )
                         }
 
@@ -318,6 +337,7 @@ class PasswordOverlayActivity : FragmentActivity() {
                                 lockedAppName = appName,
                                 lockedAppIcon = appIcon,
                                 triggeringPackageName = triggeringPackageNameFromIntent,
+                                onForgotPasscodeReset = { launchResetFlow() },
                                 onPinAttempt = onPinAttemptCallback
                             )
                         }
@@ -325,6 +345,13 @@ class PasswordOverlayActivity : FragmentActivity() {
                 }
             }
         }
+    }
+
+    private fun launchResetFlow() {
+        startActivity(Intent(this, dev.pranav.applock.MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        })
+        finish()
     }
 
     private fun setupBiometricPromptInternal() {
@@ -462,6 +489,8 @@ fun PasswordOverlayScreen(
     lockedAppName: String? = null,
     lockedAppIcon: Drawable? = null,
     triggeringPackageName: String? = null,
+    useTextPassword: Boolean = false,
+    onForgotPasscodeReset: (() -> Unit)? = null,
     onPinAttempt: ((pin: String, isFinal: Boolean) -> Boolean)? = null
 ) {
     val appLockRepository = LocalContext.current.appLockRepository()
@@ -480,9 +509,62 @@ fun PasswordOverlayScreen(
     ) {
         val passwordState = remember { mutableStateOf("") }
         var showError by remember { mutableStateOf(false) }
+        var showRecoveryDialog by remember { mutableStateOf(false) }
         val minLength = 4
 
-        if (isLandscape) {
+        if (showRecoveryDialog) {
+            RecoveryKeyDialog(
+                onDismiss = { showRecoveryDialog = false },
+                onValidated = { onForgotPasscodeReset?.invoke() }
+            )
+        }
+
+        if (useTextPassword) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                AppHeader(
+                    fromMainActivity = fromMainActivity,
+                    lockedAppName = lockedAppName,
+                    lockedAppIcon = lockedAppIcon,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                OutlinedTextField(
+                    value = passwordState.value,
+                    onValueChange = {
+                        passwordState.value = it
+                        showError = false
+                    },
+                    label = { Text("Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (showError) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(stringResource(R.string.incorrect_password_error), color = MaterialTheme.colorScheme.error)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = {
+                    val valid = onPinAttempt?.invoke(passwordState.value, true) ?: false
+                    if (valid) {
+                        onAuthSuccess()
+                    } else {
+                        showError = true
+                        passwordState.value = ""
+                    }
+                }, modifier = Modifier.fillMaxWidth()) { Text("Unlock") }
+                TextButton(onClick = { showRecoveryDialog = true }) { Text("Forgot passcode?") }
+                if (showBiometricButton) {
+                    TextButton(onClick = onBiometricAuth) { Text("Use biometric") }
+                }
+            }
+        } else if (isLandscape) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
@@ -541,6 +623,7 @@ fun PasswordOverlayScreen(
                         },
                         onPinIncorrect = { showError = true }
                     )
+                    TextButton(onClick = { showRecoveryDialog = true }) { Text("Forgot passcode?") }
                 }
             }
         } else {
@@ -599,6 +682,7 @@ fun PasswordOverlayScreen(
                     },
                     onPinIncorrect = { showError = true }
                 )
+                TextButton(onClick = { showRecoveryDialog = true }) { Text("Forgot passcode?") }
             }
         }
     }
@@ -1137,6 +1221,7 @@ fun KeypadRow(
                 } else {
                     Text(
                         text = key,
+                        color = contentColor,
                         style = MaterialTheme.typography.headlineLargeEmphasized.copy(
                             fontSize = animatedFontSize.sp
                         ),

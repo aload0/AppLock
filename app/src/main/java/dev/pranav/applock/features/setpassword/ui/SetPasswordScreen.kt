@@ -43,6 +43,7 @@ import androidx.navigation.NavController
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.R
 import dev.pranav.applock.core.navigation.Screen
+import dev.pranav.applock.core.utils.RecoveryKeyManager
 import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.lockscreen.ui.KeypadRow
 import dev.pranav.applock.features.lockscreen.ui.PasswordIndicators
@@ -66,6 +67,8 @@ fun SetPasswordScreen(
     var showMismatchError by remember { mutableStateOf(false) }
     var showLengthError by remember { mutableStateOf(false) }
     var showInvalidOldPasswordError by remember { mutableStateOf(false) }
+    var showRecoveryDialog by remember { mutableStateOf(false) }
+    var generatedRecoveryKey by remember { mutableStateOf("") }
     val minLength = 4
 
     val context = LocalContext.current
@@ -156,6 +159,21 @@ fun SetPasswordScreen(
 
             })
         biometricPrompt.authenticate(promptInfo)
+    }
+
+    if (showRecoveryDialog) {
+        RecoveryKeyGeneratedDialog(
+            recoveryKey = generatedRecoveryKey,
+            onDismiss = {
+                showRecoveryDialog = false
+                navController.navigate(Screen.Main.route) {
+                    popUpTo(Screen.SetPassword.route) { inclusive = true }
+                    if (isFirstTimeSetup) {
+                        popUpTo(Screen.AppIntro.route) { inclusive = true }
+                    }
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -349,22 +367,15 @@ fun SetPasswordScreen(
                                         else -> {
                                             if (passwordState == confirmPasswordState) {
                                                 appLockRepository?.setPassword(passwordState)
+                                                appLockRepository?.setLockType(PreferencesRepository.LOCK_TYPE_PIN)
+                                                generatedRecoveryKey = RecoveryKeyManager.generateRecoveryKey()
+                                                appLockRepository?.setRecoveryKey(generatedRecoveryKey)
                                                 Toast.makeText(
                                                     context,
                                                     context.getString(R.string.password_set_successfully_toast),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-
-                                                navController.navigate(Screen.Main.route) {
-                                                    popUpTo(Screen.SetPassword.route) {
-                                                        inclusive = true
-                                                    }
-                                                    if (isFirstTimeSetup) {
-                                                        popUpTo(Screen.AppIntro.route) {
-                                                            inclusive = true
-                                                        }
-                                                    }
-                                                }
+                                                showRecoveryDialog = true
                                             } else {
                                                 showMismatchError = true
                                                 confirmPasswordState = ""
@@ -533,9 +544,15 @@ fun SetPasswordScreen(
                     },
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
-                    Text(
-                        stringResource(R.string.use_pattern_button)
-                    )
+                    Text(stringResource(R.string.use_pattern_button))
+                }
+                TextButton(
+                    onClick = {
+                        navController.navigate(Screen.SetPasswordText.route)
+                    },
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Text("Use Password")
                 }
 
                 Column(
@@ -592,22 +609,14 @@ fun SetPasswordScreen(
                                             if (passwordState == confirmPasswordState) {
                                                 appLockRepository?.setLockType(PreferencesRepository.LOCK_TYPE_PIN)
                                                 appLockRepository?.setPassword(passwordState)
+                                                generatedRecoveryKey = RecoveryKeyManager.generateRecoveryKey()
+                                                appLockRepository?.setRecoveryKey(generatedRecoveryKey)
                                                 Toast.makeText(
                                                     context,
                                                     context.getString(R.string.password_set_successfully_toast),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-
-                                                navController.navigate(Screen.Main.route) {
-                                                    popUpTo(Screen.SetPassword.route) {
-                                                        inclusive = true
-                                                    }
-                                                    if (isFirstTimeSetup) {
-                                                        popUpTo(Screen.AppIntro.route) {
-                                                            inclusive = true
-                                                        }
-                                                    }
-                                                }
+                                                showRecoveryDialog = true
                                             } else {
                                                 showMismatchError = true
                                                 confirmPasswordState = ""

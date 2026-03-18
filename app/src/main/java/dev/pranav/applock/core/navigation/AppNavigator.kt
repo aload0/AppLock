@@ -26,6 +26,7 @@ import dev.pranav.applock.features.lockscreen.ui.PasswordOverlayScreen
 import dev.pranav.applock.features.lockscreen.ui.PatternLockScreen
 import dev.pranav.applock.features.setpassword.ui.PatternSetPasswordScreen
 import dev.pranav.applock.features.setpassword.ui.SetPasswordScreen
+import dev.pranav.applock.features.setpassword.ui.SetPasswordTextScreen
 import dev.pranav.applock.features.settings.ui.SettingsScreen
 import dev.pranav.applock.features.triggerexclusions.ui.TriggerExclusionsScreen
 
@@ -55,15 +56,31 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
         }
 
         composable(Screen.ChangePassword.route) {
-            if (application.appLockRepository.getLockType() == PreferencesRepository.LOCK_TYPE_PATTERN) {
-                PatternSetPasswordScreen(navController, false)
-            } else {
-                SetPasswordScreen(navController, isFirstTimeSetup = false)
+            when (application.appLockRepository.getLockType()) {
+                PreferencesRepository.LOCK_TYPE_PATTERN -> PatternSetPasswordScreen(navController, false)
+                PreferencesRepository.LOCK_TYPE_PASSWORD -> SetPasswordTextScreen(navController, false)
+                else -> SetPasswordScreen(navController, isFirstTimeSetup = false)
             }
+        }
+
+        composable(Screen.ChangePasswordPin.route) {
+            SetPasswordScreen(navController, isFirstTimeSetup = false)
+        }
+
+        composable(Screen.ChangePasswordPattern.route) {
+            PatternSetPasswordScreen(navController, false)
+        }
+
+        composable(Screen.ChangePasswordText.route) {
+            SetPasswordTextScreen(navController, false)
         }
 
         composable(Screen.SetPasswordPattern.route) {
             PatternSetPasswordScreen(navController, isFirstTimeSetup = true)
+        }
+
+        composable(Screen.SetPasswordText.route) {
+            SetPasswordTextScreen(navController, isFirstTimeSetup = true)
         }
 
         composable(Screen.Main.route) {
@@ -90,6 +107,38 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                         },
                         onBiometricAuth = {
                             handleBiometricAuthentication(activity, navController)
+                        },
+                        onForgotPasscodeReset = {
+                            navController.navigate(Screen.ChangePasswordPattern.route)
+                        }
+                    )
+                }
+
+                PreferencesRepository.LOCK_TYPE_PASSWORD -> {
+                    PasswordOverlayScreen(
+                        showBiometricButton = application.appLockRepository.isBiometricAuthEnabled(),
+                        fromMainActivity = true,
+                        useTextPassword = true,
+                        onBiometricAuth = {
+                            handleBiometricAuthentication(activity, navController)
+                        },
+                        onAuthSuccess = {
+                            IntruderSelfieManager.resetFailedAttempts()
+                            handleAuthenticationSuccess(navController)
+                        },
+                        onForgotPasscodeReset = {
+                            navController.navigate(Screen.ChangePasswordText.route)
+                        },
+                        onPinAttempt = { pin, isFinal ->
+                            val correctPassword = application.appLockRepository.getPassword() ?: ""
+                            val isValid = pin == correctPassword
+                            if (isValid) {
+                                IntruderSelfieManager.resetFailedAttempts()
+                                handleAuthenticationSuccess(navController)
+                            } else if (isFinal) {
+                                IntruderSelfieManager.recordFailedAttempt(context)
+                            }
+                            isValid
                         }
                     )
                 }
@@ -104,6 +153,9 @@ fun AppNavHost(navController: NavHostController, startDestination: String) {
                         onAuthSuccess = {
                             IntruderSelfieManager.resetFailedAttempts()
                             handleAuthenticationSuccess(navController)
+                        },
+                        onForgotPasscodeReset = {
+                            navController.navigate(Screen.ChangePasswordPin.route)
                         },
                         onPinAttempt = { pin, isFinal ->
                             val correctPassword = application.appLockRepository.getPassword() ?: ""

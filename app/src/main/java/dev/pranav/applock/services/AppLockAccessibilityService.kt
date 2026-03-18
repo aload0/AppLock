@@ -225,6 +225,13 @@ class AppLockAccessibilityService : AccessibilityService() {
         val className = event.className?.toString() ?: ""
         val root = rootInActiveWindow
         
+        if (appLockRepository.isPreventAllAppUninstallEnabled()) {
+            if (className.contains("Uninstaller") || className.contains("PackageInstaller") || containsTextRecursive(root, "Uninstall")) {
+                blockAccess("App uninstall is protected.")
+                return
+            }
+        }
+
         if (root != null && (containsTextRecursive(root, "dev.pranav.applock") || containsTextRecursive(root, "APP Lock by AP"))) {
             if (className.contains("AppDetails") || className.contains("InstalledAppDetails") ||
                 className.contains("Uninstaller") || className.contains("PackageInstaller") ||
