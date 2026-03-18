@@ -57,11 +57,9 @@ fun PatternSetPasswordScreen(
     var patternState by remember { mutableStateOf("") }
     var confirmPatternState by remember { mutableStateOf("") }
     var isConfirmationMode by remember { mutableStateOf(false) }
-    var isVerifyOldPasswordMode by remember { mutableStateOf(!isFirstTimeSetup) }
 
     var showMismatchError by remember { mutableStateOf(false) }
     var showMinLengthError by remember { mutableStateOf(false) }
-    var showInvalidOldPasswordError by remember { mutableStateOf(false) }
     var showRecoveryDialog by remember { mutableStateOf(false) }
     var generatedRecoveryKey by remember { mutableStateOf("") }
 
@@ -76,23 +74,6 @@ fun PatternSetPasswordScreen(
     val screenWidth = windowInfo.containerSize.width
     val screenHeight = windowInfo.containerSize.height
     val isLandscape = screenWidth > screenHeight
-
-    BackHandler {
-        if (isFirstTimeSetup) {
-            if (isConfirmationMode) {
-                isConfirmationMode = false
-            } else {
-                Toast.makeText(context, R.string.set_pin_to_continue_toast, Toast.LENGTH_SHORT)
-                    .show()
-            }
-        } else {
-            if (navController.previousBackStackEntry != null) {
-                navController.popBackStack()
-            } else {
-                activity?.finish()
-            }
-        }
-    }
 
     val fragmentActivity = LocalActivity.current as? androidx.fragment.app.FragmentActivity
 
@@ -111,13 +92,27 @@ fun PatternSetPasswordScreen(
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    isVerifyOldPasswordMode = false
-                    patternState = ""
-                    confirmPatternState = ""
-                    showInvalidOldPasswordError = false
+                    // In this context, we just allow them to set a new pattern
                 }
             })
         biometricPrompt.authenticate(promptInfo)
+    }
+
+    BackHandler {
+        if (isFirstTimeSetup) {
+            if (isConfirmationMode) {
+                isConfirmationMode = false
+            } else {
+                Toast.makeText(context, R.string.set_pin_to_continue_toast, Toast.LENGTH_SHORT)
+                    .show()
+            }
+        } else {
+            if (navController.previousBackStackEntry != null) {
+                navController.popBackStack()
+            } else {
+                activity?.finish()
+            }
+        }
     }
 
     fun switchToPinMethod() {
@@ -128,7 +123,6 @@ fun PatternSetPasswordScreen(
 
     fun submitPattern() {
         val currentPattern = when {
-            isVerifyOldPasswordMode -> patternState
             isConfirmationMode -> confirmPatternState
             else -> patternState
         }
@@ -139,17 +133,6 @@ fun PatternSetPasswordScreen(
         }
 
         when {
-            isVerifyOldPasswordMode -> {
-                if (appLockRepository!!.validatePattern(patternState)) {
-                    isVerifyOldPasswordMode = false
-                    patternState = ""
-                    showInvalidOldPasswordError = false
-                } else {
-                    showInvalidOldPasswordError = true
-                    patternState = ""
-                }
-            }
-
             !isConfirmationMode -> {
                 isConfirmationMode = true
                 showMinLengthError = false
@@ -199,7 +182,6 @@ fun PatternSetPasswordScreen(
                     title = {
                         Text(
                             text = when {
-                                isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_title)
                                 isConfirmationMode -> stringResource(R.string.confirm_pin_title)
                                 else -> stringResource(R.string.set_new_pin_title)
                             },
@@ -230,7 +212,6 @@ fun PatternSetPasswordScreen(
                 ) {
                     Text(
                         text = when {
-                            isVerifyOldPasswordMode -> "Enter current Pattern"
                             isConfirmationMode -> "Confirm pattern"
                             else -> "Create a pattern"
                         },
@@ -256,14 +237,6 @@ fun PatternSetPasswordScreen(
                             textAlign = TextAlign.Center
                         )
                     }
-                    if (showInvalidOldPasswordError) {
-                        Text(
-                            text = "Incorrect pattern",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Center
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -274,14 +247,14 @@ fun PatternSetPasswordScreen(
                         textAlign = TextAlign.Center
                     )
 
-                    if (isVerifyOldPasswordMode) {
+                    if (!isFirstTimeSetup) {
                         Spacer(modifier = Modifier.height(12.dp))
                         TextButton(onClick = { launchDeviceCredentialAuth() }) {
                             Text(stringResource(R.string.reset_using_device_password_button))
                         }
                     }
 
-                    if (isFirstTimeSetup && !isVerifyOldPasswordMode && !isConfirmationMode) {
+                    if (isFirstTimeSetup && !isConfirmationMode) {
                         TextButton(onClick = { switchToPinMethod() }) {
                             Text("Use PIN")
                         }
@@ -294,33 +267,18 @@ fun PatternSetPasswordScreen(
                         }
                     }
 
-                    if (isVerifyOldPasswordMode || isConfirmationMode) {
+                    if (isConfirmationMode) {
                         Spacer(modifier = Modifier.height(8.dp))
                         TextButton(
                             onClick = {
-                                if (isVerifyOldPasswordMode) {
-                                    if (navController.previousBackStackEntry != null) {
-                                        navController.popBackStack()
-                                    } else {
-                                        activity?.finish()
-                                    }
-                                } else {
-                                    isConfirmationMode = false
-                                    if (!isFirstTimeSetup) {
-                                        isVerifyOldPasswordMode = true
-                                    }
-                                }
+                                isConfirmationMode = false
                                 patternState = ""
                                 confirmPatternState = ""
                                 showMismatchError = false
                                 showMinLengthError = false
-                                showInvalidOldPasswordError = false
                             }
                         ) {
-                            Text(
-                                if (isVerifyOldPasswordMode) stringResource(R.string.cancel_button)
-                                else stringResource(R.string.start_over_button)
-                            )
+                            Text(stringResource(R.string.start_over_button))
                         }
                     }
                 }
@@ -351,9 +309,7 @@ fun PatternSetPasswordScreen(
 
                         override fun onResult(result: List<Dot>) {
                             val patternString = result.joinToString("") { it.id.toString() }
-                            if (isVerifyOldPasswordMode) {
-                                patternState = patternString
-                            } else if (isConfirmationMode) {
+                            if (isConfirmationMode) {
                                 confirmPatternState = patternString
                             } else {
                                 patternState = patternString
@@ -377,7 +333,6 @@ fun PatternSetPasswordScreen(
                 ) {
                     Text(
                         text = when {
-                            isVerifyOldPasswordMode -> stringResource(R.string.enter_current_pin_label)
                             isConfirmationMode -> stringResource(R.string.confirm_new_pin_label)
                             else -> stringResource(R.string.create_new_pin_label)
                         },
@@ -399,16 +354,6 @@ fun PatternSetPasswordScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Patter length should be at least 4",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.labelLarge,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    if (showInvalidOldPasswordError) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Incorrect pattern",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.labelLarge,
                             textAlign = TextAlign.Center
@@ -455,9 +400,7 @@ fun PatternSetPasswordScreen(
 
                             override fun onResult(result: List<Dot>) {
                                 val patternString = result.joinToString("") { it.id.toString() }
-                                if (isVerifyOldPasswordMode) {
-                                    patternState = patternString
-                                } else if (isConfirmationMode) {
+                                if (isConfirmationMode) {
                                     confirmPatternState = patternString
                                 } else {
                                     patternState = patternString
@@ -469,7 +412,7 @@ fun PatternSetPasswordScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (!isVerifyOldPasswordMode && !isConfirmationMode) {
+                    if (!isConfirmationMode) {
                         TextButton(onClick = { switchToPinMethod() }) {
                             Text("Use PIN")
                         }
@@ -480,38 +423,23 @@ fun PatternSetPasswordScreen(
                         }
                     }
 
-                    if (isVerifyOldPasswordMode) {
+                    if (!isFirstTimeSetup) {
                         TextButton(onClick = { launchDeviceCredentialAuth() }) {
                             Text(stringResource(R.string.reset_using_device_password_button))
                         }
                     }
 
-                    if (isVerifyOldPasswordMode || isConfirmationMode) {
+                    if (isConfirmationMode) {
                         TextButton(
                             onClick = {
-                                if (isVerifyOldPasswordMode) {
-                                    if (navController.previousBackStackEntry != null) {
-                                        navController.popBackStack()
-                                    } else {
-                                        activity?.finish()
-                                    }
-                                } else {
-                                    isConfirmationMode = false
-                                    if (!isFirstTimeSetup) {
-                                        isVerifyOldPasswordMode = true
-                                    }
-                                }
+                                isConfirmationMode = false
                                 patternState = ""
                                 confirmPatternState = ""
                                 showMismatchError = false
                                 showMinLengthError = false
-                                showInvalidOldPasswordError = false
                             }
                         ) {
-                            Text(
-                                if (isVerifyOldPasswordMode) stringResource(R.string.cancel_button)
-                                else stringResource(R.string.start_over_button)
-                            )
+                            Text(stringResource(R.string.start_over_button))
                         }
                     }
                 }

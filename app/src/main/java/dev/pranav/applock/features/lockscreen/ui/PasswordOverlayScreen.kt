@@ -1174,7 +1174,7 @@ fun KeypadRow(
             val targetColor = if (isPressed) {
                 MaterialTheme.colorScheme.primaryContainer
             } else {
-                if (icons.isNotEmpty() && index < icons.size && icons[index] != null) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceBright
+                MaterialTheme.colorScheme.secondaryContainer
             }
 
             val animatedContainerColor by animateColorAsState(
@@ -1209,7 +1209,7 @@ fun KeypadRow(
                 ),
                 elevation = ButtonDefaults.filledTonalButtonElevation()
             ) {
-                val contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                val contentColor = if (isPressed) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
 
                 if (icons.isNotEmpty() && index < icons.size && icons[index] != null) {
                     Icon(

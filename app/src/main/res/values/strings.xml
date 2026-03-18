@@ -112,6 +112,9 @@ Make sure you have Shizuku installed and enabled via ADB. Tap \'Next\' to grant 
     <string name="main_screen_search_cd">Search</string>
     <string name="main_screen_empty_search_title">No apps found</string>
     <string name="main_screen_empty_search_subtitle">Try adjusting your search</string>
+    <string name="main_screen_protection_dialog_title">App Protection</string>
+    <string name="main_screen_protection_dialog_on_text">Are you sure you want to turn ON app protection?</string>
+    <string name="main_screen_protection_dialog_off_text">Are you sure you want to turn OFF app protection?</string>
 
     <!-- SettingsScreen -->
     <string name="settings_screen_title">Settings</string>
