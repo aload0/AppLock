@@ -7,8 +7,8 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import dev.pranav.applock.data.repository.BackendImplementation
 import dev.pranav.applock.services.AppLockAccessibilityService
-import dev.pranav.applock.services.ExperimentalAppLockService
 import dev.pranav.applock.services.ShizukuAppLockService
+import dev.pranav.applock.services.UsageLockService
 import dev.pranav.applock.services.isServiceRunning
 
 object AppLockServiceStarter {
@@ -32,7 +32,7 @@ object AppLockServiceStarter {
             }
 
             BackendImplementation.USAGE_STATS -> {
-                startService(context, ExperimentalAppLockService::class.java)
+                startService(context, UsageLockService::class.java)
             }
         }
     }

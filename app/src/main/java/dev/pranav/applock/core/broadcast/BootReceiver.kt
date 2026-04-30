@@ -10,8 +10,8 @@ import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.data.repository.BackendImplementation
 import dev.pranav.applock.services.AppLockAccessibilityService
-import dev.pranav.applock.services.ExperimentalAppLockService
 import dev.pranav.applock.services.ShizukuAppLockService
+import dev.pranav.applock.services.UsageLockService
 import dev.pranav.applock.services.isServiceRunning
 
 class BootReceiver : BroadcastReceiver() {
@@ -65,7 +65,7 @@ class BootReceiver : BroadcastReceiver() {
             }
 
             BackendImplementation.USAGE_STATS -> {
-                startService(context, ExperimentalAppLockService::class.java)
+                startService(context, UsageLockService::class.java)
             }
         }
     }

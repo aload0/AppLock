@@ -46,8 +46,8 @@ import dev.pranav.applock.core.utils.openAccessibilitySettings
 import dev.pranav.applock.data.repository.AppLockRepository
 import dev.pranav.applock.data.repository.BackendImplementation
 import dev.pranav.applock.features.admin.AdminDisableActivity
-import dev.pranav.applock.services.ExperimentalAppLockService
 import dev.pranav.applock.services.ShizukuAppLockService
+import dev.pranav.applock.services.UsageLockService
 import dev.pranav.applock.ui.components.DonateButton
 import dev.pranav.applock.ui.icons.*
 import rikka.shizuku.Shizuku
@@ -811,7 +811,7 @@ fun BackendSelectionCard(
                                     selectedBackend = backend
                                     appLockRepository.setBackendImplementation(BackendImplementation.USAGE_STATS)
                                     context.startService(
-                                        Intent(context, ExperimentalAppLockService::class.java)
+                                        Intent(context, UsageLockService::class.java)
                                     )
                                 }
                                 BackendImplementation.ACCESSIBILITY -> {

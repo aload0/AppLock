@@ -57,7 +57,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 
-class PasswordOverlayActivity : FragmentActivity() {
+class PasswordOverlayActivity: FragmentActivity() {
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
     private lateinit var promptInfo: BiometricPrompt.PromptInfo
@@ -121,11 +121,13 @@ class PasswordOverlayActivity : FragmentActivity() {
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_SECURE
+                    WindowManager.LayoutParams.FLAG_SECURE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
+            //setShowWhenLocked(true)
             setTurnScreenOn(true)
         }
 
@@ -136,6 +138,8 @@ class PasswordOverlayActivity : FragmentActivity() {
 
         val layoutParams = window.attributes
         layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+        layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT
 
         if (appLockRepository.shouldUseMaxBrightness()) {
             layoutParams.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
@@ -211,6 +215,8 @@ class PasswordOverlayActivity : FragmentActivity() {
                                 triggeringPackageName = triggeringPackageNameFromIntent,
                                 onPinAttempt = onPinAttemptCallback
                             )
+
+                            BackHandler { }
                         }
                     }
                 }
@@ -237,7 +243,7 @@ class PasswordOverlayActivity : FragmentActivity() {
     }
 
     private val authenticationCallbackInternal =
-        object : BiometricPrompt.AuthenticationCallback() {
+        object: BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                 super.onAuthenticationError(errorCode, errString)
                 isBiometricPromptShowingLocal = false
@@ -292,7 +298,7 @@ class PasswordOverlayActivity : FragmentActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (!isChangingConfigurations() && !isBiometricPromptShowingLocal) {
+        if (!isChangingConfigurations && !isBiometricPromptShowingLocal) {
             Log.d(TAG, "Overlay paused; lock screen hidden but app remains locked")
             AppLockManager.isLockScreenShown.set(false)
         }
@@ -305,7 +311,7 @@ class PasswordOverlayActivity : FragmentActivity() {
 
     override fun onStop() {
         super.onStop()
-        if (isChangingConfigurations()) {
+        if (isChangingConfigurations) {
             return
         }
         Log.d(TAG, "Overlay stopped; finishing lock overlay")
@@ -497,8 +503,6 @@ fun PasswordOverlayScreen(
             }
         }
     }
-
-    BackHandler {}
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalAnimationApi::class)
@@ -557,7 +561,7 @@ fun PasswordIndicators(
     ) {
         LazyRow(
             state = lazyListState,
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(
                 indicatorSpacing,
                 Alignment.CenterHorizontally

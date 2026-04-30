@@ -58,6 +58,8 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:excludeFromRecents="true"
             android:exported="false"
+            android:launchMode="singleInstance"
+            android:noHistory="true"
             android:taskAffinity=""
             android:theme="@android:style/Theme.Material.NoActionBar.TranslucentDecor" />
 
@@ -73,7 +75,7 @@
             android:foregroundServiceType="specialUse|systemExempted" />
 
         <service
-            android:name=".services.ExperimentalAppLockService"
+            android:name=".services.UsageLockService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse|systemExempted">

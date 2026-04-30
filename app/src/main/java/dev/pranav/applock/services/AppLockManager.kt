@@ -88,7 +88,7 @@ object AppLockManager {
 
     private val ALL_APP_LOCK_SERVICES = setOf(
         ShizukuAppLockService::class.java,
-        ExperimentalAppLockService::class.java
+        UsageLockService::class.java
     )
 
     fun unlockApp(packageName: String) {

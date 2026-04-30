@@ -52,23 +52,19 @@ class ShizukuActivityManager(
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 Intent.ACTION_CLOSE_SYSTEM_DIALOGS -> {
-                    val reason = intent.getStringExtra("reason")
-                    LogUtils.d(TAG, "System dialog closed, reason: $reason")
                     val currentTop = topActivity
                     if (currentTop != null && lastForegroundApp == currentTop.packageName && currentTop.className == "com.android.launcher3.uioverrides.QuickstepLauncher") {
                         AppLockManager.clearTemporarilyUnlockedApp()
                     }
-
                 }
 
                 Intent.ACTION_SCREEN_OFF -> {
-                    Log.d(TAG, "Screen turned off, will lock apps on return")
+                    AppLockManager.clearTemporarilyUnlockedApp()
                     shouldLockAppsOnReturn = true
                     lastForegroundApp = ""
                 }
 
                 Intent.ACTION_USER_PRESENT -> {
-                    Log.d(TAG, "Device unlocked, will lock apps on return")
                     shouldLockAppsOnReturn = true
                 }
             }
@@ -92,7 +88,6 @@ class ShizukuActivityManager(
     }
 
     private fun registerEventReceivers() {
-        // Register home button and system events receiver
         val homeFilter = IntentFilter().apply {
             addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -101,7 +96,6 @@ class ShizukuActivityManager(
 
         context.registerReceiver(homeButtonReceiver, homeFilter, RECEIVER_EXPORTED)
 
-        // Keep the device unlock receiver for compatibility
         val unlockFilter = IntentFilter().apply {
             addAction(Intent.ACTION_USER_PRESENT)
             addAction(Intent.ACTION_SCREEN_OFF)
@@ -138,8 +132,6 @@ class ShizukuActivityManager(
         if (context.isDeviceLocked()) return
 
         getTasksWrapper().filterVisible().forEach {
-            Log.d(it.topActivity!!.packageName, it.toString())
-
             val activity = it.topActivity!!
             val packageName = activity.packageName
             val className = activity.className
@@ -216,10 +208,11 @@ class ShizukuActivityManager(
 val topActivity: ComponentName?
     get() = getTasksWrapper().firstOrNull()?.topActivity
 
-private val activityTaskManager: IActivityTaskManager =
+private val activityTaskManager: IActivityTaskManager by lazy {
     SystemServiceHelper.getSystemService("activity_task")
         .let(::ShizukuBinderWrapper)
         .let(IActivityTaskManager.Stub::asInterface)
+}
 
 private fun getTasksWrapper(): List<ActivityManager.RunningTaskInfo> = when {
     Build.VERSION.SDK_INT < 31 -> runCatching { activityTaskManager.getTasks(8) }.getOrNull()

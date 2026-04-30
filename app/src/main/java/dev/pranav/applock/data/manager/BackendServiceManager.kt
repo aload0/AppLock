@@ -3,8 +3,8 @@ package dev.pranav.applock.data.manager
 import android.util.Log
 import dev.pranav.applock.data.repository.BackendImplementation
 import dev.pranav.applock.services.AppLockAccessibilityService
-import dev.pranav.applock.services.ExperimentalAppLockService
 import dev.pranav.applock.services.ShizukuAppLockService
+import dev.pranav.applock.services.UsageLockService
 
 /**
  * Manages backend service operations and switching between different implementations.
@@ -44,7 +44,7 @@ class BackendServiceManager {
     private fun getBackendForService(serviceClass: Class<*>): BackendImplementation? {
         return when (serviceClass) {
             AppLockAccessibilityService::class.java -> BackendImplementation.ACCESSIBILITY
-            ExperimentalAppLockService::class.java -> BackendImplementation.USAGE_STATS
+            UsageLockService::class.java -> BackendImplementation.USAGE_STATS
             ShizukuAppLockService::class.java -> BackendImplementation.SHIZUKU
             else -> null
         }

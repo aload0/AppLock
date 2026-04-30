@@ -30,10 +30,10 @@ import dev.pranav.applock.features.lockscreen.ui.PasswordOverlayActivity
 import java.util.Timer
 import kotlin.concurrent.timerTask
 
-class ExperimentalAppLockService : Service() {
-    private val TAG = "ExperimentalAppLockService"
+class UsageLockService: Service() {
+    private val TAG = "UsageLockService"
     private val NOTIFICATION_ID = 113
-    private val CHANNEL_ID = "ExperimentalAppLockServiceChannel"
+    private val CHANNEL_ID = "UsageLockServiceChannel"
 
     companion object {
         @Volatile
@@ -47,6 +47,7 @@ class ExperimentalAppLockService : Service() {
 
     private var timer: Timer? = null
     private var previousForegroundPackage = ""
+    private var pauseMonitoring = false
 
     private val screenStateReceiver = object: android.content.BroadcastReceiver() {
         override fun onReceive(context: android.content.Context?, intent: Intent?) {
@@ -58,6 +59,9 @@ class ExperimentalAppLockService : Service() {
                 AppLockManager.isLockScreenShown.set(false)
                 AppLockManager.clearTemporarilyUnlockedApp()
                 previousForegroundPackage = ""
+                pauseMonitoring = true
+            } else if (intent?.action == Intent.ACTION_USER_PRESENT) {
+                pauseMonitoring = false
             }
         }
     }
@@ -93,7 +97,7 @@ class ExperimentalAppLockService : Service() {
 
         try {
             unregisterReceiver(screenStateReceiver)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             Log.w(TAG, "Receiver not registered or already unregistered")
         }
 
@@ -106,12 +110,8 @@ class ExperimentalAppLockService : Service() {
         super.onTaskRemoved(rootIntent)
         if (shouldStartService(appLockRepository, this::class.java)) {
             try {
-                val startIntent = Intent(this, ExperimentalAppLockService::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    ContextCompat.startForegroundService(this, startIntent)
-                } else {
-                    startService(startIntent)
-                }
+                val startIntent = Intent(this, UsageLockService::class.java)
+                ContextCompat.startForegroundService(this, startIntent)
                 Log.d(TAG, "Re-started ExperimentalAppLockService after task removal")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to restart service after task removal", e)
@@ -120,8 +120,6 @@ class ExperimentalAppLockService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-
-    // --- Monitoring ---
 
     private fun startMonitoringTimer() {
         timer?.cancel()
@@ -146,13 +144,23 @@ class ExperimentalAppLockService : Service() {
             val triggeringPackage = previousForegroundPackage
             previousForegroundPackage = currentPackage
 
+            Log.d(
+                "Usage",
+                "cur: $currentPackage, prev: $triggeringPackage, unlocked ${
+                    AppLockManager.isAppTemporarilyUnlocked(currentPackage)
+                }"
+            )
+
             if (isExclusionApp(currentPackage)) return
 
             if (triggeringPackage in appLockRepository.getTriggerExcludedApps()) {
                 return
             }
 
-            if (currentPackage == triggeringPackage) return
+            if (currentPackage == triggeringPackage && AppLockManager.isAppTemporarilyUnlocked(
+                    currentPackage
+                )
+            ) return
 
             checkAndLockApp(currentPackage, triggeringPackage, System.currentTimeMillis())
         } catch (e: Exception) {
@@ -176,21 +184,42 @@ class ExperimentalAppLockService : Service() {
      */
     private fun getCurrentForegroundAppPackage(): Pair<String, String>? {
         val time = System.currentTimeMillis()
-        val events = usageStatsManager.queryEvents(time - 1000 * 100, time)
+        val events = usageStatsManager.queryEvents(time - 3000, time)
         val event = UsageEvents.Event()
         var recentApp: Pair<String, String>? = null
+        var recentAppTime = 0L
 
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
 
-            if (event.eventType != UsageEvents.Event.ACTIVITY_RESUMED) continue
-            if (event.className == "dev.pranav.applock.features.lockscreen.ui.PasswordOverlayActivity") continue
+            Log.d(
+                TAG,
+                "${event.eventType} ${event.className} ${event.packageName} ${event.timeStamp} ${event.configuration} ${event.appStandbyBucket}"
+            )
 
-            if (event.className in AppLockConstants.KNOWN_RECENTS_CLASSES
+            if (event.eventType != UsageEvents.Event.ACTIVITY_RESUMED && event.eventType != UsageEvents.Event.USER_INTERACTION) continue
+
+            if (event.packageName == baseContext.packageName || event.className in AppLockConstants.KNOWN_RECENTS_CLASSES) {
+                recentApp = null
+                continue
+            }
+
+            if (event.className == "com.android.launcher3.uioverrides.QuickstepLauncher" && event.timeStamp != recentAppTime) {
+                recentApp = null
+                AppLockManager.clearTemporarilyUnlockedApp()
+                continue
+            }
+
+            Log.d(TAG, "recent event ${event.eventType} ${event.className} ${event.packageName}")
+
+            if (recentAppTime == event.timeStamp && recentApp?.first != null && appLockRepository.isAppLocked(
+                    recentApp!!.first
+                )
             ) {
                 continue
             }
 
+            recentAppTime = event.timeStamp
             recentApp = Pair(event.packageName, event.className)
         }
         return recentApp
@@ -260,12 +289,8 @@ class ExperimentalAppLockService : Service() {
         createNotificationChannel()
         val notification = createNotification()
 
-        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            determineForegroundServiceType()
-        } else 0
-
-        if (type != 0) {
-            startForeground(NOTIFICATION_ID, notification, type)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(NOTIFICATION_ID, notification, determineForegroundServiceType())
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }

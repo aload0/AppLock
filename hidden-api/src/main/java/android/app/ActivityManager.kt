@@ -153,8 +153,8 @@ class ActivityManager {
 
     @Deprecated("")
     @Throws(SecurityException::class)
-    fun getRunningServices(maxNum: Int): MutableList<RunningServiceInfo?>? {
-        return null
+    fun getRunningServices(maxNum: Int): List<RunningServiceInfo> {
+        return emptyList()
     }
 
     @Throws(SecurityException::class)
@@ -660,7 +660,7 @@ class ActivityManager {
      * Information you can retrieve about a particular Service that is currently running in the system.
      */
     class RunningServiceInfo {
-        var service: ComponentName? = null
+        var service: ComponentName
         var pid: Int = 0
         var uid: Int = 0
         var process: String? = null
