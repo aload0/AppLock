@@ -145,6 +145,8 @@ class LockScreenOverlayManager(private val context: Context):
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
                 context.startActivity(intent)
+
+                removeOverlay()
                 return@setOnKeyListener true
             }
             false
