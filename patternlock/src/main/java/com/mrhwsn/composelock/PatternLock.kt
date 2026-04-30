@@ -54,11 +54,11 @@ fun PatternLock(
         if (canvasSize == Size.Zero) emptyList() else buildList {
             val cellW = canvasSize.width / (dimension + 1)
             val cellH = canvasSize.height / (dimension + 1)
-            for (r in 0 until dimension) {
-                for (c in 0 until dimension) {
+            for (c in 0 until dimension) {
+                for (r in 0 until dimension) {
                     add(
                         Dot(
-                            id = this.size,
+                            id = this.size + 1,
                             offset = Offset((c + 1) * cellW, (r + 1) * cellH),
                             size = Animatable(dotsSize)
                         )
