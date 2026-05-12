@@ -14,8 +14,8 @@ android {
         applicationId = "dev.pranav.applock"
         minSdk = 26
         targetSdk = 37
-        versionCode = 242
-        versionName = "2.4.2"
+        versionCode = 243
+        versionName = "2.4.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -57,7 +57,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    // fixes "Can only use lower 16 bits for requestCode"
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.fragment.ktx)
     implementation(platform(libs.androidx.compose.bom))

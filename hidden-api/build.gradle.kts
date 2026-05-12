@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "dev.pranav.hidden_api"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 26
