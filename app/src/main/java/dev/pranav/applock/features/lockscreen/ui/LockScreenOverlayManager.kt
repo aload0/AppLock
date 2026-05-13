@@ -4,8 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.view.KeyEvent
 import android.view.WindowManager
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.*
@@ -19,7 +20,7 @@ import dev.pranav.applock.ui.theme.AppLockTheme
 
 @SuppressLint("ViewConstructor")
 class LockScreenOverlayManager(private val context: Context):
-    LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
+    LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner, OnBackPressedDispatcherOwner {
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var composeView: ComposeView? = null
@@ -33,6 +34,10 @@ class LockScreenOverlayManager(private val context: Context):
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
     override val viewModelStore: ViewModelStore get() = store
+
+    override val onBackPressedDispatcher = OnBackPressedDispatcher {
+        removeOverlay()
+    }
 
     fun showOverlay(
         lockedPackageName: String,
@@ -144,20 +149,20 @@ class LockScreenOverlayManager(private val context: Context):
         composeView?.isFocusableInTouchMode = true
         composeView?.requestFocus()
 
-        // Block Back Button
-        composeView?.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                val intent = Intent(Intent.ACTION_MAIN).apply {
-                    addCategory(Intent.CATEGORY_HOME)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                context.startActivity(intent)
-
-                removeOverlay()
-                return@setOnKeyListener true
-            }
-            false
-        }
+        //// Block Back Button
+        //composeView?.setOnKeyListener { _, keyCode, event ->
+        //    if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+        //        val intent = Intent(Intent.ACTION_MAIN).apply {
+        //            addCategory(Intent.CATEGORY_HOME)
+        //            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        //        }
+        //        context.startActivity(intent)
+        //
+        //        removeOverlay()
+        //        return@setOnKeyListener true
+        //    }
+        //    false
+        //}
 
         try {
             windowManager.addView(composeView, params)
