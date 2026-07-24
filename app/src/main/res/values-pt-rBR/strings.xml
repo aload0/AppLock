@@ -344,7 +344,7 @@ Certifique-se de que o Shizuku esteja instalado e configurado via ADB. Toque em 
     <string name="settings_screen_language_english">English</string>
     <string name="settings_screen_language_portuguese_brazil">Português (Brasil)</string>
 
-    <!-- SettingsScreen extracted strings -->
+    <!-- SettingsScreen Strings -->
     <string name="settings_screen_version_unknown">Desconhecida</string>
     <string name="settings_screen_unlock_duration_until_screen_off">Até desligar a tela</string>
     <string name="settings_screen_share_audit_logs_title">Compartilhar registros de segurança</string>
@@ -366,7 +366,7 @@ Certifique-se de que o Shizuku esteja instalado e configurado via ADB. Toque em 
     <string name="settings_screen_link_source_code">Código-fonte</string>
     <string name="settings_screen_link_report_issue">Relatar problema</string>
 
-    <!-- MainScreen extracted strings -->
+    <!-- MainScreen Strings -->
     <string name="main_screen_protection_on">ATIVADO</string>
     <string name="main_screen_protection_off">DESATIVADO</string>
     <string name="main_screen_trigger_exclusions_cd">Exclusões de acionamento</string>
@@ -380,7 +380,7 @@ Certifique-se de que o Shizuku esteja instalado e configurado via ADB. Toque em 
     <string name="main_screen_warning_cd">Aviso</string>
     <string name="main_screen_add_button_cd">Adicionar aplicativos</string>
 
-    <!-- PatternSetPassword extracted strings -->
+    <!-- PatternSetPassword Strings -->
     <string name="pattern_set_password_enter_current_label">Desenhe o padrão atual</string>
     <string name="pattern_set_password_confirm_label">Confirme o padrão</string>
     <string name="pattern_set_password_create_label">Crie um padrão</string>
@@ -388,7 +388,7 @@ Certifique-se de que o Shizuku esteja instalado e configurado via ADB. Toque em 
     <string name="pattern_set_password_min_length_error">O padrão deve conter pelo menos 4 pontos.</string>
     <string name="pattern_set_password_incorrect_short_error">Padrão incorreto.</string>
 
-    <!-- Lock Screen extracted strings -->
+    <!-- Lock Screen Strings -->
     <string name="password_overlay_close_cd">Fechar</string>
     <string name="password_overlay_continue_to_app">Continuar para %1$s</string>
     <string name="pattern_lock_continue_to_app">Continuar para %1$s</string>
@@ -401,7 +401,7 @@ Certifique-se de que o Shizuku esteja instalado e configurado via ADB. Toque em 
     <string name="biometric_prompt_subtitle">Confirme sua biometria para continuar.</string>
     <string name="biometric_prompt_negative_button">Usar PIN</string>
 
-    <!-- AntiUninstallScreen extracted strings -->
+    <!-- AntiUninstallScreen Strings -->
     <string name="anti_uninstall_screen_title">Proteção contra desinstalação</string>
     <string name="anti_uninstall_screen_desc">Selecione os aplicativos que serão protegidos contra desinstalação.</string>
 
@@ -437,7 +437,7 @@ Certifique-se de que o Shizuku esteja instalado e configurado via ADB. Toque em 
     <string name="add_button">Adicionar</string>
     <string name="back_cd">Voltar</string>
 
-    <!-- TriggerExclusionsScreen extracted strings -->
+    <!-- TriggerExclusionsScreen Strings -->
     <string name="trigger_exclusions_screen_title">Exclusões de acionamento</string>
     <string name="trigger_exclusions_screen_desc">Selecione os aplicativos que NÃO deverão acionar a tela de bloqueio ao alternar para aplicativos protegidos.</string>
 
@@ -455,7 +455,7 @@ Certifique-se de que o Shizuku esteja instalado e configurado via ADB. Toque em 
     <string name="trigger_exclusions_add_manual_cd">Adicionar pacote manualmente</string>
     <string name="trigger_exclusions_manually_added_label">Pacote adicionado manualmente</string>
 
-    <!-- UsageStatsPermission extracted strings -->
+    <!-- UsageStatsPermission Strings -->
     <string name="usage_stats_permission_dialog_title">Conceder permissão de acesso às estatísticas de uso</string>
     <string name="usage_stats_permission_dialog_text_1">Você ativou o modo de estatísticas de uso, mas o aplicativo precisa da permissão de acesso às estatísticas para funcionar corretamente.</string>
     <string name="usage_stats_permission_dialog_text_2">Toque em "Conceder permissão" para abrir as configurações e conceder as permissões necessárias.</string>
