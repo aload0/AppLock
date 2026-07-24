@@ -244,7 +244,7 @@ fun MainScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(R.string.main_screen_add_button_cd)
+                        contentDescription = stringResource(R.string.main_screen_add_button_cd)
                     )
                 }
             }
