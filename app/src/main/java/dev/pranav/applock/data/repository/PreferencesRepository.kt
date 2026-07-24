@@ -170,6 +170,14 @@ class PreferencesRepository(context: Context) {
         settingsPrefs.edit { putBoolean(KEY_LOGGING_ENABLED, enabled) }
     }
 
+    fun setLanguage(code: String) {
+        settingsPrefs.edit { putString(KEY_LANGUAGE, code) }
+    }
+
+    fun getLanguage(): String {
+        return settingsPrefs.getString(KEY_LANGUAGE, LANGUAGE_SYSTEM) ?: LANGUAGE_SYSTEM
+    }
+
     companion object {
         private const val PREFS_NAME_APP_LOCK = "app_lock_prefs"
         private const val PREFS_NAME_SETTINGS = "app_lock_settings"
@@ -197,5 +205,10 @@ class PreferencesRepository(context: Context) {
         const val LOCK_TYPE_PIN = "pin"
         const val LOCK_TYPE_PATTERN = "pattern"
         const val LOCK_TYPE_PASSWORD = "password"
+
+        const val KEY_LANGUAGE = "app_language"
+        const val LANGUAGE_SYSTEM = "system"
+        const val LANGUAGE_ENGLISH = "en"
+        const val LANGUAGE_PORTUGUESE_BR = "pt-BR"
     }
 }

@@ -26,6 +26,8 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import dev.pranav.applock.R
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.services.AppLockManager
@@ -66,7 +68,7 @@ class LockScreenOverlayManager(private val context: Context):
             isStateRestored = true
         }
 
-        composeView = ComposeView(context).apply {
+        composeView = ComposeView(LocaleManager.wrap(context)).apply {
             setViewTreeLifecycleOwner(this@LockScreenOverlayManager)
             setViewTreeSavedStateRegistryOwner(this@LockScreenOverlayManager)
             setViewTreeViewModelStoreOwner(this@LockScreenOverlayManager)
@@ -86,7 +88,7 @@ class LockScreenOverlayManager(private val context: Context):
                                 pm.getApplicationLabel(pm.getApplicationInfo(lockedPackageName, 0))
                                     .toString()
                             } catch (_: Exception) {
-                                "App"
+                                context.getString(R.string.lock_screen_overlay_default_app_name)
                             }
 
                             val onPinAttemptCallback = { pin: String ->

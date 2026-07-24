@@ -2,6 +2,7 @@ package dev.pranav.applock.features.admin
 
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.pranav.applock.R
 import dev.pranav.applock.core.broadcast.DeviceAdmin
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.core.utils.SecurityUtils
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.data.repository.AppLockRepository
@@ -40,6 +42,10 @@ class AdminDisableActivity : ComponentActivity() {
     private lateinit var appLockRepository: AppLockRepository
     private lateinit var devicePolicyManager: DevicePolicyManager
     private lateinit var deviceAdminComponentName: ComponentName
+
+    override fun attachBaseContext(newBase: Context?) {
+        super.attachBaseContext(LocaleManager.wrap(newBase ?: return))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.core.net.toUri
+import dev.pranav.applock.R
 import dev.pranav.applock.AppLockApplication
 import dev.pranav.applock.data.repository.AppLockRepository
 
@@ -53,7 +54,7 @@ fun launchBatterySettings(context: Context) {
 
         if (requestIgnoreIntent.resolveActivity(pm) != null) {
             context.startActivity(requestIgnoreIntent)
-            showBatteryOptimizationToast(context, "Battery optimization request sent")
+            showBatteryOptimizationToast(context, context.getString(R.string.utils_battery_optimization_sent_toast))
         } else {
             Log.w(
                 TAG,
@@ -63,7 +64,7 @@ fun launchBatterySettings(context: Context) {
         }
     } catch (e: Exception) {
         Log.e(TAG, "Failed to launch battery settings", e)
-        showBatteryOptimizationToast(context, "Failed to open battery settings")
+        showBatteryOptimizationToast(context, context.getString(R.string.utils_battery_open_failed_toast))
     }
 }
 
@@ -92,7 +93,7 @@ private fun launchGeneralBatterySettings(context: Context) {
         context.startActivity(generalBatteryIntent)
         showBatteryOptimizationToast(
             context,
-            "Please find and configure this app in battery settings"
+            context.getString(R.string.utils_battery_configure_toast)
         )
     } catch (e: Exception) {
         Log.e(TAG, "Failed to launch general battery settings", e)

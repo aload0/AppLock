@@ -1,5 +1,6 @@
 package dev.pranav.applock
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -10,11 +11,16 @@ import androidx.navigation.compose.rememberNavController
 import dev.pranav.applock.core.navigation.AppNavHost
 import dev.pranav.applock.core.navigation.NavigationManager
 import dev.pranav.applock.core.navigation.Screen
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.ui.theme.AppLockTheme
 
 class MainActivity : FragmentActivity() {
 
     private lateinit var navigationManager: NavigationManager
+
+    override fun attachBaseContext(newBase: Context?) {
+        super.attachBaseContext(LocaleManager.wrap(newBase ?: return))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,6 +1,5 @@
 package dev.pranav.applock.features.lockscreen.ui
 
-import dev.pranav.applock.features.lockscreen.ui.AlphanumericPasswordOverlayScreen
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
@@ -47,6 +46,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import dev.pranav.applock.R
 import dev.pranav.applock.core.ui.shapes
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.core.utils.vibrate
 import dev.pranav.applock.data.repository.AppLockRepository
@@ -71,6 +71,10 @@ class PasswordOverlayActivity: FragmentActivity() {
     private var appName: String = ""
 
     private val TAG = "PasswordOverlayActivity"
+
+    override fun attachBaseContext(newBase: Context?) {
+        super.attachBaseContext(LocaleManager.wrap(newBase ?: return))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -388,7 +392,7 @@ fun PinPasswordOverlayScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = stringResource(R.string.password_overlay_close_cd),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -412,15 +416,15 @@ fun PinPasswordOverlayScreen(
                             .padding(end = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                                "Continue to $lockedAppName"
-                            else
-                                stringResource(R.string.enter_password_to_continue),
-                            style = MaterialTheme.typography.titleLarge,
-                            textAlign = TextAlign.Center
-                        )
+                        ) {
+                            Text(
+                                text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
+                                    stringResource(R.string.password_overlay_continue_to_app, lockedAppName)
+                                else
+                                    stringResource(R.string.enter_password_to_continue),
+                                style = MaterialTheme.typography.titleLarge,
+                                textAlign = TextAlign.Center
+                            )
 
 //                        if (!fromMainActivity && !triggeringPackageName.isNullOrEmpty()) {
 //                            Spacer(modifier = Modifier.height(8.dp))
@@ -485,7 +489,7 @@ fun PinPasswordOverlayScreen(
 
                     Text(
                         text = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())
-                            "Continue to $lockedAppName"
+                            stringResource(R.string.password_overlay_continue_to_app, lockedAppName)
                         else
                             stringResource(R.string.enter_password_to_continue),
                         style = if (!fromMainActivity && !lockedAppName.isNullOrEmpty())

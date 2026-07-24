@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.data.repository.AppLockRepository
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -16,7 +17,7 @@ class AppLockApplication : Application() {
         private set
 
     override fun attachBaseContext(base: Context?) {
-        super.attachBaseContext(base)
+        super.attachBaseContext(LocaleManager.wrap(base ?: return))
         initializeHiddenApiBypass()
     }
 
