@@ -87,12 +87,11 @@ object AppLockManager {
         return false
     }
 
-    private val BACKEND_SERVICES = setOf(
+    private val ALL_APP_LOCK_SERVICES = setOf(
         ShizukuAppLockService::class.java,
         UsageLockService::class.java,
+        AppLockAccessibilityService::class.java,
     )
-
-    private val ALL_APP_LOCK_SERVICES = BACKEND_SERVICES + AppLockAccessibilityService::class.java
 
     fun unlockApp(packageName: String) {
         temporarilyUnlockedApp = packageName
@@ -136,7 +135,7 @@ object AppLockManager {
     }
 
     fun stopAllOtherServices(context: Context, excludeService: Class<*>) {
-        (BACKEND_SERVICES - excludeService).forEach {
+        (ALL_APP_LOCK_SERVICES - AppLockAccessibilityService::class.java - excludeService).forEach {
             context.stopService(Intent(context, it))
         }
         LogUtils.d(TAG, "Stopped all main app lock services except ${excludeService.simpleName}.")
