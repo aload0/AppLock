@@ -504,6 +504,7 @@ fun AppIntroScreen(navController: NavController) {
         showSkipButton = false,
         useAnimatedPager = true,
         nextButtonText = stringResource(R.string.next_button),
+        backButtonText = stringResource(R.string.back_button),
         finishButtonText = stringResource(R.string.get_started_button)
     )
 }

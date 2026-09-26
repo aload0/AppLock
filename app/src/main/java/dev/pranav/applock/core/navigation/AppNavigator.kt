@@ -1,5 +1,6 @@
 package dev.pranav.applock.core.navigation
 
+import android.content.Context
 import android.util.Log
 import androidx.activity.compose.LocalActivity
 import androidx.biometric.BiometricManager
@@ -9,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
@@ -16,6 +18,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import dev.pranav.applock.AppLockApplication
+import dev.pranav.applock.R
 import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.antiuninstall.ui.AntiUninstallScreen
@@ -189,18 +192,18 @@ private fun handleBiometricAuthentication(
             }
         )
 
-        val promptInfo = createBiometricPromptInfo()
+        val promptInfo = createBiometricPromptInfo(context)
         biometricPrompt.authenticate(promptInfo)
     } catch (e: Exception) {
         Log.e(TAG, "Error during biometric authentication", e)
     }
 }
 
-private fun createBiometricPromptInfo(): BiometricPrompt.PromptInfo {
+private fun createBiometricPromptInfo(context: Context): BiometricPrompt.PromptInfo {
     return BiometricPrompt.PromptInfo.Builder()
-        .setTitle(BIOMETRIC_TITLE)
-        .setSubtitle(BIOMETRIC_SUBTITLE)
-        .setNegativeButtonText(BIOMETRIC_NEGATIVE_BUTTON)
+        .setTitle(context.getString(R.string.biometric_prompt_title))
+        .setSubtitle(context.getString(R.string.biometric_prompt_subtitle))
+        .setNegativeButtonText(context.getString(R.string.biometric_prompt_negative_button))
         .setAllowedAuthenticators(
             BiometricManager.Authenticators.BIOMETRIC_WEAK or
                     BiometricManager.Authenticators.BIOMETRIC_STRONG
@@ -226,6 +229,3 @@ private fun navigateToMain(navController: NavHostController) {
 private const val TAG = "AppNavHost"
 private const val ANIMATION_DURATION = 400
 private const val SCALE_INITIAL = 0.9f
-private const val BIOMETRIC_TITLE = "Confirm password"
-private const val BIOMETRIC_SUBTITLE = "Confirm biometric to continue"
-private const val BIOMETRIC_NEGATIVE_BUTTON = "Use PIN"

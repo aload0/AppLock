@@ -98,6 +98,9 @@ class AppLockRepository(private val context: Context) {
     fun isLoggingEnabled(): Boolean = preferencesRepository.isLoggingEnabled()
     fun setLoggingEnabled(enabled: Boolean) = preferencesRepository.setLoggingEnabled(enabled)
 
+    fun setLanguage(code: String) = preferencesRepository.setLanguage(code)
+    fun getLanguage(): String = preferencesRepository.getLanguage()
+
     fun setActiveBackend(backend: BackendImplementation) =
         backendServiceManager.setActiveBackend(backend)
 

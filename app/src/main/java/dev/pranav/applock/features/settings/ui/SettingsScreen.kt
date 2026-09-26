@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import dev.pranav.applock.R
+import dev.pranav.applock.core.broadcast.AppLockServiceStarter
 import dev.pranav.applock.core.broadcast.DeviceAdmin
 import dev.pranav.applock.core.navigation.Screen
 import dev.pranav.applock.core.utils.LogUtils
@@ -45,14 +47,20 @@ import dev.pranav.applock.core.utils.isAccessibilityServiceEnabled
 import dev.pranav.applock.core.utils.openAccessibilitySettings
 import dev.pranav.applock.data.repository.AppLockRepository
 import dev.pranav.applock.data.repository.BackendImplementation
+import dev.pranav.applock.data.repository.PreferencesRepository
 import dev.pranav.applock.features.admin.AdminDisableActivity
-import dev.pranav.applock.services.ShizukuAppLockService
-import dev.pranav.applock.services.UsageLockService
+import dev.pranav.applock.services.AppLockManager
 import dev.pranav.applock.ui.components.DonateButton
 import dev.pranav.applock.ui.icons.*
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuProvider
 import kotlin.math.abs
+
+private val languageOptions = listOf(
+    PreferencesRepository.LANGUAGE_SYSTEM to R.string.settings_screen_language_system,
+    PreferencesRepository.LANGUAGE_ENGLISH to R.string.settings_screen_language_english,
+    PreferencesRepository.LANGUAGE_PORTUGUESE_BR to R.string.settings_screen_language_portuguese_brazil
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +69,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val appLockRepository = remember { AppLockRepository(context) }
+    val activity = LocalActivity.current
 
     var showDialog by remember { mutableStateOf(false) }
     var showUnlockTimeDialog by remember { mutableStateOf(false) }
@@ -94,6 +103,8 @@ fun SettingsScreen(
     var showPermissionDialog by remember { mutableStateOf(false) }
     var showDeviceAdminDialog by remember { mutableStateOf(false) }
     var showAccessibilityDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var selectedLanguage by remember { mutableStateOf(appLockRepository.getLanguage()) }
 
     val biometricManager = remember { BiometricManager.from(context) }
     val isBiometricAvailable = remember {
@@ -188,6 +199,52 @@ fun SettingsScreen(
         )
     }
 
+    if (showLanguageDialog) {
+        val languages = languageOptions
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text(stringResource(R.string.settings_screen_language_title)) },
+            text = {
+                Column {
+                    languages.forEach { (code, labelRes) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedLanguage = code }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedLanguage == code,
+                                onClick = { selectedLanguage = code }
+                            )
+                            Text(
+                                text = stringResource(labelRes),
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    appLockRepository.setLanguage(selectedLanguage)
+                    AppLockManager.stopAllServices(context)
+                    AppLockServiceStarter.startAppropriateServices(context, appLockRepository)
+                    showLanguageDialog = false
+                    activity?.recreate()
+                }) {
+                    Text(stringResource(R.string.confirm_button))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text(stringResource(R.string.cancel_button))
+                }
+            }
+        )
+    }
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -232,7 +289,7 @@ fun SettingsScreen(
                         null
                     }
                 }
-                val versionName = packageInfo?.versionName ?: "Unknown"
+                val versionName = packageInfo?.versionName ?: stringResource(R.string.settings_screen_version_unknown)
                 Text(
                     text = stringResource(R.string.settings_screen_version_template, versionName),
                     style = MaterialTheme.typography.bodyMedium,
@@ -243,6 +300,26 @@ fun SettingsScreen(
 
             item {
                 DonateButton()
+            }
+
+            item {
+                SectionTitle(text = stringResource(R.string.settings_screen_general_title))
+            }
+
+            item {
+                SettingsGroup(
+                    items = listOf(
+                        ActionSettingItem(
+                            icon = Icons.Default.Language,
+                            title = stringResource(R.string.settings_screen_language_title),
+                            subtitle = stringResource(
+                                languageOptions.firstOrNull { it.first == selectedLanguage }?.second
+                                    ?: R.string.settings_screen_language_system
+                            ),
+                            onClick = { showLanguageDialog = true }
+                        )
+                    )
+                )
             }
 
             item {
@@ -320,7 +397,7 @@ fun SettingsScreen(
                             icon = Timer,
                             title = stringResource(R.string.settings_screen_unlock_duration_title),
                             subtitle = if (unlockTimeDuration > 0) {
-                                if (unlockTimeDuration > 10_000) "Until screen off"
+                                if (unlockTimeDuration > 10_000) stringResource(R.string.settings_screen_unlock_duration_until_screen_off)
                                 else stringResource(
                                     R.string.settings_screen_unlock_duration_summary_minutes,
                                     unlockTimeDuration
@@ -388,7 +465,7 @@ fun SettingsScreen(
                                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                     }
                                     context.startActivity(
-                                        Intent.createChooser(shareIntent, "Share audit logs")
+                                        Intent.createChooser(shareIntent, context.getString(R.string.settings_screen_share_audit_logs_title))
                                     )
                                 } else {
                                     Toast.makeText(
@@ -412,7 +489,7 @@ fun SettingsScreen(
                                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                     }
                                     context.startActivity(
-                                        Intent.createChooser(shareIntent, "Share logs")
+                                        Intent.createChooser(shareIntent, context.getString(R.string.settings_screen_share_logs_title))
                                     )
                                 } else {
                                     Toast.makeText(
@@ -425,8 +502,8 @@ fun SettingsScreen(
                         ),
                         ToggleSettingItem(
                             icon = Icons.Default.Troubleshoot,
-                            title = "Logging",
-                            subtitle = "Enable debug logging for troubleshooting",
+                            title = stringResource(R.string.settings_screen_logging_title),
+                            subtitle = stringResource(R.string.settings_screen_logging_desc),
                             checked = loggingEnabled,
                             enabled = true,
                             onCheckedChange = { isChecked ->
@@ -725,7 +802,7 @@ fun UnlockTimeDurationDialog(
                                     duration
                                 )
                                 60 -> stringResource(R.string.settings_screen_unlock_duration_dialog_option_hour)
-                                Integer.MAX_VALUE -> "Until Screen Off"
+                                Integer.MAX_VALUE -> stringResource(R.string.settings_screen_unlock_duration_dialog_option_until_screen_off)
                                 else -> stringResource(
                                     R.string.settings_screen_unlock_duration_summary_minutes,
                                     duration
@@ -771,6 +848,7 @@ fun BackendSelectionCard(
                         backend = backend,
                         isSelected = selectedBackend == backend,
                         onClick = {
+                            if (selectedBackend == backend) return@BackendSelectionItem
                             when (backend) {
                                 BackendImplementation.SHIZUKU -> {
                                     if (!Shizuku.pingBinder() || Shizuku.checkSelfPermission() == PackageManager.PERMISSION_DENIED) {
@@ -790,9 +868,6 @@ fun BackendSelectionCard(
                                         appLockRepository.setBackendImplementation(
                                             BackendImplementation.SHIZUKU
                                         )
-                                        context.startService(
-                                            Intent(context, ShizukuAppLockService::class.java)
-                                        )
                                     }
                                 }
                                 BackendImplementation.USAGE_STATS -> {
@@ -810,9 +885,6 @@ fun BackendSelectionCard(
                                     }
                                     selectedBackend = backend
                                     appLockRepository.setBackendImplementation(BackendImplementation.USAGE_STATS)
-                                    context.startService(
-                                        Intent(context, UsageLockService::class.java)
-                                    )
                                 }
                                 BackendImplementation.ACCESSIBILITY -> {
                                     if (!context.isAccessibilityServiceEnabled()) {
@@ -823,6 +895,8 @@ fun BackendSelectionCard(
                                     appLockRepository.setBackendImplementation(BackendImplementation.ACCESSIBILITY)
                                 }
                             }
+                            AppLockManager.stopAllServices(context)
+                            AppLockServiceStarter.startAppropriateServices(context, appLockRepository)
                         }
                     )
                 }
@@ -904,19 +978,21 @@ fun BackendSelectionItem(
     )
 }
 
+@Composable
 private fun getBackendDisplayName(backend: BackendImplementation): String {
     return when (backend) {
-        BackendImplementation.ACCESSIBILITY -> "Accessibility Service"
-        BackendImplementation.USAGE_STATS -> "Usage Statistics"
-        BackendImplementation.SHIZUKU -> "Shizuku Service"
+        BackendImplementation.ACCESSIBILITY -> stringResource(R.string.settings_screen_backend_accessibility_name)
+        BackendImplementation.USAGE_STATS -> stringResource(R.string.settings_screen_backend_usage_stats_name)
+        BackendImplementation.SHIZUKU -> stringResource(R.string.settings_screen_backend_shizuku_name)
     }
 }
 
+@Composable
 private fun getBackendDescription(backend: BackendImplementation): String {
     return when (backend) {
-        BackendImplementation.ACCESSIBILITY -> "Standard method that works on most devices"
-        BackendImplementation.USAGE_STATS -> "Experimental method using app usage statistics"
-        BackendImplementation.SHIZUKU -> "Advanced method using Shizuku and internal APIs"
+        BackendImplementation.ACCESSIBILITY -> stringResource(R.string.settings_screen_backend_accessibility_desc_short)
+        BackendImplementation.USAGE_STATS -> stringResource(R.string.settings_screen_backend_usage_stats_desc_short)
+        BackendImplementation.SHIZUKU -> stringResource(R.string.settings_screen_backend_shizuku_desc_short)
     }
 }
 
@@ -1015,12 +1091,12 @@ fun LinksSection() {
     val context = LocalContext.current
 
     Column {
-        SectionTitle(text = "Links")
+        SectionTitle(text = stringResource(R.string.settings_screen_links_section_title))
 
         Column {
             SettingsCard(index = 0, listSize = 3) {
                 LinkItem(
-                    title = "Discord Community",
+                    title = stringResource(R.string.settings_screen_link_discord),
                     icon = Discord,
                     onClick = {
                         val intent = Intent(
@@ -1034,7 +1110,7 @@ fun LinksSection() {
 
             SettingsCard(index = 1, listSize = 3) {
                 LinkItem(
-                    title = "Source Code",
+                    title = stringResource(R.string.settings_screen_link_source_code),
                     icon = Icons.Outlined.Code,
                     onClick = {
                         val intent = Intent(
@@ -1048,7 +1124,7 @@ fun LinksSection() {
 
             SettingsCard(index = 2, listSize = 3) {
                 LinkItem(
-                    title = "Report Issue",
+                    title = stringResource(R.string.settings_screen_link_report_issue),
                     icon = Icons.Outlined.BugReport,
                     onClick = {
                         val intent = Intent(

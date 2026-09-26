@@ -183,7 +183,7 @@ fun MainScreen(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                text = if (applockEnabled) "ON" else "OFF",
+                                text = if (applockEnabled) stringResource(R.string.main_screen_protection_on) else stringResource(R.string.main_screen_protection_off),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = if (applockEnabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -211,7 +211,7 @@ fun MainScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Block,
-                            contentDescription = "Trigger exclusions",
+                            contentDescription = stringResource(R.string.main_screen_trigger_exclusions_cd),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -224,7 +224,7 @@ fun MainScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Lock,
-                            contentDescription = "Anti-Uninstall",
+                            contentDescription = stringResource(R.string.main_screen_anti_uninstall_cd),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -244,7 +244,7 @@ fun MainScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = stringResource(R.string.main_screen_search_cd) // Update ideally
+                        contentDescription = stringResource(R.string.main_screen_add_button_cd)
                     )
                 }
             }
@@ -432,13 +432,13 @@ private fun EmptyDashboardState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "No Protected Apps",
+            text = stringResource(R.string.main_screen_empty_title),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Tap the + button to selectively secure your apps.",
+            text = stringResource(R.string.main_screen_empty_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -496,7 +496,7 @@ private fun AddProtectedAppsSheetContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Select Apps",
+                text = stringResource(R.string.main_screen_select_apps_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -504,7 +504,7 @@ private fun AddProtectedAppsSheetContent(
                 onClick = onSave,
                 enabled = selectedPackages.isNotEmpty()
             ) {
-                Text("Protect (${selectedPackages.size})")
+                Text(stringResource(R.string.main_screen_protect_count_button, selectedPackages.size))
             }
         }
 
@@ -593,7 +593,7 @@ private fun ProtectedAppItem(
         },
         supportingContent = {
             Text(
-                text = "Protected",
+                text = stringResource(R.string.main_screen_protected_label),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
@@ -624,7 +624,7 @@ private fun ProtectedAppItem(
             IconButton(onClick = onUnlock) {
                 Icon(
                     imageVector = Icons.Outlined.LockOpen,
-                    contentDescription = "Unlock ${appName ?: "app"}",
+                    contentDescription = stringResource(R.string.main_screen_unlock_app_cd, appName ?: "app"),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -811,7 +811,7 @@ private fun PermissionWarningBanner(
         ) {
             Icon(
                 imageVector = Icons.Rounded.Warning,
-                contentDescription = "Warning",
+                contentDescription = stringResource(R.string.main_screen_warning_cd),
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(28.dp)
             )

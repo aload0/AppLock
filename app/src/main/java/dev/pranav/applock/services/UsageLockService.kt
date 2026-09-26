@@ -8,6 +8,7 @@ import android.app.admin.DevicePolicyManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -20,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import dev.pranav.applock.R
 import dev.pranav.applock.core.broadcast.DeviceAdmin
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.core.utils.hasUsagePermission
@@ -38,6 +40,10 @@ class UsageLockService: Service() {
     companion object {
         @Volatile
         var isServiceRunning = false
+    }
+
+    override fun attachBaseContext(newBase: Context?) {
+        super.attachBaseContext(LocaleManager.wrap(newBase ?: return))
     }
 
     private val appLockRepository: AppLockRepository by lazy { applicationContext.appLockRepository() }
@@ -314,7 +320,7 @@ class UsageLockService: Service() {
     private fun createNotificationChannel() {
         val serviceChannel = NotificationChannel(
             CHANNEL_ID,
-            "AppLock Service (Usage Stats)",
+            getString(R.string.usage_stats_service_channel_name),
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(serviceChannel)
@@ -322,8 +328,8 @@ class UsageLockService: Service() {
 
     private fun createNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("App Lock")
-            .setContentText("Protecting your apps")
+            .setContentTitle(getString(R.string.usage_stats_service_notification_title))
+            .setContentText(getString(R.string.usage_stats_service_notification_text))
             .setSmallIcon(R.drawable.baseline_shield_24)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setOngoing(true)

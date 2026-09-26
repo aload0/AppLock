@@ -1,5 +1,6 @@
 package dev.pranav.applock.features.lockscreen.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -12,12 +13,17 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import dev.pranav.applock.R
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.services.AppLockManager
 import dev.pranav.applock.ui.theme.AppLockTheme
 
 class TransparentBiometricActivity: FragmentActivity() {
     private val TAG = "TransparentBiometric"
     private var lockedPackageName: String? = null
+
+    override fun attachBaseContext(newBase: Context?) {
+        super.attachBaseContext(LocaleManager.wrap(newBase ?: return))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

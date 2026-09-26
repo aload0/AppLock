@@ -16,7 +16,9 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.core.content.getSystemService
+import dev.pranav.applock.R
 import dev.pranav.applock.core.broadcast.DeviceAdmin
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.core.utils.enableAccessibilityServiceWithShizuku
@@ -37,6 +39,10 @@ class AppLockAccessibilityService : AccessibilityService() {
 
     private var overlayManager: LockScreenOverlayManager? = null
     private lateinit var mainHandler: Handler
+
+    override fun attachBaseContext(newBase: Context?) {
+        super.attachBaseContext(LocaleManager.wrap(newBase ?: return))
+    }
 
     enum class BiometricState {
         IDLE, AUTH_STARTED
@@ -444,7 +450,7 @@ class AppLockAccessibilityService : AccessibilityService() {
                 performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN)
                 Toast.makeText(
                     this,
-                    "Disable anti-uninstall from AppLock settings to remove this restriction.",
+                    getString(R.string.accessibility_block_admin_deactivation_toast),
                     Toast.LENGTH_LONG
                 ).show()
                 Log.w(TAG, "Blocked device admin deactivation attempt.")

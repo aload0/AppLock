@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
@@ -17,6 +18,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import dev.pranav.applock.R
 import dev.pranav.applock.core.broadcast.DeviceAdmin
+import dev.pranav.applock.core.utils.LocaleManager
 import dev.pranav.applock.core.utils.LogUtils
 import dev.pranav.applock.core.utils.appLockRepository
 import dev.pranav.applock.data.repository.AppLockRepository
@@ -30,6 +32,10 @@ class ShizukuAppLockService : Service() {
     private val appLockRepository: AppLockRepository by lazy { applicationContext.appLockRepository() }
     private var shizukuActivityManager: ShizukuActivityManager? = null
     private var previousForegroundPackage = ""
+
+    override fun attachBaseContext(newBase: Context?) {
+        super.attachBaseContext(LocaleManager.wrap(newBase ?: return))
+    }
 
     private val notificationManager: NotificationManager by lazy {
         getSystemService(NotificationManager::class.java)
@@ -152,7 +158,7 @@ class ShizukuAppLockService : Service() {
     private fun createNotificationChannel() {
         val serviceChannel = NotificationChannel(
             CHANNEL_ID,
-            "AppLock Service",
+            getString(R.string.shizuku_service_channel_name),
             NotificationManager.IMPORTANCE_DEFAULT
         )
         notificationManager.createNotificationChannel(serviceChannel)
@@ -160,8 +166,8 @@ class ShizukuAppLockService : Service() {
 
     private fun createNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("AppLock")
-            .setContentText("Protecting your apps with Shizuku")
+            .setContentTitle(getString(R.string.shizuku_service_notification_title))
+            .setContentText(getString(R.string.shizuku_service_notification_text))
             .setSmallIcon(R.drawable.baseline_shield_24)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setOngoing(true)
