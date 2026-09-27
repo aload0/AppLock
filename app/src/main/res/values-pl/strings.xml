@@ -58,6 +58,7 @@ Upewnij się, że masz zainstalowaną aplikację Shizuku i włączoną ją przez
     <string name="all_permissions_required">Aby przejść dalej, wymagane jest przyznanie wszystkich uprawnień.</string>
     <string name="next_button">Dalej</string>
     <string name="get_started_button">Rozpocznij</string>
+    <string name="back_button">Wróć</string>
 
     <!-- PasswordOverlayScreen -->
     <string name="default_app_name">Aplikacja</string>
@@ -190,6 +191,9 @@ Upewnij się, że masz zainstalowaną aplikację Shizuku i włączoną ją przez
 
     <!-- AppLockUtils.kt -->
     <string name="utils_battery_ignore_toast">Zezwól naszej aplikacji na ignorowanie optymalizacji baterii.</string>
+    <string name="utils_battery_optimization_sent_toast">Wysłano żądanie optymalizacji baterii</string>
+    <string name="utils_battery_open_failed_toast">Nie udało się otworzyć ustawień baterii</string>
+    <string name="utils_battery_configure_toast">Znajdź i skonfiguruj tę aplikację w ustawieniach baterii</string>
     <string name="utils_battery_specific_settings_not_found_toast">Nie można odnaleźć konkretnych ustawień. Usuń aplikację z ograniczeń zużycia baterii.</string>
     <string name="utils_battery_settings_not_found_toast">Nie można otworzyć żadnych ustawień baterii.</string>
     <string name="utils_usage_permission_error_log">Błąd podczas sprawdzania uprawnień dostępu do danych o użyciu: </string>
@@ -292,4 +296,122 @@ Upewnij się, że masz zainstalowaną aplikację Shizuku i włączoną ją przez
         Jeśli AppLock okazał się dla Ciebie pomocny, rozważ przekazanie niewielkiej darowizny – każda kwota znaczy dla mnie calutki świat i utrzymuje ten projekt przy życiu.
         Dziękuję, że wierzysz w moją pracę!
     </string>
+
+    <!-- Language & General Settings -->
+    <string name="settings_screen_general_title">Ogólne</string>
+    <string name="settings_screen_language_title">Język</string>
+    <string name="settings_screen_language_system">Systemowy</string>
+    <string name="settings_screen_language_english">English</string>
+    <string name="settings_screen_language_polish">Polski</string>
+    <string name="settings_screen_language_portuguese_brazil">Português (Brasil)</string>
+
+    <!-- SettingsScreen Strings -->
+    <string name="settings_screen_version_unknown">Nieznana</string>
+    <string name="settings_screen_unlock_duration_until_screen_off">Do wyłączenia ekranu</string>
+    <string name="settings_screen_share_audit_logs_title">Udostępnij logi audytowe</string>
+    <string name="settings_screen_share_logs_title">Udostępnij logi</string>
+    <string name="settings_screen_logging_title">Rejestrowanie logów</string>
+    <string name="settings_screen_logging_desc">Włącz rejestrowanie logów debugowania w celu rozwiązywania problemów</string>
+    <string name="settings_screen_unlock_duration_dialog_option_until_screen_off">Do wyłączenia ekranu</string>
+    <string name="settings_screen_backend_accessibility_name">Usługa ułatwień dostępu</string>
+    <string name="settings_screen_backend_usage_stats_name">Statystyki użytkowania</string>
+    <string name="settings_screen_backend_shizuku_name">Usługa Shizuku</string>
+    <string name="settings_screen_backend_accessibility_desc_short">Standardowa metoda działająca na większości urządzeń</string>
+    <string name="settings_screen_backend_usage_stats_desc_short">Eksperymentalna metoda wykorzystująca statystyki użytkowania aplikacji</string>
+    <string name="settings_screen_backend_shizuku_desc_short">Zaawansowana metoda wykorzystująca Shizuku oraz wewnętrzne API</string>
+    <string name="settings_screen_links_section_title">Linki</string>
+    <string name="settings_screen_link_discord">Społeczność Discord</string>
+    <string name="settings_screen_link_source_code">Kod źródłowy</string>
+    <string name="settings_screen_link_report_issue">Zgłoś problem</string>
+
+    <!-- MainScreen Strings -->
+    <string name="main_screen_protection_on">WŁ.</string>
+    <string name="main_screen_protection_off">WYŁ.</string>
+    <string name="main_screen_trigger_exclusions_cd">Wykluczenia wyzwalacza</string>
+    <string name="main_screen_anti_uninstall_cd">Ochrona przed odinstalowaniem</string>
+    <string name="main_screen_empty_title">Brak chronionych aplikacji</string>
+    <string name="main_screen_empty_desc">Stuknij przycisk +, aby zabezpieczyć wybrane aplikacje.</string>
+    <string name="main_screen_select_apps_title">Wybierz aplikacje</string>
+    <string name="main_screen_protect_count_button">Chroń (%1$d)</string>
+    <string name="main_screen_protected_label">Chronione</string>
+    <string name="main_screen_unlock_app_cd">Odblokuj aplikację %1$s</string>
+    <string name="main_screen_warning_cd">Ostrzeżenie</string>
+    <string name="main_screen_add_button_cd">Dodaj aplikacje</string>
+
+    <!-- PatternSetPassword Strings -->
+    <string name="pattern_set_password_enter_current_label">Wprowadź aktualny wzór</string>
+    <string name="pattern_set_password_confirm_label">Potwierdź wzór</string>
+    <string name="pattern_set_password_create_label">Utwórz wzór</string>
+    <string name="pattern_set_password_incorrect_error">Niepoprawny wzór</string>
+    <string name="pattern_set_password_min_length_error">Wzór musi składać się z co najmniej 4 punktów</string>
+    <string name="pattern_set_password_incorrect_short_error">Niepoprawny wzór</string>
+
+    <!-- Lock Screen Strings -->
+    <string name="password_overlay_close_cd">Zamknij</string>
+    <string name="password_overlay_continue_to_app">Przejdź do aplikacji %1$s</string>
+    <string name="pattern_lock_continue_to_app">Przejdź do aplikacji %1$s</string>
+    <string name="pattern_lock_close_cd">Zamknij</string>
+    <string name="alphanumeric_password_overlay_close_cd">Zamknij</string>
+    <string name="alphanumeric_overlay_continue_to_app">Przejdź do aplikacji %1$s</string>
+
+        <!-- Biometric prompt strings -->
+    <string name="biometric_prompt_title">Potwierdź hasło</string>
+    <string name="biometric_prompt_subtitle">Potwierdź tożsamość biometrią, aby kontynuować</string>
+    <string name="biometric_prompt_negative_button">Użyj kodu PIN</string>
+
+    <!-- AntiUninstallScreen Strings -->
+    <string name="anti_uninstall_screen_title">Ochrona przed odinstalowaniem</string>
+    <string name="anti_uninstall_screen_desc">Wybierz aplikacje, które będą chronione przed odinstalowaniem.</string>
+    <string name="anti_uninstall_manual_packages_title">Ręcznie dodane pakiety</string>
+    <string name="anti_uninstall_installed_apps_title">Zainstalowane aplikacje</string>
+    <string name="anti_uninstall_manual_add_dialog_title">Dodaj pakiet ręcznie</string>
+    <string name="anti_uninstall_manual_add_dialog_text">Wprowadź nazwę pakietu aplikacji, którą chcesz chronić:</string>
+    <string name="anti_uninstall_package_name_label">Nazwa pakietu</string>
+    <string name="anti_uninstall_package_name_placeholder">com.example.app</string>
+    <string name="anti_uninstall_search_placeholder">Szukaj aplikacji lub nazw pakietów...</string>
+    <string name="anti_uninstall_shizuku_not_installed_title">Aplikacja Shizuku nie jest zainstalowana</string>
+    <string name="anti_uninstall_shizuku_not_running_title">Usługa Shizuku nie jest uruchomiona</string>
+    <string name="anti_uninstall_shizuku_permission_required_title">Wymagane uprawnienie</string>
+    <string name="anti_uninstall_shizuku_setup_title">Konfiguracja Shizuku</string>
+    <string name="anti_uninstall_shizuku_not_installed_text">Aplikacja Shizuku jest wymagana do skonfigurowania ochrony przed odinstalowaniem bez dostępu do roota.\n\nZainstaluj aplikację Shizuku ze sklepu Play Store lub serwisu GitHub, aby kontynuować.</string>
+    <string name="anti_uninstall_shizuku_not_running_text">Aplikacja Shizuku jest zainstalowana, ale usługa w tle nie została jeszcze uruchomiona (nie odebrano powiązania Binder).\n\nOtwórz aplikację Shizuku i uruchom usługę poprzez debugowanie bezprzewodowe lub Root.</string>
+    <string name="anti_uninstall_shizuku_permission_required_text">Usługa Shizuku jest aktywna, ale ta aplikacja wymaga Twojej zgody na autoryzację uprawnień do konfigurowania ograniczeń pakietów.\n\nNa szczęście Shizuku jest używane tylko podczas blokowania/odblokowywania dezinstalacji, więc nie musi działać w tle przez cały czas!</string>
+    <string name="anti_uninstall_install_shizuku_button">Zainstaluj Shizuku</string>
+    <string name="anti_uninstall_open_shizuku_button">Otwórz Shizuku</string>
+    <string name="anti_uninstall_add_manual_cd">Dodaj pakiet ręcznie</string>
+    <string name="anti_uninstall_manually_added_label">Ręcznie dodany pakiet</string>
+    <string name="go_back_button">Wróć</string>
+    <string name="add_button">Dodaj</string>
+    <string name="back_cd">Wstecz</string>
+
+    <!-- TriggerExclusionsScreen Strings -->
+    <string name="trigger_exclusions_screen_title">Wykluczenia wyzwalacza</string>
+    <string name="trigger_exclusions_screen_desc">Wybierz aplikacje, które NIE będą wyzwalać blokady podczas przełączania się na zablokowane aplikacje.</string>
+    <string name="trigger_exclusions_manual_packages_title">Ręcznie dodane pakiety</string>
+    <string name="trigger_exclusions_installed_apps_title">Zainstalowane aplikacje</string>
+    <string name="trigger_exclusions_manual_add_dialog_title">Dodaj pakiet ręcznie</string>
+    <string name="trigger_exclusions_manual_add_dialog_text">Wprowadź nazwę pakietu aplikacji, którą chcesz wykluczyć:</string>
+    <string name="trigger_exclusions_package_name_label">Nazwa pakietu</string>
+    <string name="trigger_exclusions_package_name_placeholder">com.example.app</string>
+    <string name="trigger_exclusions_search_placeholder">Szukaj aplikacji lub nazw pakietów...</string>
+    <string name="trigger_exclusions_add_manual_cd">Dodaj pakiet ręcznie</string>
+    <string name="trigger_exclusions_manually_added_label">Ręcznie dodany pakiet</string>
+
+    <!-- UsageStatsPermission Strings -->
+    <string name="usage_stats_permission_dialog_title">Przyznaj uprawnienie do statystyk użytkowania</string>
+    <string name="usage_stats_permission_dialog_text_1">Włączono tryb statystyk użytkowania, jednak aplikacja wymaga uprawnienia Dostęp do danych o użytkowaniu, aby działać prawidłowo.</string>
+    <string name="usage_stats_permission_dialog_text_2">Naciśnij „Przyznaj uprawnienie”, aby otworzyć ustawienia systemowe i udzielić wymaganych uprawnień.</string>
+
+    <!-- Service notification strings -->
+    <string name="shizuku_service_channel_name">Usługa AppLock</string>
+    <string name="shizuku_service_notification_title">AppLock</string>
+    <string name="shizuku_service_notification_text">Ochrona aplikacji za pomocą Shizuku</string>
+    <string name="usage_stats_service_channel_name">Usługa AppLock (Statystyki użytkowania)</string>
+    <string name="usage_stats_service_notification_title">AppLock</string>
+    <string name="usage_stats_service_notification_text">Ochrona Twoich aplikacji</string>
+    <string name="accessibility_block_admin_deactivation_toast">Wyłącz ochronę przed odinstalowaniem w ustawieniach AppLock, aby usunąć to ograniczenie.</string>
+
+    <!-- LockScreenOverlayManager extracted string -->
+    <string name="lock_screen_overlay_default_app_name">Aplikacja</string>
+
 </resources>
