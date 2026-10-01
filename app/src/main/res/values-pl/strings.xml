@@ -1,0 +1,417 @@
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_name">App Lock</string>
+
+    <string name="device_admin_description">Uniemożliwia nieupoważnionym osobom odinstalowanie aplikacji.</string>
+    <string name="accessibility_service_description">Umożliwia aplikacji AppLock wykrywanie otwierania chronionych aplikacji i wyświetlanie weryfikacji hasła.</string>
+
+    <string name="unlock_to_disable_admin">Wprowadź hasło, aby wyłączyć uprawnienia administratora.</string>
+    <string name="incorrect_pin_try_again">Niepoprawny PIN. Spróbuj ponownie.</string>
+    <string name="incorrect_pass_try_again">Niepoprawne hasło. Spróbuj ponownie.</string>
+    <string name="password_verified_admin">Hasło zweryfikowane, możesz teraz wyłączyć uprawnienia administratora</string>
+    <string name="choose_app_detection">Wybierz metodę wykrywania aplikacji</string>
+    <string name="app_detection_desc">Wybierz, w jaki sposób AppLock ma wykrywać uruchamianie chronionych aplikacji.</string>
+    <string name="notif_perm">Uprawnienia do powiadomień</string>
+    <string name="notif_perm_desc">AppLock wymaga uprawnień do wyświetlania powiadomień, aby informować Cię na bieżąco i prawidłowo działać w tle. Dotknij „Dalej”, aby przyznać uprawnienia.</string>
+    <string name="notif_perm_granted">Uprawnienia do powiadomień są przyznawane automatycznie w Twojej wersji systemu Android.</string>
+    <string name="welc_applock">Witamy w AppLock</string>
+    <string name="welcome_desc">Chroń swoje aplikacje i prywatność dzięki AppLock. Przeprowadzimy Cię przez szybką konfigurację.</string>
+    <string name="secure_apps">Zabezpiecz swoje aplikacje</string>
+    <string name="secure_apps_desc">Chroń swoje prywatne aplikacje za pomocą zaawansowanych mechanizmów blokowania</string>
+    <string name="display_over_apps">Wyświetlanie nad innymi aplikacjami</string>
+    <string name="display_over_apps_desc">AppLock wymaga uprawnień do wyświetlania nad innymi aplikacjami, aby móc pokazywać ekran blokady. Dotknij „Dalej” i włącz to uprawnienie.</string>
+
+    <!-- AppIntroScreen -->
+    <string name="notification_permission_required_desc">Uprawnienie do powiadomień jest wymagane do prawidłowego działania AppLock.</string>
+    <string name="shizuku_permission_granted">Uprawnienie dla Shizuku zostało przyznane</string>
+    <string name="shizuku_permission_required_desc">Uprawnienie dla Shizuku jest wymagane do korzystania z zaawansowanych funkcji.</string>
+    <string name="allow_display_over_other_apps">Zezwól aplikacji AppLock na wyświetlanie nad innymi aplikacjami.</string>
+    <string name="disable_battery_optimization_title">Wyłącz optymalizację baterii</string>
+    <string name="disable_battery_optimization_desc">Aby zapewnić niezawodne działanie AppLock w tle, wyłącz optymalizację zużycia baterii dla tej aplikacji. Dotknij „Dalej”, aby otworzyć ustawienia.</string>
+    <string name="accessibility_service_title">Ułatwienia dostępu</string>
+    <string name="accessibility_service_card_desc">Standardowa metoda, która działa na większości urządzeń. Wymaga uprawnień ułatwień dostępu. Może powodować niewielkie opóźnienia u niektórych producentów (OEM).</string>
+    <string name="usage_stats_title">Statystyki użycia</string>
+    <string name="usage_stats_card_desc">Eksperymentalna metoda wykorzystująca systemowe statystyki użycia. Działa lepiej na niektórych urządzeniach.</string>
+    <string name="shizuku_service_title">Usługa Shizuku</string>
+    <string name="shizuku_service_card_desc">Zaawansowana metoda zapewniająca lepszą wydajność i płynniejsze działanie. Wymaga zainstalowanej aplikacji Shizuku oraz włączenia jej przez ADB.</string>
+    <string name="can_change_later_in_settings">Możesz zmienić to później w ustawieniach</string>
+    <string name="app_intro_accessibility_desc">
+Usługa ułatwień dostępu jest wymagana do prawidłowego działania AppLock.
+
+Jeśli pojawi się komunikat „Ustawienie ograniczone”, przejdź ręcznie do: Ustawienia > Aplikacje > App Lock > menu w prawym górnym rogu i naciśnij „Zezwól na ustawienia ograniczone”.
+
+Dotknij „Dalej”, aby ją włączyć.
+    </string>
+    <string name="app_intro_usage_stats_title">Dostęp do danych o użyciu</string>
+    <string name="app_intro_usage_stats_desc">
+To uprawnienie jest wymagane do wykrywania momentu uruchomienia zablokowanych aplikacji.
+
+Jeśli pojawi się komunikat „Ustawienie ograniczone”, przejdź ręcznie do: Ustawienia > Aplikacje > App Lock > menu w prawym górnym rogu i naciśnij „Zezwól na ustawienia ograniczone”.
+
+Dotknij „Dalej”, aby je włączyć.</string>
+    <string name="app_intro_shizuku_desc">
+Shizuku zapewnia zaawansowane funkcje, takie jak blokowanie aplikacji systemowych i nie tylko.
+
+Upewnij się, że masz zainstalowaną aplikację Shizuku i włączoną ją przez ADB. Dotknij „Dalej”, aby przyznać uprawnienie.
+    </string>
+    <string name="app_intro_complete_privacy_title">Pełna prywatność</string>
+    <string name="app_intro_complete_privacy_desc">Twoje dane nigdy nie opuszczają Twojego urządzenia. AppLock dba o Twoją prywatność w każdej chwili.</string>
+    <string name="all_permissions_required">Aby przejść dalej, wymagane jest przyznanie wszystkich uprawnień.</string>
+    <string name="next_button">Dalej</string>
+    <string name="get_started_button">Rozpocznij</string>
+    <string name="back_button">Wróć</string>
+
+    <!-- PasswordOverlayScreen -->
+    <string name="default_app_name">Aplikacja</string>
+    <string name="this_app">ta aplikacja</string>
+    <string name="unlock_app_title">Odblokuj %1$s</string>
+    <string name="confirm_biometric_subtitle">Potwierdź tożsamość biometrycznie, aby kontynuować</string>
+    <string name="use_pin_button">Użyj PIN-u</string>
+    <string name="enter_password_to_continue">Wprowadź hasło, aby kontynuować</string>
+    <string name="biometric_authentication_cd">Uwierzytelnianie biometryczne</string>
+
+    <!-- SetPasswordScreen -->
+    <string name="set_pin_to_continue_toast">Ustaw PIN, aby kontynuować</string>
+    <string name="authenticate_to_reset_pin_title">Uwierzytelnij się, aby zresetować PIN</string>
+    <string name="use_device_pin_pattern_password_subtitle">Użyj kodu PIN, wzoru lub hasła urządzenia</string>
+    <string name="enter_current_pin_title">Wprowadź obecny PIN</string>
+    <string name="confirm_pin_title">Potwierdź PIN</string>
+    <string name="set_new_pin_title">Ustaw nowy PIN</string>
+    <string name="create_pin_explanation">Utwórz kod PIN, aby chronić zablokowane aplikacje. Ten PIN będzie wymagany przy każdej próbie uzyskania dostępu do zablokowanej aplikacji.</string>
+    <string name="enter_current_pin_label">Wprowadź swój obecny PIN</string>
+    <string name="confirm_new_pin_label">Potwierdź nowy PIN</string>
+    <string name="create_new_pin_label">Utwórz nowy PIN</string>
+    <string name="tooltip_enter_current_pin">Wprowadź swój obecny PIN, aby kontynuować</string>
+    <string name="tooltip_confirm_pin">Wprowadź ponownie ten sam PIN, aby potwierdzić</string>
+    <string name="tooltip_create_pin_min_length">Utwórz PIN składający się z co najmniej 4 cyfr</string>
+    <string name="information_cd">Informacja</string>
+    <string name="pins_dont_match_error">Kody PIN nie są zgodne. Spróbuj ponownie.</string>
+    <string name="pin_min_length_error">PIN musi składać się z co najmniej 4 cyfr</string>
+    <string name="re_enter_new_pin_confirm_label">Wprowadź ponownie nowy PIN, aby potwierdzić</string>
+    <string name="reset_using_device_password_button">Zresetuj za pomocą hasła urządzenia</string>
+    <string name="cancel_button">Anuluj</string>
+    <string name="start_over_button">Zacznij od nowa</string>
+    <string name="password_set_successfully_toast">Hasło zostało ustawione pomyślnie</string>
+    <string name="use_pattern_button">Użyj wzoru</string>
+    <string name="use_password_button">Użyj hasła</string>
+    <string name="use_pin_instead">Użyj PIN-u</string>
+
+    <!-- Alphanumeric Password Strings -->
+    <string name="set_alphanumeric_password_title">Ustaw hasło</string>
+    <string name="create_alphanumeric_password_label">Utwórz hasło</string>
+    <string name="confirm_alphanumeric_password_label">Potwierdź hasło</string>
+    <string name="enter_current_password_label">Wprowadź obecne hasło</string>
+    <string name="password_hint">Wprowadź hasło</string>
+    <string name="password_too_short_error">Hasło musi składać się z co najmniej 4 znaków</string>
+    <string name="password_too_long_error">Hasło może składać się z maksymalnie 64 znaków</string>
+    <string name="passwords_dont_match_error">Hasła są nie zgodne</string>
+    <string name="incorrect_password_try_again">Niepoprawne hasło. Spróbuj ponownie.</string>
+
+    <!-- MainScreen -->
+    <string name="main_screen_anti_uninstall_log">Ochrona przed odinstalowaniem jest włączona</string>
+    <string name="main_screen_shizuku_not_available_toast">Shizuku jest niedostępne. Zainstaluj i skonfiguruj aplikację Shizuku.</string>
+    <string name="main_screen_overlay_permission_dialog_title">Wymagane uprawnienie do wyświetlania nad innymi aplikacjami</string>
+    <string name="main_screen_overlay_permission_dialog_text">Zezwól aplikacji w ustawieniach na wyświetlanie nad innymi aplikacjami (nakładki). Jest to wymagane, aby aplikacja mogła pokazywać ekran blokady.</string>
+    <string name="main_screen_overlay_permission_open_settings_button">Otwórz ustawienia</string>
+    <string name="main_screen_shizuku_manual_permission_toast">Przyznaj uprawnienie dla Shizuku ręcznie</string>
+    <string name="main_screen_device_admin_explanation">App Lock wymaga uprawnień administratora urządzenia, aby zapobiec odinstalowaniu. Nie wpłynie to na funkcjonalność Twojego urządzenia.</string>
+    <string name="main_screen_join_community_dialog_title">Dołącz do społeczności</string>
+    <string name="main_screen_join_community_dialog_text">Dołącz do naszej społeczności na Discordzie, aby otrzymywać aktualizacje i wsparcie.</string>
+    <string name="main_screen_join_community_join_discord_button">Dołącz do Discorda</string>
+    <string name="main_screen_join_community_dismiss_button">Odrzuć</string>
+    <string name="main_screen_support_development_dialog_title">Wspieraj rozwój aplikacji</string>
+    <string name="main_screen_support_development_donate_button">Przekaż darowiznę</string>
+    <string name="main_screen_app_protection_cd">Ochrona aplikacji</string>
+    <string name="main_screen_settings_cd">Ustawienia</string>
+    <string name="main_screen_loading_applications_text">Wczytywanie aplikacji…</string>
+    <string name="main_screen_search_apps_placeholder">Szukaj aplikacji</string>
+    <string name="main_screen_search_cd">Szukaj</string>
+    <string name="main_screen_empty_search_title">Nie znaleziono żadnych aplikacji</string>
+    <string name="main_screen_empty_search_subtitle">Spróbuj zmienić zapytanie</string>
+
+    <!-- SettingsScreen -->
+    <string name="settings_screen_title">Ustawienia</string>
+    <string name="settings_screen_back_cd">Wstecz</string>
+    <string name="settings_screen_support_development_dialog_title">Wspieraj rozwój aplikacji</string>
+    <string name="support_development_text">Cześć, jestem Pranav, twórca App Lock. Jestem studentem i programistą z pasją do tworzenia użytecznych aplikacji. Jeśli uważasz ten program za pomocny, rozważ wsparcie jego rozwoju niewielką darowizną. Każda kwota jest dla mnie ogromnym wsparciem i pomaga mi ulepszać aplikację oraz pracować nad nowymi funkcjami. Dziękuję za Twoje wsparcie!</string>
+    <string name="settings_screen_support_development_donate_button">Przekaż darowiznę</string>
+    <string name="settings_screen_permission_required_dialog_title">Wymagane uprawnienia</string>
+    <string name="settings_screen_permission_required_dialog_text">Aby włączyć ochronę przed odinstalowaniem, App Lock wymaga dwóch uprawnień: Administratora urządzenia oraz Usługi ułatwień dostępu. Są one niezbędne do zablokowania nieautoryzowanego usunięcia aplikacji i zapewnienia silnej ochrony. Czy chcesz przejść do przyznawania tych uprawnień?</string>
+    <string name="settings_screen_permission_required_proceed_button">Dalej</string>
+    <string name="settings_screen_device_admin_dialog_title">Uprawnienia administratora urządzenia</string>
+    <string name="settings_screen_device_admin_dialog_text">App Lock wymaga uprawnień administratora urządzenia, aby zapobiec nieautoryzowanemu odinstalowaniu. Przyznaj to uprawnienie na kolejnym ekranie. Nie wpłynie to na normalne funkcjonowanie Twojego urządzenia.</string>
+    <string name="settings_screen_device_admin_grant_button">Przyznaj uprawnienie</string>
+    <string name="settings_screen_accessibility_dialog_title">Uprawnienie usługi ułatwień dostępu</string>
+    <string name="settings_screen_accessibility_dialog_text">App Lock potrzebuje również uprawnień usługi ułatwień dostępu, aby monitorować próby odinstalowania aplikacji i ponownie aktywować administratora urządzenia, jeśli zostanie wyłączony. Gwarantuje to skuteczność ochrony przed odinstalowaniem. Włącz usługę ułatwień dostępu dla App Lock w ustawieniach.</string>
+    <string name="settings_screen_accessibility_open_settings_button">Otwórz ustawienia</string>
+    <string name="settings_screen_lock_screen_customization_title">Personalizacja ekranu blokady</string>
+    <string name="settings_screen_max_brightness_title">Maksymalna jasność</string>
+    <string name="settings_screen_max_brightness_desc">Wyświetlaj ekran blokady przy maksymalnej jasności dla lepszej czytelności</string>
+    <string name="settings_screen_biometric_auth_title">Uwierzytelnianie biometryczne</string>
+    <string name="settings_screen_biometric_auth_desc">Użyj odcisku palca lub rozpoznawania twarzy, jeśli są dostępne</string>
+    <string name="settings_screen_biometric_auth_unavailable">Uwierzytelnianie biometryczne jest niedostępne na tym urządzeniu.</string>
+    <string name="settings_screen_auto_prompt_biometric_title">Automatyczne żądanie biometrii</string>
+    <string name="settings_screen_auto_prompt_biometric_desc">Automatycznie pokazuj monit o uwierzytelnienie biometryczne na ekranie blokady</string>
+    <string name="settings_screen_app_locking_behavior_title">Zachowanie blokady aplikacji</string>
+    <string name="settings_screen_unlock_behavior_title">Zachowanie po odblokowaniu</string>
+    <string name="settings_screen_unlock_behavior_desc">Wyłącz tę opcję, jeśli odblokowanie powoduje ponowne uruchomienie aplikacji</string>
+    <string name="settings_screen_unlock_behavior_option_close">Zamknij ekran blokady</string>
+    <string name="settings_screen_unlock_behavior_option_launch">Zamknij ekran blokady i uruchom aplikację</string>
+    <string name="settings_screen_auto_unlock_title">Automatyczne odblokowanie</string>
+    <string name="settings_screen_auto_unlock_desc">Odblokuj aplikację natychmiast po wprowadzeniu poprawnego PIN-u</string>
+    <string name="settings_screen_unlock_duration_title">Czas trwania odblokowania</string>
+    <string name="settings_screen_unlock_duration_desc">Utrzymuj aplikacje odblokowane przez określony czas po pierwszym odblokowaniu</string>
+    <string name="settings_screen_unlock_duration_dialog_title">Ustaw czas trwania odblokowania</string>
+    <string name="settings_screen_unlock_duration_dialog_desc">Aplikacje pozostaną odblokowane przez ten czas po pierwszym odblokowaniu. Wybierz 0 sekund, aby wyłączyć.</string>
+    <string name="settings_screen_unlock_duration_dialog_seconds_suffix">sekund</string>
+    <string name="settings_screen_security_title">Bezpieczeństwo</string>
+    <string name="settings_screen_change_pin_title">Zmień PIN</string>
+    <string name="settings_screen_change_pin_desc">Zaktualizuj swój obecny PIN</string>
+    <string name="settings_screen_anti_uninstall_title">Ochrona przed odinstalowaniem</string>
+    <string name="settings_screen_anti_uninstall_desc">Zapobiegaj nieautoryzowanemu usunięciu aplikacji App Lock</string>
+    <string name="settings_screen_haptic_feedback_title">Wibracje przy dotknięciu</string>
+    <string name="settings_screen_haptic_feedback_desc">Wyłącz sygnały wibracyjne (wibracje zwrotne) podczas naciskania klawiszy</string>
+    <string name="settings_screen_backend_implementation_title">Implementacja silnika</string>
+    <string name="settings_screen_backend_implementation_desc">Wybierz metodę, której AppLock używa do wykrywania aplikacji na pierwszym planie</string>
+    <string name="settings_screen_backend_implementation_accessibility_title">Ułatwienia dostępu</string>
+    <string name="settings_screen_backend_implementation_accessibility_desc">Standardowa metoda, może powodować niewielkie opóźnienia u niektórych producentów (OEM).</string>
+    <string name="settings_screen_backend_implementation_usage_stats_title">Statystyki użycia</string>
+    <string name="settings_screen_backend_implementation_usage_stats_desc">Eksperymentalna metoda, działa lepiej na niektórych urządzeniach.</string>
+    <string name="settings_screen_backend_implementation_shizuku_title">Shizuku</string>
+    <string name="settings_screen_backend_implementation_shizuku_desc">Zaawansowana metoda, wymaga konfiguracji Shizuku przez ADB.</string>
+    <string name="settings_screen_backend_implementation_shizuku_unavailable">Shizuku jest niedostępne lub odmówiono uprawnień.</string>
+    <string name="settings_screen_backend_implementation_shizuku_experimental_title">Funkcje eksperymentalne Shizuku</string>
+    <string name="settings_screen_backend_implementation_shizuku_experimental_desc">Włącz funkcje eksperymentalne dla silnika Shizuku (np. blokowanie konkretnych procesów/ekranów wewnątrz aplikacji). Może powodować niestabilność działania.</string>
+    <string name="settings_screen_about_title">O aplikacji</string>
+    <string name="settings_screen_developer_title">Twórca</string>
+    <string name="settings_screen_developer_name">Pranav Purwar</string>
+    <string name="settings_screen_source_code_title">Kod źródłowy</string>
+    <string name="settings_screen_source_code_desc">Zobacz kod źródłowy w serwisie GitHub</string>
+    <string name="settings_screen_support_development_title">Wspieraj rozwój</string>
+    <string name="settings_screen_support_development_desc">Pomóż wspierać dalszy rozwój tej aplikacji</string>
+
+    <!-- AppLockUtils.kt -->
+    <string name="utils_battery_ignore_toast">Zezwól naszej aplikacji na ignorowanie optymalizacji baterii.</string>
+    <string name="utils_battery_optimization_sent_toast">Wysłano żądanie optymalizacji baterii</string>
+    <string name="utils_battery_open_failed_toast">Nie udało się otworzyć ustawień baterii</string>
+    <string name="utils_battery_configure_toast">Znajdź i skonfiguruj tę aplikację w ustawieniach baterii</string>
+    <string name="utils_battery_specific_settings_not_found_toast">Nie można odnaleźć konkretnych ustawień. Usuń aplikację z ograniczeń zużycia baterii.</string>
+    <string name="utils_battery_settings_not_found_toast">Nie można otworzyć żadnych ustawień baterii.</string>
+    <string name="utils_usage_permission_error_log">Błąd podczas sprawdzania uprawnień dostępu do danych o użyciu: </string>
+
+    <!-- ShizukuPermissionDialog.kt -->
+    <string name="shizuku_permission_dialog_title">Przyznaj uprawnienie dla Shizuku</string>
+    <string name="shizuku_permission_dialog_text_1">Tryb Shizuku został włączony, ale aplikacja wymaga dodatkowych uprawnień do prawidłowego działania.</string>
+    <string name="dialog_text_press_grant_permission_to_open_settings">Naciśnij „Przyznaj uprawnienie”, aby przejść do ustawień i nadać wymagane uprawnienia.</string>
+    <string name="grant_permission_button">Przyznaj uprawnienie</string>
+    <string name="open_settings_button">Otwórz ustawienia</string>
+
+    <!-- DeviceAdminPermissionDialog.kt -->
+    <string name="device_admin_permission_dialog_title">Wymagane uprawnienie administratora urządzenia</string>
+    <string name="device_admin_permission_dialog_text">Tryb ochrony przed odinstalowaniem został włączony. Wymaga on uprawnień administratora urządzenia do ochrony aplikacji.</string>
+
+    <!-- AntiUninstallAccessibilityPermissionDialog.kt -->
+    <string name="anti_uninstall_accessibility_permission_dialog_title">Wymagane uprawnienie ułatwień dostępu</string>
+    <string name="anti_uninstall_accessibility_permission_dialog_text">Tryb ochrony przed odinstalowaniem został włączony, ale aplikacja wymaga uprawnień ułatwień dostępu, aby go wymusić.</string>
+    
+    <!-- AdminPasswordVerificationDialog.kt -->
+    <string name="admin_password_verification_dialog_title">Wymagana weryfikacja hasła</string>
+    <string name="admin_password_verification_dialog_text">Wprowadź hasło blokady aplikacji, aby wyłączyć uprawnienia administratora</string>
+    <string name="password_label">Hasło</string>
+    <string name="password_empty_error">Hasło nie może być puste</string>
+    <string name="incorrect_password_error">Niepoprawne hasło</string>
+    <string name="verify_button">Weryfikuj</string>
+
+    <!-- AccessibilityServiceGuideDialog.kt -->
+    <string name="accessibility_guide_dialog_title">Włącz usługę ułatwień dostępu</string>
+    <string name="accessibility_guide_dialog_text_1">App Lock wymaga uprawnień ułatwień dostępu, aby wykrywać moment uruchamiania chronionych aplikacji.</string>
+    <string name="accessibility_guide_dialog_text_2">Wykonaj następujące kroki:</string>
+    <string name="accessibility_guide_dialog_text_3">
+1. Dotknij „Otwórz ustawienia” poniżej\n
+2. Przełącz przełącznik w pozycję WŁ.\n
+3. Dotknij „Zezwól” w oknie potwierdzenia.
+    </string>
+    <string name="accessibility_guide_open_settings_button">Otwórz ustawienia</string>
+    <string name="settings_screen_about_and_support_title">O aplikacji i pomoc</string>
+    <string name="settings_screen_join_community_title">Dołącz do społeczności</string>
+    <string name="settings_screen_unlock_duration_summary_minutes">%1$d min</string>
+    <string name="settings_screen_unlock_duration_summary_immediate">Blokuj natychmiast</string>
+    <string name="settings_screen_biometric_auth_desc_available">Używaj odcisku palca lub rozpoznawania twarzy do odblokowywania aplikacji</string>
+    <string name="settings_screen_biometric_auth_desc_unavailable">Uwierzytelnianie biometryczne nie zostało skonfigurowane lub jest niedostępne.</string>
+    <string name="settings_screen_shizuku_permission_granted">Uprawnienie dla Shizuku zostało przyznane</string>
+    <string name="settings_screen_shizuku_permission_required_desc">Uprawnienie dla Shizuku jest wymagane do korzystania z zaawansowanych funkcji.</string>
+    <string name="settings_screen_shizuku_not_running_toast">Usługa Shizuku nie jest uruchomiona</string>
+    <string name="settings_screen_usage_permission_toast">Przyznaj uprawnienie dostępu do danych o użyciu.</string>
+    <string name="settings_screen_unlock_duration_dialog_description_new">Wybierz, jak długo aplikacje mają pozostawać odblokowane po wprowadzeniu PIN-u:</string>
+    <string name="settings_screen_unlock_duration_dialog_option_immediate">Blokuj natychmiast</string>
+    <string name="settings_screen_unlock_duration_dialog_option_minute">%1$d minuta</string>
+    <string name="settings_screen_unlock_duration_dialog_option_hour">1 godzina</string>
+    <string name="settings_screen_permission_required_dialog_text_1">Aby włączyć ochronę przed odinstalowaniem, App Lock wymaga dwóch uprawnień:</string>
+    <string name="settings_screen_permission_required_dialog_text_2">1. Administrator urządzenia – zapobiega odinstalowaniu\n2. Usługa ułatwień dostępu – monitoruje użycie aplikacji\n\nTe uprawnienia pomagają chronić aplikację przed usunięciem bez Twojej wiedzy.</string>
+    <string name="settings_screen_device_admin_dialog_text_1">App Lock wymaga uprawnień administratora urządzenia, aby zapobiec odinstalowaniu.</string>
+    <string name="settings_screen_device_admin_dialog_text_2">To uprawnienie pozwala aplikacji na:\n• ochronę przed jej odinstalowaniem\n• ochronę ustawień blokady aplikacji\n\nNie wpłynie to na normalne funkcjonowanie Twojego urządzenia.</string>
+    <string name="settings_screen_accessibility_dialog_text_1">App Lock wymaga uprawnień usługi ułatwień dostępu, aby monitorować użycie aplikacji.</string>
+    <string name="settings_screen_accessibility_dialog_text_2">To uprawnienie pozwala aplikacji na:\n• wykrywanie momentu otwierania aplikacji\n• wyświetlanie ekranu blokady, gdy jest to potrzebne\n• zapewnienie płynnej ochrony aplikacji</string>
+    <string name="settings_screen_accessibility_dialog_text_3">Twoja prywatność jest chroniona – żadne dane nie są zbierane ani udostępniane.</string>
+    <string name="settings_screen_backend_implementation_shizuku_advanced">Zaawansowane</string>
+    <string name="settings_screen_fallback_selection_dialog_title">Wybierz metodę awaryjną</string>
+    <string name="settings_screen_fallback_selection_dialog_desc">Wybierz metodę awaryjną, która zostanie użyta w przypadku awarii metody głównej:</string>
+    <string name="confirm_button">Potwierdź</string>
+    <string name="enable_button">Włącz</string>
+    <string name="settings_screen_advanced_title">Zaawansowane</string>
+    <string name="settings_screen_export_logs_title">Eksportuj logi</string>
+    <string name="settings_screen_export_logs_desc">Eksportuj logi aplikacji w celu debugowania błędu.</string>
+    <string name="settings_Screen_export_audit">Eksportuj logi bezpieczeństwa</string>
+    <string name="settings_screen_export_audit_desc">Eksportuj logi bezpieczeństwa w celu ich weryfikacji.</string>
+    <string name="settings_screen_export_logs_success">Logi zostały wyeksportowane</string>
+    <string name="settings_screen_export_logs_error">Nie udało się wyeksportować logów</string>
+    <string name="settings_screen_version_template">Wersja %1$s</string>
+
+    <!-- Pattern Lock Strings -->
+    <string name="enter_pattern_to_continue">Narysuj wzór, aby kontynuować</string>
+    <string name="incorrect_pattern_try_again">Niepoprawny wzór. Spróbuj ponownie.</string>
+    <!-- Permission Warning Banner Strings -->
+    <string name="permission_warning_overlay_title">Wyświetlanie nad innymi aplikacjami</string>
+    <string name="permission_warning_overlay_desc">Wyświetla ekran blokady nad chronionymi aplikacjami.</string>
+    <string name="permission_warning_accessibility_title">Usługa ułatwień dostępu</string>
+    <string name="permission_warning_accessibility_desc">Wykrywa moment uruchomienia chronionych aplikacji.</string>
+    <string name="permission_warning_usage_stats_title">Dostęp do danych o użyciu</string>
+    <string name="permission_warning_usage_stats_desc">Wykrywa moment uruchomienia chronionych aplikacji.</string>
+    <string name="permission_warning_shizuku_title">Uprawnienie dla Shizuku</string>
+    <string name="permission_warning_shizuku_desc">Bezpiecznie wykrywa moment uruchomienia chronionych aplikacji.</string>
+    <string name="permission_warning_device_admin_title">Administrator urządzenia</string>
+    <string name="permission_warning_device_admin_desc">Zapobiega odinstalowaniu aplikacji AppLock.</string>
+    <string name="permission_warning_title_suffix"> – wymagane</string>
+
+    <string name="join_community">Dołącz do społeczności</string>
+    <string name="join_community_desc">Dołącz do naszej społeczności na Discordzie, aby nawiązać kontakt z innymi użytkownikami, dzielić się opiniami i być na bieżąco z najnowszymi wiadomościami oraz funkcjami.</string>
+    <string name="join_discord">Dołącz do Discorda</string>
+    <string name="maybe_later">Może później</string>
+
+    <string name="donate">Przekaż darowiznę</string>
+    <string name="donate_subtitle">Pomóż utrzymać AppLock jako aplikację darmową i bez reklam na zawsze</string>
+    <string name="donate_dialog_title">Wspieraj rozwój aplikacji</string>
+    <string name="donate_dialog_message">
+        Cześć, jestem Pranav. Jestem studentem i programistą. Tworzę AppLock w moim wolnym czasie, aby aplikacja pozostała prywatna i wolna od reklam dla każdego.
+        Godzenie tego projektu ze studiami to spore wyzwanie, ale Twoje wsparcie to umożliwia.
+        Jeśli AppLock okazał się dla Ciebie pomocny, rozważ przekazanie niewielkiej darowizny – każda kwota znaczy dla mnie calutki świat i utrzymuje ten projekt przy życiu.
+        Dziękuję, że wierzysz w moją pracę!
+    </string>
+
+    <!-- Language & General Settings -->
+    <string name="settings_screen_general_title">Ogólne</string>
+    <string name="settings_screen_language_title">Język</string>
+    <string name="settings_screen_language_system">Systemowy</string>
+    <string name="settings_screen_language_english">English</string>
+    <string name="settings_screen_language_polish">Polski</string>
+    <string name="settings_screen_language_portuguese_brazil">Português (Brasil)</string>
+
+    <!-- SettingsScreen Strings -->
+    <string name="settings_screen_version_unknown">Nieznana</string>
+    <string name="settings_screen_unlock_duration_until_screen_off">Do wyłączenia ekranu</string>
+    <string name="settings_screen_share_audit_logs_title">Udostępnij logi audytowe</string>
+    <string name="settings_screen_share_logs_title">Udostępnij logi</string>
+    <string name="settings_screen_logging_title">Rejestrowanie logów</string>
+    <string name="settings_screen_logging_desc">Włącz rejestrowanie logów debugowania w celu rozwiązywania problemów</string>
+    <string name="settings_screen_unlock_duration_dialog_option_until_screen_off">Do wyłączenia ekranu</string>
+    <string name="settings_screen_backend_accessibility_name">Usługa ułatwień dostępu</string>
+    <string name="settings_screen_backend_usage_stats_name">Statystyki użytkowania</string>
+    <string name="settings_screen_backend_shizuku_name">Usługa Shizuku</string>
+    <string name="settings_screen_backend_accessibility_desc_short">Standardowa metoda działająca na większości urządzeń</string>
+    <string name="settings_screen_backend_usage_stats_desc_short">Eksperymentalna metoda wykorzystująca statystyki użytkowania aplikacji</string>
+    <string name="settings_screen_backend_shizuku_desc_short">Zaawansowana metoda wykorzystująca Shizuku oraz wewnętrzne API</string>
+    <string name="settings_screen_links_section_title">Linki</string>
+    <string name="settings_screen_link_discord">Społeczność Discord</string>
+    <string name="settings_screen_link_source_code">Kod źródłowy</string>
+    <string name="settings_screen_link_report_issue">Zgłoś problem</string>
+
+    <!-- MainScreen Strings -->
+    <string name="main_screen_protection_on">WŁ.</string>
+    <string name="main_screen_protection_off">WYŁ.</string>
+    <string name="main_screen_trigger_exclusions_cd">Wykluczenia wyzwalacza</string>
+    <string name="main_screen_anti_uninstall_cd">Ochrona przed odinstalowaniem</string>
+    <string name="main_screen_empty_title">Brak chronionych aplikacji</string>
+    <string name="main_screen_empty_desc">Stuknij przycisk +, aby zabezpieczyć wybrane aplikacje.</string>
+    <string name="main_screen_select_apps_title">Wybierz aplikacje</string>
+    <string name="main_screen_protect_count_button">Chroń (%1$d)</string>
+    <string name="main_screen_protected_label">Chronione</string>
+    <string name="main_screen_unlock_app_cd">Odblokuj aplikację %1$s</string>
+    <string name="main_screen_warning_cd">Ostrzeżenie</string>
+    <string name="main_screen_add_button_cd">Dodaj aplikacje</string>
+
+    <!-- PatternSetPassword Strings -->
+    <string name="pattern_set_password_enter_current_label">Wprowadź aktualny wzór</string>
+    <string name="pattern_set_password_confirm_label">Potwierdź wzór</string>
+    <string name="pattern_set_password_create_label">Utwórz wzór</string>
+    <string name="pattern_set_password_incorrect_error">Niepoprawny wzór</string>
+    <string name="pattern_set_password_min_length_error">Wzór musi składać się z co najmniej 4 punktów</string>
+    <string name="pattern_set_password_incorrect_short_error">Niepoprawny wzór</string>
+
+    <!-- Lock Screen Strings -->
+    <string name="password_overlay_close_cd">Zamknij</string>
+    <string name="password_overlay_continue_to_app">Przejdź do aplikacji %1$s</string>
+    <string name="pattern_lock_continue_to_app">Przejdź do aplikacji %1$s</string>
+    <string name="pattern_lock_close_cd">Zamknij</string>
+    <string name="alphanumeric_password_overlay_close_cd">Zamknij</string>
+    <string name="alphanumeric_overlay_continue_to_app">Przejdź do aplikacji %1$s</string>
+
+        <!-- Biometric prompt strings -->
+    <string name="biometric_prompt_title">Potwierdź hasło</string>
+    <string name="biometric_prompt_subtitle">Potwierdź tożsamość biometrią, aby kontynuować</string>
+    <string name="biometric_prompt_negative_button">Użyj kodu PIN</string>
+
+    <!-- AntiUninstallScreen Strings -->
+    <string name="anti_uninstall_screen_title">Ochrona przed odinstalowaniem</string>
+    <string name="anti_uninstall_screen_desc">Wybierz aplikacje, które będą chronione przed odinstalowaniem.</string>
+    <string name="anti_uninstall_manual_packages_title">Ręcznie dodane pakiety</string>
+    <string name="anti_uninstall_installed_apps_title">Zainstalowane aplikacje</string>
+    <string name="anti_uninstall_manual_add_dialog_title">Dodaj pakiet ręcznie</string>
+    <string name="anti_uninstall_manual_add_dialog_text">Wprowadź nazwę pakietu aplikacji, którą chcesz chronić:</string>
+    <string name="anti_uninstall_package_name_label">Nazwa pakietu</string>
+    <string name="anti_uninstall_package_name_placeholder">com.example.app</string>
+    <string name="anti_uninstall_search_placeholder">Szukaj aplikacji lub nazw pakietów...</string>
+    <string name="anti_uninstall_shizuku_not_installed_title">Aplikacja Shizuku nie jest zainstalowana</string>
+    <string name="anti_uninstall_shizuku_not_running_title">Usługa Shizuku nie jest uruchomiona</string>
+    <string name="anti_uninstall_shizuku_permission_required_title">Wymagane uprawnienie</string>
+    <string name="anti_uninstall_shizuku_setup_title">Konfiguracja Shizuku</string>
+    <string name="anti_uninstall_shizuku_not_installed_text">Aplikacja Shizuku jest wymagana do skonfigurowania ochrony przed odinstalowaniem bez dostępu do roota.\n\nZainstaluj aplikację Shizuku ze sklepu Play Store lub serwisu GitHub, aby kontynuować.</string>
+    <string name="anti_uninstall_shizuku_not_running_text">Aplikacja Shizuku jest zainstalowana, ale usługa w tle nie została jeszcze uruchomiona (nie odebrano powiązania Binder).\n\nOtwórz aplikację Shizuku i uruchom usługę poprzez debugowanie bezprzewodowe lub Root.</string>
+    <string name="anti_uninstall_shizuku_permission_required_text">Usługa Shizuku jest aktywna, ale ta aplikacja wymaga Twojej zgody na autoryzację uprawnień do konfigurowania ograniczeń pakietów.\n\nNa szczęście Shizuku jest używane tylko podczas blokowania/odblokowywania dezinstalacji, więc nie musi działać w tle przez cały czas!</string>
+    <string name="anti_uninstall_install_shizuku_button">Zainstaluj Shizuku</string>
+    <string name="anti_uninstall_open_shizuku_button">Otwórz Shizuku</string>
+    <string name="anti_uninstall_add_manual_cd">Dodaj pakiet ręcznie</string>
+    <string name="anti_uninstall_manually_added_label">Ręcznie dodany pakiet</string>
+    <string name="go_back_button">Wróć</string>
+    <string name="add_button">Dodaj</string>
+    <string name="back_cd">Wstecz</string>
+
+    <!-- TriggerExclusionsScreen Strings -->
+    <string name="trigger_exclusions_screen_title">Wykluczenia wyzwalacza</string>
+    <string name="trigger_exclusions_screen_desc">Wybierz aplikacje, które NIE będą wyzwalać blokady podczas przełączania się na zablokowane aplikacje.</string>
+    <string name="trigger_exclusions_manual_packages_title">Ręcznie dodane pakiety</string>
+    <string name="trigger_exclusions_installed_apps_title">Zainstalowane aplikacje</string>
+    <string name="trigger_exclusions_manual_add_dialog_title">Dodaj pakiet ręcznie</string>
+    <string name="trigger_exclusions_manual_add_dialog_text">Wprowadź nazwę pakietu aplikacji, którą chcesz wykluczyć:</string>
+    <string name="trigger_exclusions_package_name_label">Nazwa pakietu</string>
+    <string name="trigger_exclusions_package_name_placeholder">com.example.app</string>
+    <string name="trigger_exclusions_search_placeholder">Szukaj aplikacji lub nazw pakietów...</string>
+    <string name="trigger_exclusions_add_manual_cd">Dodaj pakiet ręcznie</string>
+    <string name="trigger_exclusions_manually_added_label">Ręcznie dodany pakiet</string>
+
+    <!-- UsageStatsPermission Strings -->
+    <string name="usage_stats_permission_dialog_title">Przyznaj uprawnienie do statystyk użytkowania</string>
+    <string name="usage_stats_permission_dialog_text_1">Włączono tryb statystyk użytkowania, jednak aplikacja wymaga uprawnienia Dostęp do danych o użytkowaniu, aby działać prawidłowo.</string>
+    <string name="usage_stats_permission_dialog_text_2">Naciśnij „Przyznaj uprawnienie”, aby otworzyć ustawienia systemowe i udzielić wymaganych uprawnień.</string>
+
+    <!-- Service notification strings -->
+    <string name="shizuku_service_channel_name">Usługa AppLock</string>
+    <string name="shizuku_service_notification_title">AppLock</string>
+    <string name="shizuku_service_notification_text">Ochrona aplikacji za pomocą Shizuku</string>
+    <string name="usage_stats_service_channel_name">Usługa AppLock (Statystyki użytkowania)</string>
+    <string name="usage_stats_service_notification_title">AppLock</string>
+    <string name="usage_stats_service_notification_text">Ochrona Twoich aplikacji</string>
+    <string name="accessibility_block_admin_deactivation_toast">Wyłącz ochronę przed odinstalowaniem w ustawieniach AppLock, aby usunąć to ograniczenie.</string>
+
+    <!-- LockScreenOverlayManager extracted string -->
+    <string name="lock_screen_overlay_default_app_name">Aplikacja</string>
+
+</resources>
