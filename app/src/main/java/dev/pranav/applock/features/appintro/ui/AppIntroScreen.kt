@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QueryStats
@@ -337,7 +338,7 @@ fun AppIntroScreen(navController: NavController) {
                 MethodSelectionCard(
                     title = stringResource(R.string.shizuku_service_title),
                     description = stringResource(R.string.shizuku_service_card_desc),
-                    icon = Icons.Default.QueryStats,
+                    icon = Icons.Default.AutoAwesome,
                     isSelected = selectedMethod == AppUsageMethod.SHIZUKU,
                     onClick = { selectedMethod = AppUsageMethod.SHIZUKU },
                 )
@@ -409,7 +410,7 @@ fun AppIntroScreen(navController: NavController) {
             IntroPage(
                 title = stringResource(R.string.shizuku_service_title),
                 description = stringResource(R.string.app_intro_shizuku_desc),
-                icon = Icons.Default.QueryStats,
+                icon = Icons.Default.AutoAwesome,
                 backgroundColor = Color(0xFFCE5151),
                 contentColor = Color.White,
                 onNext = {
